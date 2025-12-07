@@ -1,8 +1,7 @@
 package huyphmnat.fdsa.snippet;
 
 import huyphmnat.fdsa.base.BaseIntegrationTest;
-import huyphmnat.fdsa.snippet.dtos.CreateSnippetRequest;
-import huyphmnat.fdsa.snippet.dtos.SnippetCreatedEvent;
+import huyphmnat.fdsa.snippet.dtos.*;
 import huyphmnat.fdsa.snippet.exceptions.SnippetNotFoundException;
 import huyphmnat.fdsa.snippet.interfaces.SnippetService;
 import huyphmnat.fdsa.snippet.internal.services.interfaces.EventService;
@@ -53,14 +52,112 @@ public class SnippetServiceTest extends BaseIntegrationTest {
     }
 
     @Test
+    public void testGetSnippet() {
+        var newSnippet = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .code("console.log('Test');")
+                .build());
+
+        var retrievedSnippet = snippetService.getSnippet(newSnippet.getId());
+
+        assertNotNull(retrievedSnippet);
+        assertEquals(newSnippet.getId(), retrievedSnippet.getId());
+        assertEquals(newSnippet.getCode(), retrievedSnippet.getCode());
+    }
+
+    @Test
+    public void testGetSnippet_NotFound() {
+        var randomId = java.util.UUID.randomUUID();
+        assertThrows(SnippetNotFoundException.class, () -> {
+            snippetService.getSnippet(randomId);
+        });
+    }
+
+    @Test
+    public void testUpdateSnippet() {
+        // Create a snippet first
+        var newSnippet = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .code("console.log('Original');")
+                .build());
+
+        // Reset mock to clear previous invocations
+        reset(eventService);
+
+        // Update the snippet
+        var updatedSnippet = snippetService.updateSnippet(UpdateSnippetRequest
+                .builder()
+                .id(newSnippet.getId())
+                .code("console.log('Updated');")
+                .build());
+
+        assertNotNull(updatedSnippet);
+        assertEquals(newSnippet.getId(), updatedSnippet.getId());
+        assertEquals("console.log('Updated');", updatedSnippet.getCode());
+
+        // Verify the snippet was updated in database
+        var retrievedSnippet = snippetService.getSnippet(newSnippet.getId());
+        assertEquals("console.log('Updated');", retrievedSnippet.getCode());
+
+        // Verify that the update event was published correctly
+        verify(eventService, times(1)).publish(eventNameCaptor.capture(), eventPayloadCaptor.capture());
+
+        assertEquals("snippet.updated", eventNameCaptor.getValue());
+
+        Object payload = eventPayloadCaptor.getValue();
+        assertInstanceOf(SnippetUpdatedEvent.class, payload);
+
+        SnippetUpdatedEvent event = (SnippetUpdatedEvent) payload;
+        assertEquals(updatedSnippet.getId(), event.getId());
+        assertEquals(updatedSnippet.getCode(), event.getCode());
+    }
+
+    @Test
+    public void testUpdateSnippet_NotFound() {
+        var randomId = java.util.UUID.randomUUID();
+        assertThrows(SnippetNotFoundException.class, () -> {
+            snippetService.updateSnippet(UpdateSnippetRequest
+                    .builder()
+                    .id(randomId)
+                    .code("console.log('Will Fail');")
+                    .build());
+        });
+    }
+
+    @Test
     public void testDeleteSnippet() {
         var newSnippet = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
                 .code("console.log('Hello, World!');")
                 .build());
+
+        // Reset mock to clear previous invocations
+        reset(eventService);
+
         snippetService.deleteSnippet(newSnippet.getId());
+
+        // Verify snippet is deleted
         assertThrows(SnippetNotFoundException.class, () -> {
             snippetService.getSnippet(newSnippet.getId());
+        });
+
+        // Verify that the delete event was published correctly
+        verify(eventService, times(1)).publish(eventNameCaptor.capture(), eventPayloadCaptor.capture());
+
+        assertEquals("snippet.deleted", eventNameCaptor.getValue());
+
+        Object payload = eventPayloadCaptor.getValue();
+        assertInstanceOf(SnippetDeletedEvent.class, payload);
+
+        SnippetDeletedEvent event = (SnippetDeletedEvent) payload;
+        assertEquals(newSnippet.getId(), event.getId());
+    }
+
+    @Test
+    public void testDeleteSnippet_NotFound() {
+        var randomId = java.util.UUID.randomUUID();
+        assertThrows(SnippetNotFoundException.class, () -> {
+            snippetService.deleteSnippet(randomId);
         });
     }
 }

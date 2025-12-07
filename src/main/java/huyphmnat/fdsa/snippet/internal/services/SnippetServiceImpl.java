@@ -1,8 +1,6 @@
 package huyphmnat.fdsa.snippet.internal.services;
 
-import huyphmnat.fdsa.snippet.dtos.CreateSnippetRequest;
-import huyphmnat.fdsa.snippet.dtos.Snippet;
-import huyphmnat.fdsa.snippet.dtos.SnippetCreatedEvent;
+import huyphmnat.fdsa.snippet.dtos.*;
 import huyphmnat.fdsa.snippet.exceptions.SnippetNotFoundException;
 import huyphmnat.fdsa.snippet.interfaces.SnippetService;
 import huyphmnat.fdsa.snippet.internal.entites.SnippetEntity;
@@ -39,7 +37,25 @@ public class SnippetServiceImpl implements SnippetService {
     }
 
     @Transactional
+    public Snippet updateSnippet(UpdateSnippetRequest request) {
+        var entity = snippetRepository
+                .findById(request.getId())
+                .orElseThrow(SnippetNotFoundException::new);
+
+        entity.setCode(request.getCode());
+        snippetRepository.save(entity);
+
+        eventService.publish("snippet.updated", mapper.map(entity, SnippetUpdatedEvent.class));
+        return mapper.map(entity, Snippet.class);
+    }
+
+    @Transactional
     public void deleteSnippet(UUID id) {
+        var entity = snippetRepository
+                .findById(id)
+                .orElseThrow(SnippetNotFoundException::new);
+
         snippetRepository.deleteById(id);
+        eventService.publish("snippet.deleted", SnippetDeletedEvent.builder().id(id).build());
     }
 }
