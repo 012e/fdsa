@@ -37,6 +37,14 @@ public class SnippetServiceImpl implements SnippetService {
     }
 
     @Transactional
+    public java.util.List<Snippet> getAllSnippets() {
+        return snippetRepository.findAll()
+                .stream()
+                .map(entity -> mapper.map(entity, Snippet.class))
+                .toList();
+    }
+
+    @Transactional
     public Snippet updateSnippet(UpdateSnippetRequest request) {
         var entity = snippetRepository
                 .findById(request.getId())

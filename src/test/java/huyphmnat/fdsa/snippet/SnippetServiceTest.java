@@ -74,6 +74,40 @@ public class SnippetServiceTest extends BaseIntegrationTest {
     }
 
     @Test
+    public void testGetAllSnippets() {
+        // Create multiple snippets
+        var snippet1 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .code("console.log('First');")
+                .build());
+
+        var snippet2 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .code("console.log('Second');")
+                .build());
+
+        var snippet3 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .code("console.log('Third');")
+                .build());
+
+        // Get all snippets
+        var allSnippets = snippetService.getAllSnippets();
+
+        assertNotNull(allSnippets);
+        assertTrue(allSnippets.size() >= 3);
+
+        // Verify that our created snippets are in the list
+        var snippetIds = allSnippets.stream()
+                .map(Snippet::getId)
+                .toList();
+
+        assertTrue(snippetIds.contains(snippet1.getId()));
+        assertTrue(snippetIds.contains(snippet2.getId()));
+        assertTrue(snippetIds.contains(snippet3.getId()));
+    }
+
+    @Test
     public void testUpdateSnippet() {
         // Create a snippet first
         var newSnippet = snippetService.createSnippet(CreateSnippetRequest

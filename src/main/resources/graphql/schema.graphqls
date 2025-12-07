@@ -3,6 +3,16 @@ type Query {
     getAllSnippets: [Snippet!]!
 }
 
+type Mutation {
+    createSnippet(snippet: SnippetInput): Snippet!
+    updateSnippet(id: ID!, snippet: SnippetInput): Snippet!
+    deleteSnippet(id: ID!): Boolean!
+}
+
+input SnippetInput {
+    code: String!
+}
+
 type Snippet {
     id: ID!
     code: String!
