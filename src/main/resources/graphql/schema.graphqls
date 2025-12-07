@@ -1,0 +1,9 @@
+type Query {
+    getSnippet(id: ID!): Snippet!
+    getAllSnippets: [Snippet!]!
+}
+
+type Snippet {
+    id: ID!
+    code: String!
+}
