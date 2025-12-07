@@ -32,3 +32,21 @@ services:
       - "29092:29092"
     volumes:
         - ./tmp/kafka_data:/kafka/data
+
+  temporal:
+    image: temporalio/temporal:1.5.1
+    container_name: temporal
+    command: [ "server", "start-dev", "--ip", "0.0.0.0" ]
+    volumes:
+      - ./tmp/temporal_data:/var/lib/temporal
+    ports:
+      - "7233:7233" # Temporal Frontend gRPC port
+      - "8233:8233" # Temporal Web UI port
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:v0.7.2
+    ports:
+      - 6969:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'

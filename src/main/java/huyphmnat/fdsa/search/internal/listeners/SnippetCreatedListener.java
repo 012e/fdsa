@@ -11,9 +11,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class SnippetCreatedListener {
-
-    @KafkaListener(topics = "snippets.created", groupId = "search-service")
+    @KafkaListener(
+            topics= "snippet.created",
+            groupId = "search-service"
+    )
     public void listen(SnippetCreatedEvent event) {
-        log.info("snippet created");
+        log.info("Received SnippetCreatedEvent: id={}, code={}", event.getId(), event.getCode());
+        // TODO: Process the event
     }
 }

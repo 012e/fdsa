@@ -1,6 +1,6 @@
 type Query {
-    getSnippet(id: ID!): Snippet!
-    getAllSnippets: [Snippet!]!
+    snippetById(id: ID!): Snippet!
+    snippets: [Snippet!]!
 }
 
 type Mutation {
