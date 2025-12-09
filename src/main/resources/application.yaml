@@ -19,13 +19,3 @@ spring:
   temporal:
     url: ${TEMPORAL_URL:localhost:7233}
     namespace: ${TEMPORAL_NAMESPACE:default}
-logging:
-  level:
-    org.apache.kafka: DEBUG
-    org.springframework.kafka: DEBUG
-
-
-
-
-
-

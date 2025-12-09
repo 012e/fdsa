@@ -1,8 +1,5 @@
 package huyphmnat.fdsa.shared;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.validation.constraints.NotNull;
-import lombok.NonNull;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
