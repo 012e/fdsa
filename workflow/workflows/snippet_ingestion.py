@@ -104,17 +104,30 @@ class SnippetIngestionWorkflow:
         
         # Step 6: Index to OpenSearch
         workflow.logger.info("Indexing to OpenSearch...")
+
+        # Build a single payload matching the SnippetDocument shape expected by the
+        # `index_snippet_to_opensearch` activity. Each chunk becomes an object with
+        # an index, code, summary and embedding.
+        chunks_payload = []
+        for i, (chunk, summary, embedding) in enumerate(zip(chunks, chunk_summaries, chunk_embeddings)):
+            chunks_payload.append({
+                "chunk_index": i,
+                "code": chunk,
+                "summary": summary,
+                "embedding": embedding,
+            })
+
+        snippet_payload = {
+            "snippet_id": snippet_id,
+            "code": code,
+            "overall_summary": overall_summary,
+            "overall_embedding": overall_embedding,
+            "chunks": chunks_payload,
+        }
+
         result = await workflow.execute_activity(
             index_snippet_to_opensearch,
-            args=[
-                snippet_id,
-                code,
-                overall_summary,
-                overall_embedding,
-                chunks,
-                chunk_summaries,
-                chunk_embeddings,
-            ],
+            snippet_payload,
             start_to_close_timeout=timedelta(seconds=60),
             retry_policy=RetryPolicy(
                 maximum_attempts=3,
