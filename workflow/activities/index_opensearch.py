@@ -1,8 +1,30 @@
 from temporalio import activity
 from opensearchpy import OpenSearch
-from typing import Any
+from typing import Any, List, Optional
 import os
 from datetime import datetime
+
+# Use pydantic dataclasses for input validation/typing
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+
+
+@pydantic_dataclass
+class Chunk:
+    chunk_index: int
+    code: str
+    summary: str
+    embedding: List[float]
+
+
+@pydantic_dataclass
+class SnippetDocument:
+    snippet_id: str
+    code: str
+    overall_summary: str
+    overall_embedding: List[float]
+    chunks: List[Chunk]
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 def get_opensearch_client() -> OpenSearch:
@@ -23,30 +45,48 @@ def get_opensearch_client() -> OpenSearch:
 
 
 @activity.defn
-async def index_snippet_to_opensearch(
-    snippet_id: str,
-    code: str,
-    overall_summary: str,
-    overall_embedding: list[float],
-    chunks: list[str],
-    chunk_summaries: list[str],
-    chunk_embeddings: list[list[float]],
-) -> dict[str, Any]:
+async def index_snippet_to_opensearch(snippet: SnippetDocument | dict) -> dict[str, Any]:
     """
     Activity to index the snippet and its chunks into OpenSearch.
     
     Args:
-        snippet_id: Unique identifier for the snippet
-        code: Original source code
-        overall_summary: Summary of the entire code
-        overall_embedding: Embedding vector for the overall summary
-        chunks: List of code chunks
-        chunk_summaries: List of summaries for each chunk
-        chunk_embeddings: List of embedding vectors for each chunk
+        snippet: A `SnippetDocument` instance or a dict representing the snippet
+            containing fields: `snippet_id`, `code`, `overall_summary`,
+            `overall_embedding`, and `chunks` (list of chunk dicts or `Chunk`).
         
     Returns:
         Result information including document IDs
     """
+    # Accept either a SnippetDocument instance or a dict that can be parsed into one.
+    if not isinstance(snippet, SnippetDocument):
+        # snippet may be a dict coming from the activity call - parse it into our dataclass
+        # Support both flat chunk dicts and already-parsed Chunk instances
+        if isinstance(snippet, dict):
+            # Convert nested chunk dicts into Chunk objects if necessary
+            raw_chunks = snippet.get("chunks", [])
+            parsed_chunks: List[Chunk] = []
+            for c in raw_chunks:
+                if isinstance(c, Chunk):
+                    parsed_chunks.append(c)
+                elif isinstance(c, dict):
+                    # allow missing chunk_index and compute if absent
+                    parsed_chunks.append(Chunk(**c))
+                else:
+                    raise TypeError(f"Unsupported chunk type: {type(c)}")
+
+            snippet = SnippetDocument(
+                snippet_id=snippet["snippet_id"],
+                code=snippet["code"],
+                overall_summary=snippet["overall_summary"],
+                overall_embedding=snippet["overall_embedding"],
+                chunks=parsed_chunks,
+                created_at=snippet.get("created_at"),
+                updated_at=snippet.get("updated_at"),
+            )
+        else:
+            # If it's already an object with the expected attributes, try to coerce
+            raise TypeError("snippet must be a dict or SnippetDocument")
+
     client = get_opensearch_client()
     index_name = "code_snippets"
     
@@ -98,32 +138,32 @@ async def index_snippet_to_opensearch(
         }
         client.indices.create(index=index_name, body=index_body)
     
-    # Prepare chunks data
+    # Prepare chunks data from the SnippetDocument.chunks
     chunks_data = []
-    for idx, (chunk, summary, embedding) in enumerate(zip(chunks, chunk_summaries, chunk_embeddings)):
+    for c in snippet.chunks:
         chunks_data.append({
-            "chunk_index": idx,
-            "code": chunk,
-            "summary": summary,
-            "embedding": embedding,
+            "chunk_index": c.chunk_index,
+            "code": c.code,
+            "summary": c.summary,
+            "embedding": c.embedding,
         })
     
     # Prepare document
     document = {
-        "snippet_id": snippet_id,
-        "code": code,
-        "overall_summary": overall_summary,
-        "overall_embedding": overall_embedding,
+        "snippet_id": snippet.snippet_id,
+        "code": snippet.code,
+        "overall_summary": snippet.overall_summary,
+        "overall_embedding": snippet.overall_embedding,
         "chunks": chunks_data,
-        "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat(),
+        "created_at": (snippet.created_at.isoformat() if snippet.created_at else datetime.utcnow().isoformat()),
+        "updated_at": (snippet.updated_at.isoformat() if snippet.updated_at else datetime.utcnow().isoformat()),
     }
     
     # Index the document
     response = client.index(
         index=index_name,
         body=document,
-        id=snippet_id,
+        id=snippet.snippet_id,
     )
     
     # Refresh index to make document immediately searchable
@@ -131,7 +171,7 @@ async def index_snippet_to_opensearch(
     
     return {
         "index": index_name,
-        "document_id": snippet_id,
+        "document_id": snippet.snippet_id,
         "result": response["result"],
         "chunks_count": len(chunks_data),
     }
