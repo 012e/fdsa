@@ -2,6 +2,7 @@ package huyphmnat.fdsa.snippet.interfaces;
 
 import huyphmnat.fdsa.snippet.dtos.CreateSnippetRequest;
 import huyphmnat.fdsa.snippet.dtos.Snippet;
+import huyphmnat.fdsa.snippet.dtos.SnippetFile;
 import huyphmnat.fdsa.snippet.dtos.UpdateSnippetRequest;
 
 import java.util.List;
@@ -14,4 +15,5 @@ public interface SnippetService {
     List<Snippet> getAllSnippets();
     Snippet updateSnippet(UpdateSnippetRequest request);
     void deleteSnippet(UUID id);
+    List<SnippetFile> listFilesByPath(String path);
 }

@@ -88,4 +88,21 @@ public class SnippetServiceImpl implements SnippetService {
         snippetRepository.deleteById(id);
         eventService.publish("snippet.deleted", SnippetDeletedEvent.builder().id(id).build());
     }
+
+    @Transactional
+    public java.util.List<SnippetFile> listFilesByPath(String path) {
+        // If path ends with '/', list all files in that directory
+        if (path.endsWith("/")) {
+            return snippetRepository.findByPathStartingWith(path)
+                    .stream()
+                    .map(entity -> mapper.map(entity, SnippetFile.class))
+                    .toList();
+        } else {
+            // If path doesn't end with '/', get the specific file
+            var entity = snippetRepository
+                    .findByPath(path)
+                    .orElseThrow(SnippetNotFoundException::new);
+            return java.util.List.of(mapper.map(entity, SnippetFile.class));
+        }
+    }
 }

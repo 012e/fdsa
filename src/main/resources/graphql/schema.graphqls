@@ -2,6 +2,7 @@ type Query {
     snippetById(id: ID!): Snippet!
     snippetByPath(path: String!): Snippet!
     snippets: [Snippet!]!
+    listFilesByPath(path: String!): [SnippetFile!]!
 }
 
 type Mutation {
@@ -19,4 +20,9 @@ type Snippet {
     id: ID!
     path: String!
     code: String!
+}
+
+type SnippetFile {
+    id: ID!
+    path: String!
 }

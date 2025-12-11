@@ -299,4 +299,153 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         assertEquals("/test/same-path.js", updatedSnippet.getPath());
         assertEquals("console.log('Updated code');", updatedSnippet.getCode());
     }
+
+    @Test
+    public void testListFilesByPath_Directory() {
+        // Create multiple snippets in the same directory
+        var snippet1 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/home/ok/file1.js")
+                .code("console.log('File 1');")
+                .build());
+
+        var snippet2 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/home/ok/file2.js")
+                .code("console.log('File 2');")
+                .build());
+
+        var snippet3 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/home/ok/file3.js")
+                .code("console.log('File 3');")
+                .build());
+
+        // Create a snippet in a different directory
+        snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/home/other/file.js")
+                .code("console.log('Other');")
+                .build());
+
+        // List files in /home/ok/ directory (with trailing slash)
+        var files = snippetService.listFilesByPath("/home/ok/");
+
+        assertNotNull(files);
+        assertEquals(3, files.size());
+
+        var fileIds = files.stream()
+                .map(SnippetFile::getId)
+                .toList();
+
+        assertTrue(fileIds.contains(snippet1.getId()));
+        assertTrue(fileIds.contains(snippet2.getId()));
+        assertTrue(fileIds.contains(snippet3.getId()));
+
+        // Verify that code is not returned
+        files.forEach(file -> {
+            assertNotNull(file.getId());
+            assertNotNull(file.getPath());
+        });
+    }
+
+    @Test
+    public void testListFilesByPath_SingleFile() {
+        // Create a snippet
+        var snippet = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/home/ok")
+                .code("console.log('Single file');")
+                .build());
+
+        // Get specific file (without trailing slash)
+        var files = snippetService.listFilesByPath("/home/ok");
+
+        assertNotNull(files);
+        assertEquals(1, files.size());
+        assertEquals(snippet.getId(), files.get(0).getId());
+        assertEquals("/home/ok", files.get(0).getPath());
+        // Verify that code is not returned (SnippetFile doesn't have code field)
+    }
+
+    @Test
+    public void testListFilesByPath_SingleFile_NotFound() {
+        // Try to get a file that doesn't exist
+        assertThrows(SnippetNotFoundException.class, () -> {
+            snippetService.listFilesByPath("/nonexistent/file.js");
+        });
+    }
+
+    @Test
+    public void testListFilesByPath_EmptyDirectory() {
+        // List files in a directory that doesn't have any files
+        var files = snippetService.listFilesByPath("/empty/directory/");
+
+        assertNotNull(files);
+        assertEquals(0, files.size());
+    }
+
+    @Test
+    public void testListFilesByPath_NestedDirectories() {
+        // Create snippets in nested directories
+        var snippet1 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/home/project/src/main.js")
+                .code("console.log('Main');")
+                .build());
+
+        var snippet2 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/home/project/src/utils.js")
+                .code("console.log('Utils');")
+                .build());
+
+        var snippet3 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/home/project/README.md")
+                .code("# Readme")
+                .build());
+
+        // List all files in /home/project/src/
+        var srcFiles = snippetService.listFilesByPath("/home/project/src/");
+        assertEquals(2, srcFiles.size());
+
+        // List all files in /home/project/ (should include all files starting with that prefix)
+        var projectFiles = snippetService.listFilesByPath("/home/project/");
+        assertEquals(3, projectFiles.size());
+    }
+
+    @Test
+    public void testListFilesByPath_RootDirectory() {
+        // Create snippets at different levels
+        var snippet1 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/root1.js")
+                .code("console.log('Root 1');")
+                .build());
+
+        var snippet2 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/root2.js")
+                .code("console.log('Root 2');")
+                .build());
+
+        var snippet3 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .path("/subdir/file.js")
+                .code("console.log('Subdir');")
+                .build());
+
+        // List files at root level
+        var rootFiles = snippetService.listFilesByPath("/");
+        assertTrue(rootFiles.size() >= 3);
+
+        var fileIds = rootFiles.stream()
+                .map(SnippetFile::getId)
+                .toList();
+
+        assertTrue(fileIds.contains(snippet1.getId()));
+        assertTrue(fileIds.contains(snippet2.getId()));
+        assertTrue(fileIds.contains(snippet3.getId()));
+    }
 }

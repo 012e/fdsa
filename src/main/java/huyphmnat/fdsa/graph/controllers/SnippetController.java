@@ -2,6 +2,7 @@ package huyphmnat.fdsa.graph.controllers;
 
 import huyphmnat.fdsa.snippet.dtos.CreateSnippetRequest;
 import huyphmnat.fdsa.snippet.dtos.Snippet;
+import huyphmnat.fdsa.snippet.dtos.SnippetFile;
 import huyphmnat.fdsa.snippet.dtos.UpdateSnippetRequest;
 import huyphmnat.fdsa.snippet.interfaces.SnippetService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,12 @@ public class SnippetController {
     public List<Snippet> getAllSnippets() {
         log.info("Getting all snippets");
         return snippetService.getAllSnippets();
+    }
+
+    @QueryMapping
+    public List<SnippetFile> listFilesByPath(@Argument String path) {
+        log.info("Listing files by path: {}", path);
+        return snippetService.listFilesByPath(path);
     }
 
     @MutationMapping
