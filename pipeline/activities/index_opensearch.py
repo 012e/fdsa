@@ -1,11 +1,12 @@
-from temporalio import activity
-from opensearchpy import OpenSearch
-from typing import Any, List, Optional
 import os
 from datetime import datetime
+from typing import Any, List, Optional
+
+from opensearchpy import OpenSearch
 
 # Use pydantic dataclasses for input validation/typing
 from pydantic.dataclasses import dataclass as pydantic_dataclass
+from temporalio import activity
 
 
 @pydantic_dataclass
@@ -31,7 +32,7 @@ def get_opensearch_client() -> OpenSearch:
     """Create and return an OpenSearch client."""
     host = os.getenv("OPENSEARCH_HOST", "localhost")
     port = int(os.getenv("OPENSEARCH_PORT", "9200"))
-    
+
     # For development without SSL
     client = OpenSearch(
         hosts=[{"host": host, "port": port}],
@@ -45,15 +46,17 @@ def get_opensearch_client() -> OpenSearch:
 
 
 @activity.defn
-async def index_snippet_to_opensearch(snippet: SnippetDocument | dict) -> dict[str, Any]:
+async def index_snippet_to_opensearch(
+    snippet: SnippetDocument | dict,
+) -> dict[str, Any]:
     """
     Activity to index the snippet and its chunks into OpenSearch.
-    
+
     Args:
         snippet: A `SnippetDocument` instance or a dict representing the snippet
             containing fields: `snippet_id`, `code`, `overall_summary`,
             `overall_embedding`, and `chunks` (list of chunk dicts or `Chunk`).
-        
+
     Returns:
         Result information including document IDs
     """
@@ -89,7 +92,7 @@ async def index_snippet_to_opensearch(snippet: SnippetDocument | dict) -> dict[s
 
     client = get_opensearch_client()
     index_name = "code_snippets"
-    
+
     # Create index if it doesn't exist
     if not client.indices.exists(index=index_name):
         index_body = {
@@ -111,8 +114,8 @@ async def index_snippet_to_opensearch(snippet: SnippetDocument | dict) -> dict[s
                         "method": {
                             "name": "hnsw",
                             "space_type": "cosinesimil",
-                            "engine": "nmslib",
-                        }
+                            "engine": "faiss",
+                        },
                     },
                     "chunks": {
                         "type": "nested",
@@ -126,28 +129,30 @@ async def index_snippet_to_opensearch(snippet: SnippetDocument | dict) -> dict[s
                                 "method": {
                                     "name": "hnsw",
                                     "space_type": "cosinesimil",
-                                    "engine": "nmslib",
-                                }
-                            }
-                        }
+                                    "engine": "faiss",
+                                },
+                            },
+                        },
                     },
                     "created_at": {"type": "date"},
                     "updated_at": {"type": "date"},
                 }
-            }
+            },
         }
         client.indices.create(index=index_name, body=index_body)
-    
+
     # Prepare chunks data from the SnippetDocument.chunks
     chunks_data = []
     for c in snippet.chunks:
-        chunks_data.append({
-            "chunk_index": c.chunk_index,
-            "code": c.code,
-            "summary": c.summary,
-            "embedding": c.embedding,
-        })
-    
+        chunks_data.append(
+            {
+                "chunk_index": c.chunk_index,
+                "code": c.code,
+                "summary": c.summary,
+                "embedding": c.embedding,
+            }
+        )
+
     # Prepare document
     document = {
         "snippet_id": snippet.snippet_id,
@@ -155,20 +160,28 @@ async def index_snippet_to_opensearch(snippet: SnippetDocument | dict) -> dict[s
         "overall_summary": snippet.overall_summary,
         "overall_embedding": snippet.overall_embedding,
         "chunks": chunks_data,
-        "created_at": (snippet.created_at.isoformat() if snippet.created_at else datetime.utcnow().isoformat()),
-        "updated_at": (snippet.updated_at.isoformat() if snippet.updated_at else datetime.utcnow().isoformat()),
+        "created_at": (
+            snippet.created_at.isoformat()
+            if snippet.created_at
+            else datetime.utcnow().isoformat()
+        ),
+        "updated_at": (
+            snippet.updated_at.isoformat()
+            if snippet.updated_at
+            else datetime.utcnow().isoformat()
+        ),
     }
-    
+
     # Index the document
     response = client.index(
         index=index_name,
         body=document,
         id=snippet.snippet_id,
     )
-    
+
     # Refresh index to make document immediately searchable
     client.indices.refresh(index=index_name)
-    
+
     return {
         "index": index_name,
         "document_id": snippet.snippet_id,

@@ -43,10 +43,33 @@ services:
       - "7233:7233" # Temporal Frontend gRPC port
       - "8233:8233" # Temporal Web UI port
 
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:v0.7.2
-    ports:
-      - 6969:8080
+  opensearch:
+    image: opensearchproject/opensearch:3.3.0
+    container_name: opensearch-node
     environment:
-      DYNAMIC_CONFIG_ENABLED: 'true'
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD="Demo@123"
+      - plugins.security.disabled=true   # Disable security for local/testing
+    # ulimits:
+    #   memlock:
+    #     soft: -1
+    #     hard: -1
+    volumes:
+      - ./tmp/opensearch-data:/usr/share/opensearch/data
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+ 
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3.3.0
+    container_name: dashboards
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    ports:
+      - "5601:5601"
+    depends_on:
+      - opensearch
+
