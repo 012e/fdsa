@@ -1,5 +1,6 @@
 type Query {
     snippetById(id: ID!): Snippet!
+    snippetByPath(path: String!): Snippet!
     snippets: [Snippet!]!
 }
 
@@ -10,10 +11,12 @@ type Mutation {
 }
 
 input SnippetInput {
+    path: String!
     code: String!
 }
 
 type Snippet {
     id: ID!
+    path: String!
     code: String!
 }

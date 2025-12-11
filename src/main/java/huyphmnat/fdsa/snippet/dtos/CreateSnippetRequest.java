@@ -6,5 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class CreateSnippetRequest {
+    private String path;
     private String code;
 }

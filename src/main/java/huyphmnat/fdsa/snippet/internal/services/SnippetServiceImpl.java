@@ -1,6 +1,7 @@
 package huyphmnat.fdsa.snippet.internal.services;
 
 import huyphmnat.fdsa.snippet.dtos.*;
+import huyphmnat.fdsa.snippet.exceptions.DuplicateSnippetPathException;
 import huyphmnat.fdsa.snippet.exceptions.SnippetNotFoundException;
 import huyphmnat.fdsa.snippet.interfaces.SnippetService;
 import huyphmnat.fdsa.snippet.internal.entites.SnippetEntity;
@@ -22,6 +23,9 @@ public class SnippetServiceImpl implements SnippetService {
 
     @Transactional
     public Snippet createSnippet(CreateSnippetRequest request) {
+        if (snippetRepository.existsByPath(request.getPath())) {
+            throw new DuplicateSnippetPathException(request.getPath());
+        }
         var dto = mapper.map(request, SnippetEntity.class);
         snippetRepository.save(dto);
         eventService.publish("snippet.created", mapper.map(dto, SnippetCreatedEvent.class));
@@ -32,6 +36,14 @@ public class SnippetServiceImpl implements SnippetService {
     public Snippet getSnippet(UUID id) {
         var result = snippetRepository
                 .findById(id)
+                .orElseThrow(SnippetNotFoundException::new);
+        return mapper.map(result, Snippet.class);
+    }
+
+    @Transactional
+    public Snippet getSnippetByPath(String path) {
+        var result = snippetRepository
+                .findByPath(path)
                 .orElseThrow(SnippetNotFoundException::new);
         return mapper.map(result, Snippet.class);
     }
@@ -50,7 +62,17 @@ public class SnippetServiceImpl implements SnippetService {
                 .findById(request.getId())
                 .orElseThrow(SnippetNotFoundException::new);
 
-        entity.setCode(request.getCode());
+        // Check if path is being changed and if the new path already exists
+        if (request.getPath() != null && !request.getPath().equals(entity.getPath())) {
+            if (snippetRepository.existsByPath(request.getPath())) {
+                throw new DuplicateSnippetPathException(request.getPath());
+            }
+            entity.setPath(request.getPath());
+        }
+
+        if (request.getCode() != null) {
+            entity.setCode(request.getCode());
+        }
         snippetRepository.save(entity);
 
         eventService.publish("snippet.updated", mapper.map(entity, SnippetUpdatedEvent.class));

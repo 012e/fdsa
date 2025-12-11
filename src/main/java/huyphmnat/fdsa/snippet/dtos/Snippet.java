@@ -13,5 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Snippet {
     private UUID id;
+    private String path;
     private String code;
 }

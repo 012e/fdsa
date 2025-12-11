@@ -10,6 +10,7 @@ import java.util.UUID;
 public interface SnippetService {
     Snippet createSnippet(CreateSnippetRequest request);
     Snippet getSnippet(UUID id);
+    Snippet getSnippetByPath(String path);
     List<Snippet> getAllSnippets();
     Snippet updateSnippet(UpdateSnippetRequest request);
     void deleteSnippet(UUID id);

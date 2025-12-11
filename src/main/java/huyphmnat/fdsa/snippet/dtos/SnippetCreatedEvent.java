@@ -13,5 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public class SnippetCreatedEvent {
     private UUID id;
+    private String path;
     private String code;
 }

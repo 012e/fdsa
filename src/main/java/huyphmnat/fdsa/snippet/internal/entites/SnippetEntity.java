@@ -21,6 +21,10 @@ public class SnippetEntity {
     @UuidGenerator(algorithm = UuidVersion7Strategy.class)
     private UUID id;
 
+    @Column(nullable = false, unique = true)
+    @NotEmpty()
+    private String path;
+
     @Column(nullable = false)
     @NotEmpty()
     private String code;

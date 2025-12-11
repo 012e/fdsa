@@ -27,6 +27,12 @@ public class SnippetController {
     }
 
     @QueryMapping
+    public Snippet getSnippetByPath(@Argument String path) {
+        log.info("Getting snippet with path: {}", path);
+        return snippetService.getSnippetByPath(path);
+    }
+
+    @QueryMapping
     public List<Snippet> getAllSnippets() {
         log.info("Getting all snippets");
         return snippetService.getAllSnippets();
@@ -34,9 +40,10 @@ public class SnippetController {
 
     @MutationMapping
     public Snippet createSnippet(@Argument SnippetInput snippet) {
-        log.info("Creating snippet with code: {}", snippet.code());
+        log.info("Creating snippet with path: {} and code: {}", snippet.path(), snippet.code());
         return snippetService.createSnippet(
                 CreateSnippetRequest.builder()
+                        .path(snippet.path())
                         .code(snippet.code())
                         .build()
         );
@@ -44,10 +51,11 @@ public class SnippetController {
 
     @MutationMapping
     public Snippet updateSnippet(@Argument String id, @Argument SnippetInput snippet) {
-        log.info("Updating snippet with id: {} and code: {}", id, snippet.code());
+        log.info("Updating snippet with id: {}, path: {} and code: {}", id, snippet.path(), snippet.code());
         return snippetService.updateSnippet(
                 UpdateSnippetRequest.builder()
                         .id(UUID.fromString(id))
+                        .path(snippet.path())
                         .code(snippet.code())
                         .build()
         );
@@ -60,5 +68,5 @@ public class SnippetController {
         return true;
     }
 
-    public record SnippetInput(String code) {}
+    public record SnippetInput(String path, String code) {}
 }
