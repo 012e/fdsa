@@ -8,7 +8,8 @@ import java.util.UUID;
 
 @Repository
 public interface SnippetRepository extends JpaRepository<SnippetEntity, UUID> {
-    boolean existsByPath(String path);
-    java.util.Optional<SnippetEntity> findByPath(String path);
-    java.util.List<SnippetEntity> findByPathStartingWith(String pathPrefix);
+    boolean existsByOwnerAndPath(String owner, String path);
+    java.util.Optional<SnippetEntity> findByOwnerAndPath(String owner, String path);
+    java.util.List<SnippetEntity> findByOwnerAndPathStartingWith(String owner, String pathPrefix);
+    java.util.List<SnippetEntity> findByOwner(String owner);
 }

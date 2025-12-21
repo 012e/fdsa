@@ -13,6 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class UpdateSnippetRequest {
     private UUID id;
+    private String owner;
     private String path;
     private String code;
 }

@@ -28,9 +28,9 @@ public class SnippetController {
     }
 
     @QueryMapping
-    public Snippet getSnippetByPath(@Argument String path) {
-        log.info("Getting snippet with path: {}", path);
-        return snippetService.getSnippetByPath(path);
+    public Snippet getSnippetByPath(@Argument String owner, @Argument String path) {
+        log.info("Getting snippet with owner: {} and path: {}", owner, path);
+        return snippetService.getSnippetByPath(owner, path);
     }
 
     @QueryMapping
@@ -40,16 +40,23 @@ public class SnippetController {
     }
 
     @QueryMapping
-    public List<SnippetFile> listFilesByPath(@Argument String path) {
-        log.info("Listing files by path: {}", path);
-        return snippetService.listFilesByPath(path);
+    public List<Snippet> getSnippetsByOwner(@Argument String owner) {
+        log.info("Getting snippets for owner: {}", owner);
+        return snippetService.getSnippetsByOwner(owner);
+    }
+
+    @QueryMapping
+    public List<SnippetFile> listFilesByPath(@Argument String owner, @Argument String path) {
+        log.info("Listing files by owner: {} and path: {}", owner, path);
+        return snippetService.listFilesByPath(owner, path);
     }
 
     @MutationMapping
     public Snippet createSnippet(@Argument SnippetInput snippet) {
-        log.info("Creating snippet with path: {} and code: {}", snippet.path(), snippet.code());
+        log.info("Creating snippet with owner: {}, path: {} and code: {}", snippet.owner(), snippet.path(), snippet.code());
         return snippetService.createSnippet(
                 CreateSnippetRequest.builder()
+                        .owner(snippet.owner())
                         .path(snippet.path())
                         .code(snippet.code())
                         .build()
@@ -58,10 +65,11 @@ public class SnippetController {
 
     @MutationMapping
     public Snippet updateSnippet(@Argument String id, @Argument SnippetInput snippet) {
-        log.info("Updating snippet with id: {}, path: {} and code: {}", id, snippet.path(), snippet.code());
+        log.info("Updating snippet with id: {}, owner: {}, path: {} and code: {}", id, snippet.owner(), snippet.path(), snippet.code());
         return snippetService.updateSnippet(
                 UpdateSnippetRequest.builder()
                         .id(UUID.fromString(id))
+                        .owner(snippet.owner())
                         .path(snippet.path())
                         .code(snippet.code())
                         .build()
@@ -75,5 +83,5 @@ public class SnippetController {
         return true;
     }
 
-    public record SnippetInput(String path, String code) {}
+    public record SnippetInput(String owner, String path, String code) {}
 }

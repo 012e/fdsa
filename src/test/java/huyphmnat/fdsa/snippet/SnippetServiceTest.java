@@ -31,14 +31,15 @@ public class SnippetServiceTest extends BaseIntegrationTest {
     public void testCreateSnippet() {
         var newSnippet = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
-                .code("console.log('Hello, World!');")
+                .owner("testuser")
                 .path("/test/hello-world.js")
+                .code("not important")
                 .build());
         var createdSnippet = snippetService.getSnippet(newSnippet.getId());
 
         assertNotNull(createdSnippet);
         assertEquals(newSnippet.getCode(), createdSnippet.getCode());
-        assertEquals(newSnippet.getId(), createdSnippet.getId());
+        assertEquals(newSnippet.getOwner(), createdSnippet.getOwner());
         assertEquals(newSnippet.getPath(), createdSnippet.getPath());
 
         // Verify that the event was published correctly
@@ -52,12 +53,14 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         SnippetCreatedEvent event = (SnippetCreatedEvent) payload;
         assertEquals(newSnippet.getId(), event.getId());
         assertEquals(newSnippet.getCode(), event.getCode());
+        assertEquals(newSnippet.getOwner(), event.getOwner());
     }
 
     @Test
     public void testGetSnippet() {
         var newSnippet = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .code("console.log('Test');")
                 .path("/test/snippet.js")
                 .build());
@@ -83,18 +86,21 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         // Create multiple snippets
         var snippet1 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/first.js")
                 .code("console.log('First');")
                 .build());
 
         var snippet2 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/second.js")
                 .code("console.log('Second');")
                 .build());
 
         var snippet3 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/third.js")
                 .code("console.log('Third');")
                 .build());
@@ -120,6 +126,7 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         // Create a snippet first
         var newSnippet = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/original.js")
                 .code("console.log('Original');")
                 .build());
@@ -176,6 +183,7 @@ public class SnippetServiceTest extends BaseIntegrationTest {
     public void testDeleteSnippet() {
         var newSnippet = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/delete.js")
                 .code("console.log('Hello, World!');")
                 .build());
@@ -214,11 +222,12 @@ public class SnippetServiceTest extends BaseIntegrationTest {
     public void testGetSnippetByPath() {
         var newSnippet = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/by-path.js")
                 .code("console.log('Find by path');")
                 .build());
 
-        var retrievedSnippet = snippetService.getSnippetByPath("/test/by-path.js");
+        var retrievedSnippet = snippetService.getSnippetByPath("testuser", "/test/by-path.js");
 
         assertNotNull(retrievedSnippet);
         assertEquals(newSnippet.getId(), retrievedSnippet.getId());
@@ -229,7 +238,7 @@ public class SnippetServiceTest extends BaseIntegrationTest {
     @Test
     public void testGetSnippetByPath_NotFound() {
         assertThrows(SnippetNotFoundException.class, () -> {
-            snippetService.getSnippetByPath("/nonexistent/path.js");
+            snippetService.getSnippetByPath("testuser", "/nonexistent/path.js");
         });
     }
 
@@ -237,6 +246,7 @@ public class SnippetServiceTest extends BaseIntegrationTest {
     public void testCreateSnippet_DuplicatePath() {
         snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/duplicate.js")
                 .code("console.log('First');")
                 .build());
@@ -244,6 +254,7 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         assertThrows(DuplicateSnippetPathException.class, () -> {
             snippetService.createSnippet(CreateSnippetRequest
                     .builder()
+                    .owner("testuser")
                     .path("/test/duplicate.js")
                     .code("console.log('Second');")
                     .build());
@@ -251,15 +262,50 @@ public class SnippetServiceTest extends BaseIntegrationTest {
     }
 
     @Test
+    public void testCreateSnippet_SamePathDifferentOwners() {
+        // Same path should work for different owners
+        var snippet1 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .owner("user1")
+                .path("/test/shared-name.js")
+                .code("console.log('User 1');")
+                .build());
+
+        var snippet2 = snippetService.createSnippet(CreateSnippetRequest
+                .builder()
+                .owner("user2")
+                .path("/test/shared-name.js")
+                .code("console.log('User 2');")
+                .build());
+
+        assertNotNull(snippet1);
+        assertNotNull(snippet2);
+        assertNotEquals(snippet1.getId(), snippet2.getId());
+        assertEquals("/test/shared-name.js", snippet1.getPath());
+        assertEquals("/test/shared-name.js", snippet2.getPath());
+        assertEquals("user1", snippet1.getOwner());
+        assertEquals("user2", snippet2.getOwner());
+
+        // Verify they can be retrieved separately by owner and path
+        var retrieved1 = snippetService.getSnippetByPath("user1", "/test/shared-name.js");
+        var retrieved2 = snippetService.getSnippetByPath("user2", "/test/shared-name.js");
+
+        assertEquals(snippet1.getId(), retrieved1.getId());
+        assertEquals(snippet2.getId(), retrieved2.getId());
+    }
+
+    @Test
     public void testUpdateSnippet_DuplicatePath() {
         var snippet1 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/existing-path.js")
                 .code("console.log('Existing');")
                 .build());
 
         var snippet2 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/another-path.js")
                 .code("console.log('Another');")
                 .build());
@@ -279,6 +325,7 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         // Create a snippet
         var snippet = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/test/same-path.js")
                 .code("console.log('Original');")
                 .build());
@@ -305,18 +352,21 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         // Create multiple snippets in the same directory
         var snippet1 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/home/ok/file1.js")
                 .code("console.log('File 1');")
                 .build());
 
         var snippet2 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/home/ok/file2.js")
                 .code("console.log('File 2');")
                 .build());
 
         var snippet3 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/home/ok/file3.js")
                 .code("console.log('File 3');")
                 .build());
@@ -324,12 +374,13 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         // Create a snippet in a different directory
         snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/home/other/file.js")
                 .code("console.log('Other');")
                 .build());
 
         // List files in /home/ok/ directory (with trailing slash)
-        var files = snippetService.listFilesByPath("/home/ok/");
+        var files = snippetService.listFilesByPath("testuser", "/home/ok/");
 
         assertNotNull(files);
         assertEquals(3, files.size());
@@ -342,10 +393,11 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         assertTrue(fileIds.contains(snippet2.getId()));
         assertTrue(fileIds.contains(snippet3.getId()));
 
-        // Verify that code is not returned
+        // Verify that code is not returned and all are files (not directories)
         files.forEach(file -> {
             assertNotNull(file.getId());
             assertNotNull(file.getPath());
+            assertFalse(file.isDirectory());
         });
     }
 
@@ -354,32 +406,26 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         // Create a snippet
         var snippet = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
-                .path("/home/ok")
+                .owner("testuser")
+                .path("/home/single/file.js")
                 .code("console.log('Single file');")
                 .build());
 
-        // Get specific file (without trailing slash)
-        var files = snippetService.listFilesByPath("/home/ok");
+        // Get specific file by listing directory
+        var files = snippetService.listFilesByPath("testuser", "/home/single/");
 
         assertNotNull(files);
         assertEquals(1, files.size());
         assertEquals(snippet.getId(), files.get(0).getId());
-        assertEquals("/home/ok", files.get(0).getPath());
-        // Verify that code is not returned (SnippetFile doesn't have code field)
+        assertEquals("/home/single/file.js", files.get(0).getPath());
+        assertFalse(files.get(0).isDirectory());
     }
 
-    @Test
-    public void testListFilesByPath_SingleFile_NotFound() {
-        // Try to get a file that doesn't exist
-        assertThrows(SnippetNotFoundException.class, () -> {
-            snippetService.listFilesByPath("/nonexistent/file.js");
-        });
-    }
 
     @Test
     public void testListFilesByPath_EmptyDirectory() {
         // List files in a directory that doesn't have any files
-        var files = snippetService.listFilesByPath("/empty/directory/");
+        var files = snippetService.listFilesByPath("testuser", "/empty/directory/");
 
         assertNotNull(files);
         assertEquals(0, files.size());
@@ -390,29 +436,52 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         // Create snippets in nested directories
         var snippet1 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/home/project/src/main.js")
                 .code("console.log('Main');")
                 .build());
 
         var snippet2 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/home/project/src/utils.js")
                 .code("console.log('Utils');")
                 .build());
 
         var snippet3 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/home/project/README.md")
                 .code("# Readme")
                 .build());
 
-        // List all files in /home/project/src/
-        var srcFiles = snippetService.listFilesByPath("/home/project/src/");
+        // List all files in /home/project/src/ (should show 2 files)
+        var srcFiles = snippetService.listFilesByPath("testuser", "/home/project/src/");
         assertEquals(2, srcFiles.size());
+        srcFiles.forEach(file -> {
+            assertFalse(file.isDirectory());
+            assertNotNull(file.getId());
+        });
 
-        // List all files in /home/project/ (should include all files starting with that prefix)
-        var projectFiles = snippetService.listFilesByPath("/home/project/");
-        assertEquals(3, projectFiles.size());
+        // List all entries in /home/project/ (should show 1 file and 1 directory = 2 items)
+        var projectFiles = snippetService.listFilesByPath("testuser", "/home/project/");
+        assertEquals(2, projectFiles.size());
+
+        // Verify we have one directory (src/) and one file (README.md)
+        var directories = projectFiles.stream()
+                .filter(SnippetFile::isDirectory)
+                .toList();
+        var files = projectFiles.stream()
+                .filter(file -> !file.isDirectory())
+                .toList();
+
+        assertEquals(1, directories.size());
+        assertEquals("/home/project/src/", directories.get(0).getPath());
+        assertNull(directories.get(0).getId());
+
+        assertEquals(1, files.size());
+        assertEquals(snippet3.getId(), files.get(0).getId());
+        assertEquals("/home/project/README.md", files.get(0).getPath());
     }
 
     @Test
@@ -420,32 +489,46 @@ public class SnippetServiceTest extends BaseIntegrationTest {
         // Create snippets at different levels
         var snippet1 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/root1.js")
                 .code("console.log('Root 1');")
                 .build());
 
         var snippet2 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/root2.js")
                 .code("console.log('Root 2');")
                 .build());
 
         var snippet3 = snippetService.createSnippet(CreateSnippetRequest
                 .builder()
+                .owner("testuser")
                 .path("/subdir/file.js")
                 .code("console.log('Subdir');")
                 .build());
 
-        // List files at root level
-        var rootFiles = snippetService.listFilesByPath("/");
+        // List entries at root level (should show 2 files and 1 directory)
+        var rootFiles = snippetService.listFilesByPath("testuser", "/");
         assertTrue(rootFiles.size() >= 3);
 
-        var fileIds = rootFiles.stream()
-                .map(SnippetFile::getId)
+        // Verify we have files and directories
+        var files = rootFiles.stream()
+                .filter(file -> !file.isDirectory())
+                .toList();
+        var directories = rootFiles.stream()
+                .filter(SnippetFile::isDirectory)
                 .toList();
 
+        // Should have at least 2 direct files
+        assertTrue(files.size() >= 2);
+        var fileIds = files.stream().map(SnippetFile::getId).toList();
         assertTrue(fileIds.contains(snippet1.getId()));
         assertTrue(fileIds.contains(snippet2.getId()));
-        assertTrue(fileIds.contains(snippet3.getId()));
+
+        // Should have at least 1 directory (subdir/)
+        assertTrue(directories.size() >= 1);
+        var dirPaths = directories.stream().map(SnippetFile::getPath).toList();
+        assertTrue(dirPaths.contains("/subdir/"));
     }
 }

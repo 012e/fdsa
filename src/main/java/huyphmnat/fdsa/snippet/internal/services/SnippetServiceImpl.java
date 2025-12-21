@@ -23,7 +23,7 @@ public class SnippetServiceImpl implements SnippetService {
 
     @Transactional
     public Snippet createSnippet(CreateSnippetRequest request) {
-        if (snippetRepository.existsByPath(request.getPath())) {
+        if (snippetRepository.existsByOwnerAndPath(request.getOwner(), request.getPath())) {
             throw new DuplicateSnippetPathException(request.getPath());
         }
         var dto = mapper.map(request, SnippetEntity.class);
@@ -41,9 +41,9 @@ public class SnippetServiceImpl implements SnippetService {
     }
 
     @Transactional
-    public Snippet getSnippetByPath(String path) {
+    public Snippet getSnippetByPath(String owner, String path) {
         var result = snippetRepository
-                .findByPath(path)
+                .findByOwnerAndPath(owner, path)
                 .orElseThrow(SnippetNotFoundException::new);
         return mapper.map(result, Snippet.class);
     }
@@ -57,16 +57,36 @@ public class SnippetServiceImpl implements SnippetService {
     }
 
     @Transactional
+    public java.util.List<Snippet> getSnippetsByOwner(String owner) {
+        return snippetRepository.findByOwner(owner)
+                .stream()
+                .map(entity -> mapper.map(entity, Snippet.class))
+                .toList();
+    }
+
+    @Transactional
     public Snippet updateSnippet(UpdateSnippetRequest request) {
         var entity = snippetRepository
                 .findById(request.getId())
                 .orElseThrow(SnippetNotFoundException::new);
 
-        // Check if path is being changed and if the new path already exists
-        if (request.getPath() != null && !request.getPath().equals(entity.getPath())) {
-            if (snippetRepository.existsByPath(request.getPath())) {
-                throw new DuplicateSnippetPathException(request.getPath());
+        // Track if owner or path is being changed
+        String newOwner = request.getOwner() != null ? request.getOwner() : entity.getOwner();
+        String newPath = request.getPath() != null ? request.getPath() : entity.getPath();
+
+        // Check if owner+path combination is being changed and if it already exists
+        boolean ownerOrPathChanged = !newOwner.equals(entity.getOwner()) || !newPath.equals(entity.getPath());
+        if (ownerOrPathChanged) {
+            if (snippetRepository.existsByOwnerAndPath(newOwner, newPath)) {
+                throw new DuplicateSnippetPathException(newPath);
             }
+        }
+
+        if (request.getOwner() != null) {
+            entity.setOwner(request.getOwner());
+        }
+
+        if (request.getPath() != null) {
             entity.setPath(request.getPath());
         }
 
@@ -90,19 +110,49 @@ public class SnippetServiceImpl implements SnippetService {
     }
 
     @Transactional
-    public java.util.List<SnippetFile> listFilesByPath(String path) {
-        // If path ends with '/', list all files in that directory
-        if (path.endsWith("/")) {
-            return snippetRepository.findByPathStartingWith(path)
-                    .stream()
-                    .map(entity -> mapper.map(entity, SnippetFile.class))
-                    .toList();
-        } else {
-            // If path doesn't end with '/', get the specific file
-            var entity = snippetRepository
-                    .findByPath(path)
-                    .orElseThrow(SnippetNotFoundException::new);
-            return java.util.List.of(mapper.map(entity, SnippetFile.class));
+    public java.util.List<SnippetFile> listFilesByPath(String owner, String path) {
+        // Normalize path to always end with '/' for directory queries
+        String searchPath = path.endsWith("/") ? path : path + "/";
+
+        // Find all snippets that start with this path within the owner's namespace
+        var entities = snippetRepository.findByOwnerAndPathStartingWith(owner, searchPath);
+
+        // Track unique entries (files and directories)
+        var entriesMap = new java.util.LinkedHashMap<String, SnippetFile>();
+
+        for (var entity : entities) {
+            String relativePath = entity.getPath().substring(searchPath.length());
+
+            // Check if this is a direct child or nested
+            int slashIndex = relativePath.indexOf('/');
+
+            if (slashIndex == -1) {
+                // Direct file - add if not already present
+                if (!entriesMap.containsKey(entity.getPath())) {
+                    entriesMap.put(entity.getPath(), SnippetFile.builder()
+                            .id(entity.getId())
+                            .owner(entity.getOwner())
+                            .path(entity.getPath())
+                            .isDirectory(false)
+                            .build());
+                }
+            } else {
+                // Nested path - extract directory name
+                String dirName = relativePath.substring(0, slashIndex);
+                String dirPath = searchPath + dirName + "/";
+
+                // Add directory entry if not already present
+                if (!entriesMap.containsKey(dirPath)) {
+                    entriesMap.put(dirPath, SnippetFile.builder()
+                            .id(null)  // Directories don't have IDs
+                            .owner(owner)
+                            .path(dirPath)
+                            .isDirectory(true)
+                            .build());
+                }
+            }
         }
+
+        return new java.util.ArrayList<>(entriesMap.values());
     }
 }

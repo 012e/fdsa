@@ -1,9 +1,11 @@
 package huyphmnat.fdsa.base;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -11,11 +13,17 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
+import org.springframework.util.FileSystemUtils;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @ExtendWith(SpringExtension.class)
 @ExtendWith(MockitoExtension.class)
+@DirtiesContext
 public class BaseIntegrationTest {
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
@@ -26,10 +34,25 @@ public class BaseIntegrationTest {
             "apache/kafka-native:4.1.1"
     );
 
+    private static Path tempRepoBaseDir;
+
+    @BeforeAll
+    static void initTempRepoBaseDir() throws IOException {
+        tempRepoBaseDir = Files.createTempDirectory("fdsa-repos-");
+    }
+
+    @AfterAll
+    static void cleanupTempRepoBaseDir() throws IOException {
+        if (tempRepoBaseDir != null && Files.exists(tempRepoBaseDir)) {
+            FileSystemUtils.deleteRecursively(tempRepoBaseDir);
+        }
+    }
+
     @DynamicPropertySource
     public static void properties(DynamicPropertyRegistry registry) {
         setupPostgresql(registry);
         setupKafka(registry);
+        setupRepositoryBaseDir(registry);
     }
 
     private static void setupKafka(DynamicPropertyRegistry registry) {
@@ -42,8 +65,7 @@ public class BaseIntegrationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    @BeforeEach
-    public void setup() {
-
+    private static void setupRepositoryBaseDir(DynamicPropertyRegistry registry) {
+        registry.add("repository.base-dir", () -> tempRepoBaseDir.toAbsolutePath().toString());
     }
 }

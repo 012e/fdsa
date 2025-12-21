@@ -11,9 +11,10 @@ import java.util.UUID;
 public interface SnippetService {
     Snippet createSnippet(CreateSnippetRequest request);
     Snippet getSnippet(UUID id);
-    Snippet getSnippetByPath(String path);
+    Snippet getSnippetByPath(String owner, String path);
     List<Snippet> getAllSnippets();
+    List<Snippet> getSnippetsByOwner(String owner);
     Snippet updateSnippet(UpdateSnippetRequest request);
     void deleteSnippet(UUID id);
-    List<SnippetFile> listFilesByPath(String path);
+    List<SnippetFile> listFilesByPath(String owner, String path);
 }

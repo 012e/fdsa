@@ -3,6 +3,7 @@ worker:
 
 # Run all tests with auto-discovery
 test:
+    export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/docker.sock
     uv run pytest -v -s
 
 # Run integration tests only
@@ -15,7 +16,7 @@ test-fast:
 
 # Run specific test file
 test-file FILE:
-    uv run pytest {{FILE}} -v -s
+    uv run pytest {{ FILE }} -v -s
 
 # Run tests with coverage
 test-cov:

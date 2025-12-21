@@ -1,28 +1,85 @@
 type Query {
     snippetById(id: ID!): Snippet!
-    snippetByPath(path: String!): Snippet!
+    snippetByPath(owner: String!, path: String!): Snippet!
     snippets: [Snippet!]!
-    listFilesByPath(path: String!): [SnippetFile!]!
+    snippetsByOwner(owner: String!): [Snippet!]!
+    listFilesByPath(owner: String!, path: String!): [SnippetFile!]!
+
+    # Repository queries
+    repository(identifier: String!): Repository!
+    repositories: [Repository!]!
+    repositoriesByOwner(owner: String!): [Repository!]!
 }
 
 type Mutation {
     createSnippet(snippet: SnippetInput): Snippet!
     updateSnippet(id: ID!, snippet: SnippetInput): Snippet!
     deleteSnippet(id: ID!): Boolean!
+
+    # Repository mutations
+    createRepository(input: RepositoryInput!): Repository!
+
+    # Repository file mutations
+    createRepositoryFolder(input: RepositoryPathChangeInput!): Boolean!
+    deleteRepositoryFolder(input: RepositoryPathChangeInput!): Boolean!
+    addRepositoryFile(input: RepositoryFileChangeInput!): Boolean!
+    updateRepositoryFile(input: RepositoryFileChangeInput!): Boolean!
+    deleteRepositoryFile(input: RepositoryPathChangeInput!): Boolean!
 }
 
 input SnippetInput {
+    owner: String!
     path: String!
     code: String!
 }
 
+# Repository inputs and types
+input RepositoryInput {
+    identifier: String
+    owner: String!
+    name: String!
+    description: String
+}
+
+input RepositoryPathChangeInput {
+    repositoryId: ID!
+    path: String!
+    commitMessage: String!
+}
+
+input RepositoryFileChangeInput {
+    repositoryId: ID!
+    path: String!
+    content: String!
+    commitMessage: String!
+    encoding: RepositoryFileEncoding = TEXT
+}
+
+enum RepositoryFileEncoding {
+    TEXT
+    BASE64
+}
+
 type Snippet {
     id: ID!
+    owner: String!
     path: String!
     code: String!
 }
 
 type SnippetFile {
-    id: ID!
+    id: ID
+    owner: String!
     path: String!
+    isDirectory: Boolean!
+}
+
+# Repository type
+"""Code repository backed by the repository service"""
+type Repository {
+    filesystemPath: String!
+    description: String
+    name: String!
+    owner: String!
+    identifier: String!
 }

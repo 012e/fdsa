@@ -13,6 +13,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class SnippetFile {
     private UUID id;
+    private String owner;
     private String path;
+    private boolean isDirectory;
 }
 

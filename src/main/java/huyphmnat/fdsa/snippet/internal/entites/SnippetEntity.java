@@ -1,9 +1,6 @@
 package huyphmnat.fdsa.snippet.internal.entites;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,14 +11,20 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@Table(name = "snippets")
+@Table(name = "snippets", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"owner", "path"})
+})
 @Entity
 public class SnippetEntity {
     @Id
     @UuidGenerator(algorithm = UuidVersion7Strategy.class)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
+    @NotEmpty()
+    private String owner;
+
+    @Column(nullable = false)
     @NotEmpty()
     private String path;
 
