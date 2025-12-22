@@ -1,6 +1,5 @@
-package huyphmnat.fdsa.snippet.internal.services;
+package huyphmnat.fdsa.shared.events;
 
-import huyphmnat.fdsa.snippet.internal.services.interfaces.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -15,3 +14,4 @@ public class EventServiceImpl implements EventService {
         kafkaTemplate.send(eventName, payload);
     }
 }
+

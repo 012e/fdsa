@@ -1,5 +1,4 @@
-package huyphmnat.fdsa.snippet.internal.services.interfaces;
-
+package huyphmnat.fdsa.shared.events;
 public interface EventService {
     void publish(String eventName, Object payload);
 }

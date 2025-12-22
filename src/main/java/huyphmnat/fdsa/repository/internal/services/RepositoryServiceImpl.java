@@ -3,9 +3,11 @@ package huyphmnat.fdsa.repository.internal.services;
 import huyphmnat.fdsa.repository.dtos.CloneRepositoryRequest;
 import huyphmnat.fdsa.repository.dtos.CreateRepositoryRequest;
 import huyphmnat.fdsa.repository.dtos.Repository;
+import huyphmnat.fdsa.repository.dtos.RepositoryClonedEvent;
 import huyphmnat.fdsa.repository.interfaces.RepositoryService;
 import huyphmnat.fdsa.repository.internal.entites.RepositoryEntity;
 import huyphmnat.fdsa.repository.internal.repositories.RepositoryRepository;
+import huyphmnat.fdsa.shared.events.EventService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     private final RepositoryRepository repositoryRepository;
     private final ModelMapper mapper;
     private final GitInitializer gitInitializer;
+    private final EventService eventService;
 
     @Value("${repository.base-dir:./tmp/repos}")
     private String baseDir;
@@ -118,6 +121,16 @@ public class RepositoryServiceImpl implements RepositoryService {
                 .build();
 
         repositoryRepository.save(entity);
+
+        // Publish repository.cloned event
+        RepositoryClonedEvent event = RepositoryClonedEvent.builder()
+                .id(entity.getId())
+                .identifier(entity.getIdentifier())
+                .sourceUrl(sourceUrl)
+                .filesystemPath(entity.getFilesystemPath())
+                .build();
+        eventService.publish("repository.cloned", event);
+        log.info("Published repository.cloned event for {}", identifier);
 
         return mapper.map(entity, Repository.class);
     }

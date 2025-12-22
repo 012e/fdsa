@@ -6,7 +6,7 @@ import huyphmnat.fdsa.snippet.exceptions.SnippetNotFoundException;
 import huyphmnat.fdsa.snippet.interfaces.SnippetService;
 import huyphmnat.fdsa.snippet.internal.entites.SnippetEntity;
 import huyphmnat.fdsa.snippet.internal.repositories.SnippetRepository;
-import huyphmnat.fdsa.snippet.internal.services.interfaces.EventService;
+import huyphmnat.fdsa.shared.events.EventService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;

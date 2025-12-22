@@ -1,11 +1,11 @@
 package huyphmnat.fdsa.snippet;
 
 import huyphmnat.fdsa.base.BaseIntegrationTest;
+import huyphmnat.fdsa.shared.events.EventService;
 import huyphmnat.fdsa.snippet.dtos.*;
 import huyphmnat.fdsa.snippet.exceptions.DuplicateSnippetPathException;
 import huyphmnat.fdsa.snippet.exceptions.SnippetNotFoundException;
 import huyphmnat.fdsa.snippet.interfaces.SnippetService;
-import huyphmnat.fdsa.snippet.internal.services.interfaces.EventService;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
