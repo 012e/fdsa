@@ -1,5 +1,6 @@
 package huyphmnat.fdsa.repository.internal.services;
 
+import huyphmnat.fdsa.repository.dtos.CloneRepositoryRequest;
 import huyphmnat.fdsa.repository.dtos.CreateRepositoryRequest;
 import huyphmnat.fdsa.repository.dtos.Repository;
 import huyphmnat.fdsa.repository.interfaces.RepositoryService;
@@ -7,6 +8,9 @@ import huyphmnat.fdsa.repository.internal.entites.RepositoryEntity;
 import huyphmnat.fdsa.repository.internal.repositories.RepositoryRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RepositoryServiceImpl implements RepositoryService {
 
     private final RepositoryRepository repositoryRepository;
@@ -49,6 +54,59 @@ public class RepositoryServiceImpl implements RepositoryService {
         Path repoPath = basePath.resolve(identifier);
 
         gitInitializer.initRepository(repoPath);
+
+        RepositoryEntity entity = RepositoryEntity.builder()
+                .id(UUID.randomUUID())
+                .identifier(identifier)
+                .description(request.getDescription())
+                .filesystemPath(repoPath.toString())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        repositoryRepository.save(entity);
+
+        return mapper.map(entity, Repository.class);
+    }
+
+    @Override
+    @Transactional
+    public Repository cloneRepository(CloneRepositoryRequest request) {
+        String sourceUrl = request.getSourceUrl();
+        String identifier = request.getIdentifier();
+
+        if (sourceUrl == null || sourceUrl.isBlank()) {
+            throw new IllegalArgumentException("Source URL must be provided");
+        }
+
+        if (identifier == null || identifier.isBlank()) {
+            throw new IllegalArgumentException("Repository identifier must be provided");
+        }
+
+        // Validate GitHub-style identifier format (username/repository)
+        if (!identifier.matches("^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$")) {
+            throw new IllegalArgumentException("Repository identifier must be in format 'username/repository' (e.g., 'jk/human-helper-source-code')");
+        }
+
+        if (repositoryRepository.existsByIdentifier(identifier)) {
+            throw new IllegalStateException("Repository with identifier '" + identifier + "' already exists");
+        }
+
+        Path basePath = Paths.get(baseDir).toAbsolutePath();
+        Path repoPath = basePath.resolve(identifier);
+
+        try {
+            log.info("Cloning repository from {} to {}", sourceUrl, repoPath);
+            Git.cloneRepository()
+                    .setURI(sourceUrl)
+                    .setDirectory(repoPath.toFile())
+                    .call()
+                    .close();
+            log.info("Successfully cloned repository from {}", sourceUrl);
+        } catch (GitAPIException e) {
+            log.error("Failed to clone repository from {} to {}", sourceUrl, repoPath, e);
+            throw new RuntimeException("Failed to clone repository from " + sourceUrl, e);
+        }
 
         RepositoryEntity entity = RepositoryEntity.builder()
                 .id(UUID.randomUUID())

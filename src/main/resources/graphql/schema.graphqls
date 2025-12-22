@@ -18,6 +18,7 @@ type Mutation {
 
     # Repository mutations
     createRepository(input: RepositoryInput!): Repository!
+    cloneRepository(input: CloneRepositoryInput!): Repository!
 
     # Repository file mutations
     createRepositoryFolder(input: RepositoryPathChangeInput!): Boolean!
@@ -35,6 +36,12 @@ input SnippetInput {
 
 # Repository inputs and types
 input RepositoryInput {
+    identifier: String!
+    description: String
+}
+
+input CloneRepositoryInput {
+    sourceUrl: String!
     identifier: String!
     description: String
 }

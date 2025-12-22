@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import huyphmnat.fdsa.repository.interfaces.RepositoryService;
 import huyphmnat.fdsa.repository.dtos.Repository;
 import huyphmnat.fdsa.repository.dtos.CreateRepositoryRequest;
+import huyphmnat.fdsa.repository.dtos.CloneRepositoryRequest;
 
 @Controller
 @Slf4j
@@ -47,5 +48,17 @@ public class RepositoryController {
         return repositoryService.createRepository(request);
     }
 
+    @MutationMapping
+    public Repository cloneRepository(@Argument CloneRepositoryInput input) {
+        log.info("Cloning repository from {} with identifier: {}", input.sourceUrl(), input.identifier());
+        CloneRepositoryRequest request = CloneRepositoryRequest.builder()
+                .sourceUrl(input.sourceUrl())
+                .identifier(input.identifier())
+                .description(input.description())
+                .build();
+        return repositoryService.cloneRepository(request);
+    }
+
     public record RepositoryInput(String identifier, String description) {}
+    public record CloneRepositoryInput(String sourceUrl, String identifier, String description) {}
 }
