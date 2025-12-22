@@ -4,7 +4,7 @@ from typing import Any
 
 KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
 KAFKA_GROUP_ID = os.getenv("KAFKA_GROUP_ID", "snippet-ingestion-worker")
-KAFKA_TOPICS = ["snippet.created", "snippet.updated"]
+KAFKA_TOPICS = ["snippet.created", "snippet.updated", "repository.cloned"]
 
 
 # Use a JSON deserializer by default so consumers receive dicts

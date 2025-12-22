@@ -6,35 +6,34 @@ from temporalio.client import Client
 
 from config.kafka import KAFKA_CONSUMER_CONFIG, KAFKA_TOPICS
 from config.temporal import TEMPORAL_HOST, TEMPORAL_NAMESPACE, TEMPORAL_TASK_QUEUE
-from workflows.snippet_ingestion import SnippetIngestionWorkflow
+from workflows.repository_ingestion import RepositoryIngestionWorkflow
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-async def start_workflow(temporal_client: Client, snippet_id: str, code: str):
+async def start_repository_workflow(temporal_client: Client, owner: str):
     """
-    Start a snippet ingestion workflow.
+    Start a repository ingestion workflow.
 
     Args:
         temporal_client: Temporal client instance
-        snippet_id: Unique identifier for the snippet
-        code: Source code to process
+        owner: Repository owner/identifier
     """
     try:
-        workflow_id = f"snippet-ingestion-{snippet_id}"
+        workflow_id = f"repository-ingestion-{owner}"
 
         handle = await temporal_client.start_workflow(
-            SnippetIngestionWorkflow.run,
-            args=[snippet_id, code],
+            RepositoryIngestionWorkflow.run,
+            args=[owner],
             id=workflow_id,
             task_queue=TEMPORAL_TASK_QUEUE,
         )
 
-        logger.info(f"Started workflow {workflow_id} for snippet {snippet_id}")
+        logger.info(f"Started workflow {workflow_id} for repository {owner}")
         return handle
     except Exception as e:
-        logger.error(f"Error starting workflow for snippet {snippet_id}: {e}")
+        logger.error(f"Error starting workflow for repository {owner}: {e}")
         raise
 
 
@@ -65,38 +64,18 @@ async def consume_events():
                     try:
                         # message.value is deserialized by the consumer's value_deserializer
                         event_data = message.value
-                        # event_data should be a dict with 'id' and 'code'
-                        snippet_id = (
-                            event_data.get("id")
-                            if isinstance(event_data, dict)
-                            else None
-                        )
-                        code = (
-                            event_data.get("code")
-                            if isinstance(event_data, dict)
-                            else None
-                        )
-
-                        if not snippet_id or not code:
-                            logger.warning(f"Invalid event data: {event_data}")
-                            continue
-
                         topic = getattr(message, "topic", None)
-                        if topic == "snippet.created":
-                            logger.info(
-                                f"Received snippet.created for snippet {snippet_id}"
-                            )
-                        elif topic == "snippet.updated":
-                            logger.info(
-                                f"Received snippet.updated for snippet {snippet_id}"
-                            )
-                        else:
-                            logger.info(
-                                f"Received message on topic {topic} for snippet {snippet_id}"
-                            )
 
-                        # Start (or restart/reindex) the workflow for this snippet
-                        await start_workflow(temporal_client, str(snippet_id), code)
+                        if topic == "repository.cloned":
+                            identifier = event_data.get("identifier") or event_data.get("id")
+                            if identifier:
+                                logger.info(f"Received repository.cloned for {identifier}")
+                                await start_repository_workflow(temporal_client, identifier)
+                            else:
+                                logger.warning(f"Invalid repository.cloned data: {event_data}")
+                            continue
+                        
+                        logger.info(f"Ignoring topic {topic}")
 
                     except Exception as e:
                         logger.error(f"Error processing message: {e}")
