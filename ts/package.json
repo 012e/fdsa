@@ -1,0 +1,17 @@
+{
+  "name": "ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "pnpm dlx concurrently --names=frontend,consumer,runner --prefix-colors=blue 'pnpm --filter frontend dev' 'cd ./workers/consumer && pnpm start' 'cd ./workers/runner && pnpm start'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.13.1",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

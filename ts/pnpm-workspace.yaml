@@ -1,0 +1,9 @@
+packages:
+  - frontend
+  - workers/*
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - '@temporalio/core-bridge'
+  - esbuild
+  - protobufjs
