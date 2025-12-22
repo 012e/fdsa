@@ -11,8 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateRepositoryRequest {
     private String identifier;
-    private String owner;
-    private String name;
     private String description;
 }
 

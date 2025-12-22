@@ -33,11 +33,9 @@ public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
     @Test
     public void testAddUpdateDeleteFileAndFoldersWithGitCommits() throws Exception {
         // 1. Create a repository
-        String identifier = "repo-file-ops-" + UUID.randomUUID();
+        String identifier = "file-ops-user/repo-file-ops-" + UUID.randomUUID();
         Repository repo = repositoryService.createRepository(CreateRepositoryRequest.builder()
                 .identifier(identifier)
-                .owner("file-ops-user")
-                .name("File Ops Repo")
                 .description("Repository for file operations integration test")
                 .build());
 

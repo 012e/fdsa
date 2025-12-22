@@ -39,15 +39,13 @@ public class RepositoryController {
 
     @MutationMapping
     public Repository createRepository(@Argument RepositoryInput input) {
-        log.info("Creating repository with identifier: {}, owner: {}, name: {}", input.identifier(), input.owner(), input.name());
+        log.info("Creating repository with identifier: {}", input.identifier());
         CreateRepositoryRequest request = CreateRepositoryRequest.builder()
                 .identifier(input.identifier())
-                .owner(input.owner())
-                .name(input.name())
                 .description(input.description())
                 .build();
         return repositoryService.createRepository(request);
     }
 
-    public record RepositoryInput(String identifier, String owner, String name, String description) {}
+    public record RepositoryInput(String identifier, String description) {}
 }

@@ -12,7 +12,5 @@ import lombok.AllArgsConstructor;
 public class Repository {
     private String filesystemPath;
     private String description;
-    private String name;
-    private String owner;
     private String identifier;
 }

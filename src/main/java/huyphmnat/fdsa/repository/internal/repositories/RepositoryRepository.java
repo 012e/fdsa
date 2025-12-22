@@ -12,6 +12,6 @@ public interface RepositoryRepository extends JpaRepository<RepositoryEntity, UU
 
     Optional<RepositoryEntity> findByIdentifier(String identifier);
 
-    List<RepositoryEntity> findByOwner(String owner);
+    List<RepositoryEntity> findByIdentifierStartingWith(String prefix);
 }
 

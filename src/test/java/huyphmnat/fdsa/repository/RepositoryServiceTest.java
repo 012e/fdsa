@@ -22,19 +22,15 @@ public class RepositoryServiceTest extends BaseIntegrationTest {
 
     @Test
     public void testCreateRepository_CreatesGitRepoAndPersists() throws Exception {
-        String identifier = "test-repo-1";
+        String identifier = "testuser/test-repo-1";
 
         Repository repo = repositoryService.createRepository(CreateRepositoryRequest.builder()
                 .identifier(identifier)
-                .owner("testuser")
-                .name("Test Repo")
                 .description("A test repository")
                 .build());
 
         assertNotNull(repo);
         assertEquals(identifier, repo.getIdentifier());
-        assertEquals("testuser", repo.getOwner());
-        assertEquals("Test Repo", repo.getName());
         assertNotNull(repo.getFilesystemPath());
 
         Path repoPath = Paths.get(repo.getFilesystemPath());
@@ -54,19 +50,15 @@ public class RepositoryServiceTest extends BaseIntegrationTest {
 
     @Test
     public void testCreateRepository_DuplicateIdentifier() {
-        String identifier = "duplicate-repo";
+        String identifier = "user1/duplicate-repo";
 
         repositoryService.createRepository(CreateRepositoryRequest.builder()
                 .identifier(identifier)
-                .owner("user1")
-                .name("Repo 1")
                 .build());
 
         assertThrows(IllegalStateException.class, () -> {
             repositoryService.createRepository(CreateRepositoryRequest.builder()
                     .identifier(identifier)
-                    .owner("user2")
-                    .name("Repo 2")
                     .build());
         });
     }
@@ -74,21 +66,15 @@ public class RepositoryServiceTest extends BaseIntegrationTest {
     @Test
     public void testListRepositoriesByOwner() {
         repositoryService.createRepository(CreateRepositoryRequest.builder()
-                .identifier("owner1-repo1")
-                .owner("owner1")
-                .name("Repo 1")
+                .identifier("owner1/repo1")
                 .build());
 
         repositoryService.createRepository(CreateRepositoryRequest.builder()
-                .identifier("owner1-repo2")
-                .owner("owner1")
-                .name("Repo 2")
+                .identifier("owner1/repo2")
                 .build());
 
         repositoryService.createRepository(CreateRepositoryRequest.builder()
-                .identifier("owner2-repo1")
-                .owner("owner2")
-                .name("Repo 3")
+                .identifier("owner2/repo1")
                 .build());
 
         var owner1Repos = repositoryService.listRepositoriesByOwner("owner1");

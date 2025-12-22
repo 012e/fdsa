@@ -36,6 +36,11 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new IllegalArgumentException("Repository identifier must be provided");
         }
 
+        // Validate GitHub-style identifier format (username/repository)
+        if (!identifier.matches("^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$")) {
+            throw new IllegalArgumentException("Repository identifier must be in format 'username/repository' (e.g., 'jk/human-helper-source-code')");
+        }
+
         if (repositoryRepository.existsByIdentifier(identifier)) {
             throw new IllegalStateException("Repository with identifier '" + identifier + "' already exists");
         }
@@ -48,8 +53,6 @@ public class RepositoryServiceImpl implements RepositoryService {
         RepositoryEntity entity = RepositoryEntity.builder()
                 .id(UUID.randomUUID())
                 .identifier(identifier)
-                .owner(request.getOwner())
-                .name(request.getName())
                 .description(request.getDescription())
                 .filesystemPath(repoPath.toString())
                 .createdAt(Instant.now())
@@ -81,7 +84,8 @@ public class RepositoryServiceImpl implements RepositoryService {
     @Override
     @Transactional
     public List<Repository> listRepositoriesByOwner(String owner) {
-        return repositoryRepository.findByOwner(owner)
+        // Filter repositories by identifier prefix "owner/"
+        return repositoryRepository.findByIdentifierStartingWith(owner + "/")
                 .stream()
                 .map(entity -> mapper.map(entity, Repository.class))
                 .toList();

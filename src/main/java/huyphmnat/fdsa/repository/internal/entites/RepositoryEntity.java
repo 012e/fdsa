@@ -26,11 +26,6 @@ public class RepositoryEntity {
     @Column(nullable = false, unique = true)
     private String identifier;
 
-    @Column(nullable = false)
-    private String owner;
-
-    @Column(nullable = false)
-    private String name;
 
     @Column
     private String description;

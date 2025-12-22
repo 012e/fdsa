@@ -35,9 +35,7 @@ input SnippetInput {
 
 # Repository inputs and types
 input RepositoryInput {
-    identifier: String
-    owner: String!
-    name: String!
+    identifier: String!
     description: String
 }
 
@@ -79,7 +77,5 @@ type SnippetFile {
 type Repository {
     filesystemPath: String!
     description: String
-    name: String!
-    owner: String!
     identifier: String!
 }
