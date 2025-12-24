@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { graphqlClient } from '@/lib/graphql-client'
+import { execute } from '@/graphql/execute'
 import {
   GET_REPOSITORIES,
   CREATE_REPOSITORY,
@@ -43,7 +43,7 @@ function RepositoriesPage() {
   const { data: repositories, isLoading, error } = useQuery({
     queryKey: ['repositories'],
     queryFn: async () => {
-      const data = await graphqlClient.request(GET_REPOSITORIES)
+      const data = await execute(GET_REPOSITORIES)
       return data.repositories as Repository[]
     },
   })
@@ -51,7 +51,7 @@ function RepositoriesPage() {
   // Create repository mutation
   const createMutation = useMutation({
     mutationFn: async (input: { identifier: string; description?: string }) => {
-      return await graphqlClient.request(CREATE_REPOSITORY, { input })
+      return await execute(CREATE_REPOSITORY, { input })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repositories'] })
@@ -64,7 +64,7 @@ function RepositoriesPage() {
   // Clone repository mutation
   const cloneMutation = useMutation({
     mutationFn: async (input: { identifier: string; sourceUrl: string; description?: string }) => {
-      return await graphqlClient.request(CLONE_REPOSITORY, { input })
+      return await execute(CLONE_REPOSITORY, { input })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['repositories'] })

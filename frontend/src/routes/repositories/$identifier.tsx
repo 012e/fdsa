@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { graphqlClient } from '@/lib/graphql-client'
+import { execute } from '@/graphql/execute'
 import {
   GET_REPOSITORY,
   ADD_REPOSITORY_FILE,
@@ -60,7 +60,7 @@ function RepositoryDetailPage() {
   const { data: repository, isLoading, error } = useQuery({
     queryKey: ['repository', identifier],
     queryFn: async () => {
-      const data = await graphqlClient.request(GET_REPOSITORY, { identifier })
+      const data = await execute(GET_REPOSITORY, { identifier })
       return data.repository as Repository
     },
   })
@@ -73,7 +73,7 @@ function RepositoryDetailPage() {
       content: string
       commitMessage: string
     }) => {
-      return await graphqlClient.request(ADD_REPOSITORY_FILE, { input })
+      return await execute(ADD_REPOSITORY_FILE, { input })
     },
     onSuccess: () => {
       setAddFileDialogOpen(false)
@@ -91,7 +91,7 @@ function RepositoryDetailPage() {
       content: string
       commitMessage: string
     }) => {
-      return await graphqlClient.request(UPDATE_REPOSITORY_FILE, { input })
+      return await execute(UPDATE_REPOSITORY_FILE, { input })
     },
     onSuccess: () => {
       setEditFileDialogOpen(false)
@@ -108,7 +108,7 @@ function RepositoryDetailPage() {
       path: string
       commitMessage: string
     }) => {
-      return await graphqlClient.request(DELETE_REPOSITORY_FILE, { input })
+      return await execute(DELETE_REPOSITORY_FILE, { input })
     },
   })
 
@@ -119,7 +119,7 @@ function RepositoryDetailPage() {
       path: string
       commitMessage: string
     }) => {
-      return await graphqlClient.request(CREATE_REPOSITORY_FOLDER, { input })
+      return await execute(CREATE_REPOSITORY_FOLDER, { input })
     },
     onSuccess: () => {
       setAddFolderDialogOpen(false)
@@ -135,7 +135,7 @@ function RepositoryDetailPage() {
       path: string
       commitMessage: string
     }) => {
-      return await graphqlClient.request(DELETE_REPOSITORY_FOLDER, { input })
+      return await execute(DELETE_REPOSITORY_FOLDER, { input })
     },
   })
 
