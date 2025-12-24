@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
-import { queryApi } from '@/lib/api'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { repositoryApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -21,59 +21,73 @@ function RepositoriesPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false)
 
-  // Form states
-  const [newRepoIdentifier, setNewRepoIdentifier] = useState('')
+  // Form states - updated to use owner/repo format
+  const [newRepoOwner, setNewRepoOwner] = useState('')
+  const [newRepoName, setNewRepoName] = useState('')
   const [newRepoDescription, setNewRepoDescription] = useState('')
-  const [cloneRepoIdentifier, setCloneRepoIdentifier] = useState('')
+  const [cloneRepoOwner, setCloneRepoOwner] = useState('')
+  const [cloneRepoName, setCloneRepoName] = useState('')
   const [cloneRepoSourceUrl, setCloneRepoSourceUrl] = useState('')
   const [cloneRepoDescription, setCloneRepoDescription] = useState('')
 
-  // Query repositories using openapi-react-query
-  const { data: repositories, isLoading, error } = queryApi.useQuery('get', '/api/repositories')
+  // Query repositories using TanStack Query with repositoryApi
+  const { data: repositories, isLoading, error } = useQuery({
+    queryKey: ['repositories'],
+    queryFn: async () => {
+      const response = await repositoryApi.getAllRepositories()
+      return (response.data as unknown) as any[] // Cast to array since API return type is not properly defined
+    },
+  })
 
   // Create repository mutation
-  const createMutation = queryApi.useMutation('post', '/api/repositories', {
+  const createMutation = useMutation({
+    mutationFn: async (data: { identifier: string; description?: string }) => {
+      const response = await repositoryApi.createRepository(data)
+      return response.data
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['get', '/api/repositories'] })
+      queryClient.invalidateQueries({ queryKey: ['repositories'] })
       setCreateDialogOpen(false)
-      setNewRepoIdentifier('')
+      setNewRepoOwner('')
+      setNewRepoName('')
       setNewRepoDescription('')
     },
   })
 
   // Clone repository mutation
-  const cloneMutation = queryApi.useMutation('post', '/api/repositories/clone', {
+  const cloneMutation = useMutation({
+    mutationFn: async (data: { identifier: string; sourceUrl: string; description?: string }) => {
+      const response = await repositoryApi.cloneRepository(data)
+      return response.data
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['get', '/api/repositories'] })
+      queryClient.invalidateQueries({ queryKey: ['repositories'] })
       setCloneDialogOpen(false)
-      setCloneRepoIdentifier('')
+      setCloneRepoOwner('')
+      setCloneRepoName('')
       setCloneRepoSourceUrl('')
       setCloneRepoDescription('')
     },
   })
 
   const handleCreateRepository = () => {
-    if (!newRepoIdentifier.trim()) return
+    if (!newRepoOwner.trim() || !newRepoName.trim()) return
     createMutation.mutate({
-      body: {
-        identifier: newRepoIdentifier,
-        description: newRepoDescription || undefined,
-      },
+      identifier: `${newRepoOwner}/${newRepoName}`,
+      description: newRepoDescription || undefined,
     })
   }
 
   const handleCloneRepository = () => {
-    if (!cloneRepoIdentifier.trim() || !cloneRepoSourceUrl.trim()) return
+    if (!cloneRepoOwner.trim() || !cloneRepoName.trim() || !cloneRepoSourceUrl.trim()) return
     cloneMutation.mutate({
-      body: {
-        identifier: cloneRepoIdentifier,
-        sourceUrl: cloneRepoSourceUrl,
-        description: cloneRepoDescription || undefined,
-      },
+      identifier: `${cloneRepoOwner}/${cloneRepoName}`,
+      sourceUrl: cloneRepoSourceUrl,
+      description: cloneRepoDescription || undefined,
     })
   }
 
-  const filteredRepositories = repositories?.filter((repo) =>
+  const filteredRepositories = repositories?.filter((repo: any) =>
     repo.identifier?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     repo.description?.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -106,12 +120,21 @@ function RepositoriesPage() {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="clone-identifier">Repository Name</Label>
+                    <Label htmlFor="clone-owner">Repository Owner</Label>
                     <Input
-                      id="clone-identifier"
+                      id="clone-owner"
+                      placeholder="username"
+                      value={cloneRepoOwner}
+                      onChange={(e) => setCloneRepoOwner(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="clone-name">Repository Name</Label>
+                    <Input
+                      id="clone-name"
                       placeholder="my-cloned-repo"
-                      value={cloneRepoIdentifier}
-                      onChange={(e) => setCloneRepoIdentifier(e.target.value)}
+                      value={cloneRepoName}
+                      onChange={(e) => setCloneRepoName(e.target.value)}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -143,7 +166,7 @@ function RepositoriesPage() {
                   </Button>
                   <Button
                     onClick={handleCloneRepository}
-                    disabled={!cloneRepoIdentifier.trim() || !cloneRepoSourceUrl.trim() || cloneMutation.isPending}
+                    disabled={!cloneRepoOwner.trim() || !cloneRepoName.trim() || !cloneRepoSourceUrl.trim() || cloneMutation.isPending}
                   >
                     {cloneMutation.isPending ? 'Cloning...' : 'Clone Repository'}
                   </Button>
@@ -167,12 +190,21 @@ function RepositoriesPage() {
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="identifier">Repository Name</Label>
+                    <Label htmlFor="owner">Repository Owner</Label>
                     <Input
-                      id="identifier"
+                      id="owner"
+                      placeholder="username"
+                      value={newRepoOwner}
+                      onChange={(e) => setNewRepoOwner(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Repository Name</Label>
+                    <Input
+                      id="name"
                       placeholder="my-awesome-project"
-                      value={newRepoIdentifier}
-                      onChange={(e) => setNewRepoIdentifier(e.target.value)}
+                      value={newRepoName}
+                      onChange={(e) => setNewRepoName(e.target.value)}
                     />
                   </div>
                   <div className="grid gap-2">
@@ -195,7 +227,7 @@ function RepositoriesPage() {
                   </Button>
                   <Button
                     onClick={handleCreateRepository}
-                    disabled={!newRepoIdentifier.trim() || createMutation.isPending}
+                    disabled={!newRepoOwner.trim() || !newRepoName.trim() || createMutation.isPending}
                   >
                     {createMutation.isPending ? 'Creating...' : 'Create Repository'}
                   </Button>
@@ -264,38 +296,43 @@ function RepositoriesPage() {
               </Card>
             ) : (
               <div className="grid gap-4">
-                {filteredRepositories.map((repo) => (
-                  <Link
-                    key={repo.identifier}
-                    to="/repositories/$identifier"
-                    params={{ identifier: repo.identifier! }}
-                  >
-                    <Card className="hover:border-primary transition-colors cursor-pointer">
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="flex items-center gap-2 mb-2">
-                              <GitBranch className="w-5 h-5 text-muted-foreground" />
-                              <span className="text-primary hover:underline">
-                                {repo.identifier}
-                              </span>
-                            </CardTitle>
-                            <CardDescription className="mb-3">
-                              {repo.description || 'No description provided'}
-                            </CardDescription>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Folder className="w-4 h-4" />
-                              <code className="text-xs bg-muted px-2 py-1 rounded">
-                                {repo.filesystemPath}
-                              </code>
+                {filteredRepositories.map((repo: any) => {
+                  // Parse identifier as owner/repo
+                  const [owner, repoName] = repo.identifier?.split('/') || ['', '']
+                  
+                  return (
+                    <Link
+                      key={repo.identifier}
+                      to="/repositories/$owner/$repo"
+                      params={{ owner, repo: repoName }}
+                    >
+                      <Card className="hover:border-primary transition-colors cursor-pointer">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <CardTitle className="flex items-center gap-2 mb-2">
+                                <GitBranch className="w-5 h-5 text-muted-foreground" />
+                                <span className="text-primary hover:underline">
+                                  {repo.identifier}
+                                </span>
+                              </CardTitle>
+                              <CardDescription className="mb-3">
+                                {repo.description || 'No description provided'}
+                              </CardDescription>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Folder className="w-4 h-4" />
+                                <code className="text-xs bg-muted px-2 py-1 rounded">
+                                  {repo.filesystemPath}
+                                </code>
+                              </div>
                             </div>
+                            <Badge variant="outline">Repository</Badge>
                           </div>
-                          <Badge variant="outline">Repository</Badge>
-                        </div>
-                      </CardHeader>
-                    </Card>
-                  </Link>
-                ))}
+                        </CardHeader>
+                      </Card>
+                    </Link>
+                  )
+                })}
               </div>
             )}
           </>

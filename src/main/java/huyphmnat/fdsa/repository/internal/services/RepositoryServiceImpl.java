@@ -72,6 +72,13 @@ public class RepositoryServiceImpl implements RepositoryService {
         return mapper.map(entity, Repository.class);
     }
 
+    private static String trimSlashes(String input) {
+        if (input == null) return null;
+        return input
+                .replaceAll("^/+", "")
+                .replaceAll("/+$", "");
+    }
+
     @Override
     @Transactional
     public Repository cloneRepository(CloneRepositoryRequest request) {
@@ -113,7 +120,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
         RepositoryEntity entity = RepositoryEntity.builder()
                 .id(UUID.randomUUID())
-                .identifier(identifier)
+                .identifier(trimSlashes(identifier))
                 .description(request.getDescription())
                 .filesystemPath(repoPath.toString())
                 .createdAt(Instant.now())
@@ -138,6 +145,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     @Override
     @Transactional
     public Repository getRepository(String identifier) {
+        identifier = trimSlashes(identifier);
         var entity = repositoryRepository.findByIdentifier(identifier)
                 .orElseThrow(() -> new RuntimeException("Repository not found"));
         return mapper.map(entity, Repository.class);

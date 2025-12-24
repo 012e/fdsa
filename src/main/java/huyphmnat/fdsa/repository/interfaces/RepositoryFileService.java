@@ -1,5 +1,8 @@
 package huyphmnat.fdsa.repository.interfaces;
 
+import huyphmnat.fdsa.repository.dtos.DirectoryContent;
+import huyphmnat.fdsa.repository.dtos.FileContent;
+
 import java.util.UUID;
 
 public interface RepositoryFileService {
@@ -12,6 +15,10 @@ public interface RepositoryFileService {
     void updateFile(UUID repositoryId, String path, byte[] content, String commitMessage);
 
     void addFile(UUID repositoryId, String path, byte[] content, String commitMessage);
+
+    DirectoryContent listDirectory(UUID repositoryId, String path);
+
+    FileContent readFile(UUID repositoryId, String path);
 }
 
 

@@ -11,8 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RepositoriesIndexRouteImport } from './routes/repositories/index'
-import { Route as RepositoriesIdentifierRouteImport } from './routes/repositories/$identifier'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
+import { Route as RepositoriesOwnerRepoRouteImport } from './routes/repositories/$owner/$repo'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
 import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
@@ -32,14 +32,14 @@ const RepositoriesIndexRoute = RepositoriesIndexRouteImport.update({
   path: '/repositories/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RepositoriesIdentifierRoute = RepositoriesIdentifierRouteImport.update({
-  id: '/repositories/$identifier',
-  path: '/repositories/$identifier',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
   id: '/demo/tanstack-query',
   path: '/demo/tanstack-query',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RepositoriesOwnerRepoRoute = RepositoriesOwnerRepoRouteImport.update({
+  id: '/repositories/$owner/$repo',
+  path: '/repositories/$owner/$repo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
@@ -86,12 +86,12 @@ const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
-  '/repositories/$identifier': typeof RepositoriesIdentifierRoute
   '/repositories': typeof RepositoriesIndexRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
+  '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
@@ -100,12 +100,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
-  '/repositories/$identifier': typeof RepositoriesIdentifierRoute
   '/repositories': typeof RepositoriesIndexRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
+  '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
@@ -115,12 +115,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
-  '/repositories/$identifier': typeof RepositoriesIdentifierRoute
   '/repositories/': typeof RepositoriesIndexRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
+  '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
@@ -131,12 +131,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/demo/tanstack-query'
-    | '/repositories/$identifier'
     | '/repositories'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
+    | '/repositories/$owner/$repo'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
     | '/demo/start/ssr/spa-mode'
@@ -145,12 +145,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/demo/tanstack-query'
-    | '/repositories/$identifier'
     | '/repositories'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
+    | '/repositories/$owner/$repo'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
     | '/demo/start/ssr/spa-mode'
@@ -159,12 +159,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/demo/tanstack-query'
-    | '/repositories/$identifier'
     | '/repositories/'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
+    | '/repositories/$owner/$repo'
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
     | '/demo/start/ssr/spa-mode'
@@ -174,12 +174,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
-  RepositoriesIdentifierRoute: typeof RepositoriesIdentifierRoute
   RepositoriesIndexRoute: typeof RepositoriesIndexRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
   DemoApiTqTodosRoute: typeof DemoApiTqTodosRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
+  RepositoriesOwnerRepoRoute: typeof RepositoriesOwnerRepoRoute
   DemoStartSsrDataOnlyRoute: typeof DemoStartSsrDataOnlyRoute
   DemoStartSsrFullSsrRoute: typeof DemoStartSsrFullSsrRoute
   DemoStartSsrSpaModeRoute: typeof DemoStartSsrSpaModeRoute
@@ -202,18 +202,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RepositoriesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/repositories/$identifier': {
-      id: '/repositories/$identifier'
-      path: '/repositories/$identifier'
-      fullPath: '/repositories/$identifier'
-      preLoaderRoute: typeof RepositoriesIdentifierRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/demo/tanstack-query': {
       id: '/demo/tanstack-query'
       path: '/demo/tanstack-query'
       fullPath: '/demo/tanstack-query'
       preLoaderRoute: typeof DemoTanstackQueryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/repositories/$owner/$repo': {
+      id: '/repositories/$owner/$repo'
+      path: '/repositories/$owner/$repo'
+      fullPath: '/repositories/$owner/$repo'
+      preLoaderRoute: typeof RepositoriesOwnerRepoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/start/server-funcs': {
@@ -278,12 +278,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
-  RepositoriesIdentifierRoute: RepositoriesIdentifierRoute,
   RepositoriesIndexRoute: RepositoriesIndexRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
   DemoApiTqTodosRoute: DemoApiTqTodosRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
+  RepositoriesOwnerRepoRoute: RepositoriesOwnerRepoRoute,
   DemoStartSsrDataOnlyRoute: DemoStartSsrDataOnlyRoute,
   DemoStartSsrFullSsrRoute: DemoStartSsrFullSsrRoute,
   DemoStartSsrSpaModeRoute: DemoStartSsrSpaModeRoute,
