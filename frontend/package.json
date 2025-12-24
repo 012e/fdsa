@@ -3,10 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently --names=frontend,codegen --prefix-colors=blue,red 'vite dev --port 3000' 'pnpm exec graphql-codegen --config codegen.ts --watch'",
+    "dev": "concurrently --names=frontend--prefix-colors=blue 'vite dev --port 3000'",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "openapi": "curl http://localhost:8080/v3/api-docs > schema.json && pnpm dlx openapi-typescript schema.json -o src/lib/generated/api-schema.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
@@ -25,8 +26,11 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "graphql-request": "^7.4.0",
+    "jotai": "^2.16.0",
     "lucide-react": "^0.561.0",
     "nitro": "latest",
+    "openapi-fetch": "^0.15.0",
+    "openapi-react-query": "^0.5.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tailwind-merge": "^3.4.0",

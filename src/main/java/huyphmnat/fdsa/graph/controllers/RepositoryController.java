@@ -2,10 +2,8 @@ package huyphmnat.fdsa.graph.controllers;
 
 import java.util.List;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.graphql.data.method.annotation.MutationMapping;
-import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import huyphmnat.fdsa.repository.interfaces.RepositoryService;
@@ -13,50 +11,51 @@ import huyphmnat.fdsa.repository.dtos.Repository;
 import huyphmnat.fdsa.repository.dtos.CreateRepositoryRequest;
 import huyphmnat.fdsa.repository.dtos.CloneRepositoryRequest;
 
-@Controller
+@RestController
+@RequestMapping("/api/repositories")
 @Slf4j
 @RequiredArgsConstructor
 public class RepositoryController {
 
     private final RepositoryService repositoryService;
 
-    @QueryMapping
-    public Repository repository(@Argument String identifier) {
+    @GetMapping("/{identifier}")
+    public ResponseEntity<Repository> getRepository(@PathVariable String identifier) {
         log.info("Getting repository with identifier: {}", identifier);
-        return repositoryService.getRepository(identifier);
+        return ResponseEntity.ok(repositoryService.getRepository(identifier));
     }
 
-    @QueryMapping
-    public List<Repository> repositories() {
+    @GetMapping
+    public ResponseEntity<List<Repository>> getAllRepositories() {
         log.info("Listing all repositories");
-        return repositoryService.listRepositories();
+        return ResponseEntity.ok(repositoryService.listRepositories());
     }
 
-    @QueryMapping
-    public List<Repository> repositoriesByOwner(@Argument String owner) {
+    @GetMapping("/by-owner/{owner}")
+    public ResponseEntity<List<Repository>> getRepositoriesByOwner(@PathVariable String owner) {
         log.info("Listing repositories for owner: {}", owner);
-        return repositoryService.listRepositoriesByOwner(owner);
+        return ResponseEntity.ok(repositoryService.listRepositoriesByOwner(owner));
     }
 
-    @MutationMapping
-    public Repository createRepository(@Argument RepositoryInput input) {
+    @PostMapping
+    public ResponseEntity<Repository> createRepository(@RequestBody RepositoryInput input) {
         log.info("Creating repository with identifier: {}", input.identifier());
         CreateRepositoryRequest request = CreateRepositoryRequest.builder()
                 .identifier(input.identifier())
                 .description(input.description())
                 .build();
-        return repositoryService.createRepository(request);
+        return ResponseEntity.ok(repositoryService.createRepository(request));
     }
 
-    @MutationMapping
-    public Repository cloneRepository(@Argument CloneRepositoryInput input) {
+    @PostMapping("/clone")
+    public ResponseEntity<Repository> cloneRepository(@RequestBody CloneRepositoryInput input) {
         log.info("Cloning repository from {} with identifier: {}", input.sourceUrl(), input.identifier());
         CloneRepositoryRequest request = CloneRepositoryRequest.builder()
                 .sourceUrl(input.sourceUrl())
                 .identifier(input.identifier())
                 .description(input.description())
                 .build();
-        return repositoryService.cloneRepository(request);
+        return ResponseEntity.ok(repositoryService.cloneRepository(request));
     }
 
     public record RepositoryInput(String identifier, String description) {}

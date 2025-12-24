@@ -1,15 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { execute } from '@/graphql/execute'
-import {
-  GET_REPOSITORY,
-  ADD_REPOSITORY_FILE,
-  UPDATE_REPOSITORY_FILE,
-  DELETE_REPOSITORY_FILE,
-  CREATE_REPOSITORY_FOLDER,
-  DELETE_REPOSITORY_FOLDER,
-} from '@/graphql/repository-queries'
+import { queryApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -29,12 +20,6 @@ import {
 export const Route = createFileRoute('/repositories/$identifier')({
   component: RepositoryDetailPage,
 })
-
-type Repository = {
-  identifier: string
-  description: string | null
-  filesystemPath: string
-}
 
 function RepositoryDetailPage() {
   const { identifier } = Route.useParams()
@@ -56,25 +41,15 @@ function RepositoryDetailPage() {
   const [editFileContent, setEditFileContent] = useState('')
   const [editFileCommitMessage, setEditFileCommitMessage] = useState('')
 
-  // Query repository
-  const { data: repository, isLoading, error } = useQuery({
-    queryKey: ['repository', identifier],
-    queryFn: async () => {
-      const data = await execute(GET_REPOSITORY, { identifier })
-      return data.repository as Repository
+  // Query repository using openapi-react-query
+  const { data: repository, isLoading, error } = queryApi.useQuery('get', '/api/repositories/{identifier}', {
+    params: {
+      path: { identifier },
     },
   })
 
   // Add file mutation
-  const addFileMutation = useMutation({
-    mutationFn: async (input: { 
-      repositoryId: string
-      path: string
-      content: string
-      commitMessage: string
-    }) => {
-      return await execute(ADD_REPOSITORY_FILE, { input })
-    },
+  const addFileMutation = queryApi.useMutation('post', '/api/repositories/{repositoryId}/files', {
     onSuccess: () => {
       setAddFileDialogOpen(false)
       setNewFilePath('')
@@ -84,15 +59,7 @@ function RepositoryDetailPage() {
   })
 
   // Update file mutation
-  const updateFileMutation = useMutation({
-    mutationFn: async (input: { 
-      repositoryId: string
-      path: string
-      content: string
-      commitMessage: string
-    }) => {
-      return await execute(UPDATE_REPOSITORY_FILE, { input })
-    },
+  const updateFileMutation = queryApi.useMutation('put', '/api/repositories/{repositoryId}/files', {
     onSuccess: () => {
       setEditFileDialogOpen(false)
       setEditFilePath('')
@@ -101,26 +68,11 @@ function RepositoryDetailPage() {
     },
   })
 
-  // Delete file mutation
-  const deleteFileMutation = useMutation({
-    mutationFn: async (input: { 
-      repositoryId: string
-      path: string
-      commitMessage: string
-    }) => {
-      return await execute(DELETE_REPOSITORY_FILE, { input })
-    },
-  })
+  // Delete file mutation (unused but kept for future use)
+  // const deleteFileMutation = queryApi.useMutation('delete', '/api/repositories/{repositoryId}/files')
 
   // Create folder mutation
-  const createFolderMutation = useMutation({
-    mutationFn: async (input: { 
-      repositoryId: string
-      path: string
-      commitMessage: string
-    }) => {
-      return await execute(CREATE_REPOSITORY_FOLDER, { input })
-    },
+  const createFolderMutation = queryApi.useMutation('post', '/api/repositories/{repositoryId}/folders', {
     onSuccess: () => {
       setAddFolderDialogOpen(false)
       setNewFolderPath('')
@@ -128,43 +80,47 @@ function RepositoryDetailPage() {
     },
   })
 
-  // Delete folder mutation
-  const deleteFolderMutation = useMutation({
-    mutationFn: async (input: { 
-      repositoryId: string
-      path: string
-      commitMessage: string
-    }) => {
-      return await execute(DELETE_REPOSITORY_FOLDER, { input })
-    },
-  })
+  // Delete folder mutation (unused but kept for future use)
+  // const deleteFolderMutation = queryApi.useMutation('delete', '/api/repositories/{repositoryId}/folders')
 
   const handleAddFile = () => {
     if (!repository || !newFilePath.trim() || !newFileCommitMessage.trim()) return
     addFileMutation.mutate({
-      repositoryId: repository.identifier,
-      path: newFilePath,
-      content: newFileContent,
-      commitMessage: newFileCommitMessage,
+      params: {
+        path: { repositoryId: repository.identifier! },
+      },
+      body: {
+        path: newFilePath,
+        content: newFileContent,
+        commitMessage: newFileCommitMessage,
+      },
     })
   }
 
   const handleUpdateFile = () => {
     if (!repository || !editFilePath.trim() || !editFileCommitMessage.trim()) return
     updateFileMutation.mutate({
-      repositoryId: repository.identifier,
-      path: editFilePath,
-      content: editFileContent,
-      commitMessage: editFileCommitMessage,
+      params: {
+        path: { repositoryId: repository.identifier! },
+      },
+      body: {
+        path: editFilePath,
+        content: editFileContent,
+        commitMessage: editFileCommitMessage,
+      },
     })
   }
 
   const handleCreateFolder = () => {
     if (!repository || !newFolderPath.trim() || !newFolderCommitMessage.trim()) return
     createFolderMutation.mutate({
-      repositoryId: repository.identifier,
-      path: newFolderPath,
-      commitMessage: newFolderCommitMessage,
+      params: {
+        path: { repositoryId: repository.identifier! },
+      },
+      body: {
+        path: newFolderPath,
+        commitMessage: newFolderCommitMessage,
+      },
     })
   }
 
@@ -190,7 +146,7 @@ function RepositoryDetailPage() {
           <Card className="border-destructive">
             <CardContent className="pt-6">
               <p className="text-destructive">
-                Error loading repository: {error?.message || 'Repository not found'}
+                Error loading repository: {String(error) || 'Repository not found'}
               </p>
             </CardContent>
           </Card>

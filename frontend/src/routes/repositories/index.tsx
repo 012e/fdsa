@@ -1,12 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { execute } from '@/graphql/execute'
-import {
-  GET_REPOSITORIES,
-  CREATE_REPOSITORY,
-  CLONE_REPOSITORY,
-} from '@/graphql/repository-queries'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -19,12 +14,6 @@ import { BookOpen, GitBranch, Plus, GitFork, Search, Folder } from 'lucide-react
 export const Route = createFileRoute('/repositories/')({
   component: RepositoriesPage,
 })
-
-type Repository = {
-  identifier: string
-  description: string | null
-  filesystemPath: string
-}
 
 function RepositoriesPage() {
   const queryClient = useQueryClient()
@@ -39,22 +28,13 @@ function RepositoriesPage() {
   const [cloneRepoSourceUrl, setCloneRepoSourceUrl] = useState('')
   const [cloneRepoDescription, setCloneRepoDescription] = useState('')
 
-  // Query repositories
-  const { data: repositories, isLoading, error } = useQuery({
-    queryKey: ['repositories'],
-    queryFn: async () => {
-      const data = await execute(GET_REPOSITORIES)
-      return data.repositories as Repository[]
-    },
-  })
+  // Query repositories using openapi-react-query
+  const { data: repositories, isLoading, error } = queryApi.useQuery('get', '/api/repositories')
 
   // Create repository mutation
-  const createMutation = useMutation({
-    mutationFn: async (input: { identifier: string; description?: string }) => {
-      return await execute(CREATE_REPOSITORY, { input })
-    },
+  const createMutation = queryApi.useMutation('post', '/api/repositories', {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['repositories'] })
+      queryClient.invalidateQueries({ queryKey: ['get', '/api/repositories'] })
       setCreateDialogOpen(false)
       setNewRepoIdentifier('')
       setNewRepoDescription('')
@@ -62,12 +42,9 @@ function RepositoriesPage() {
   })
 
   // Clone repository mutation
-  const cloneMutation = useMutation({
-    mutationFn: async (input: { identifier: string; sourceUrl: string; description?: string }) => {
-      return await execute(CLONE_REPOSITORY, { input })
-    },
+  const cloneMutation = queryApi.useMutation('post', '/api/repositories/clone', {
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['repositories'] })
+      queryClient.invalidateQueries({ queryKey: ['get', '/api/repositories'] })
       setCloneDialogOpen(false)
       setCloneRepoIdentifier('')
       setCloneRepoSourceUrl('')
@@ -78,22 +55,26 @@ function RepositoriesPage() {
   const handleCreateRepository = () => {
     if (!newRepoIdentifier.trim()) return
     createMutation.mutate({
-      identifier: newRepoIdentifier,
-      description: newRepoDescription || undefined,
+      body: {
+        identifier: newRepoIdentifier,
+        description: newRepoDescription || undefined,
+      },
     })
   }
 
   const handleCloneRepository = () => {
     if (!cloneRepoIdentifier.trim() || !cloneRepoSourceUrl.trim()) return
     cloneMutation.mutate({
-      identifier: cloneRepoIdentifier,
-      sourceUrl: cloneRepoSourceUrl,
-      description: cloneRepoDescription || undefined,
+      body: {
+        identifier: cloneRepoIdentifier,
+        sourceUrl: cloneRepoSourceUrl,
+        description: cloneRepoDescription || undefined,
+      },
     })
   }
 
   const filteredRepositories = repositories?.filter((repo) =>
-    repo.identifier.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    repo.identifier?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     repo.description?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
@@ -241,7 +222,7 @@ function RepositoriesPage() {
         {error && (
           <Card className="border-destructive">
             <CardContent className="pt-6">
-              <p className="text-destructive">Error loading repositories: {error.message}</p>
+              <p className="text-destructive">Error loading repositories: {String(error)}</p>
             </CardContent>
           </Card>
         )}
@@ -287,7 +268,7 @@ function RepositoriesPage() {
                   <Link
                     key={repo.identifier}
                     to="/repositories/$identifier"
-                    params={{ identifier: repo.identifier }}
+                    params={{ identifier: repo.identifier! }}
                   >
                     <Card className="hover:border-primary transition-colors cursor-pointer">
                       <CardHeader>
