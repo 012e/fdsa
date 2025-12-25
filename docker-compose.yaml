@@ -43,6 +43,19 @@ services:
       - "7233:7233" # Temporal Frontend gRPC port
       - "8233:8233" # Temporal Web UI port
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.7
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "6969:8080"
+    command:
+      - start-dev
+    volumes:
+      - ./tmp/keycloak/data:/opt/keycloak/data
+    user: "${UID}:${GID}"
+
   opensearch:
     image: opensearchproject/opensearch:3.3.0
     container_name: opensearch-node
@@ -58,6 +71,8 @@ services:
     #     hard: -1
     volumes:
       - ./tmp/opensearch-data:/usr/share/opensearch/data
+    profiles:
+      - search
     ports:
       - "9200:9200"
       - "9600:9600"
@@ -70,6 +85,8 @@ services:
       - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
     ports:
       - "5601:5601"
+    profiles:
+      - search
     depends_on:
       - opensearch
 

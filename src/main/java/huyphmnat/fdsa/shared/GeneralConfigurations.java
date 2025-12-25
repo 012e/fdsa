@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class Configurations {
+public class GeneralConfigurations {
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();

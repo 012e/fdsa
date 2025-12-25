@@ -19,3 +19,16 @@ spring:
   temporal:
     url: ${TEMPORAL_URL:localhost:7233}
     namespace: ${TEMPORAL_NAMESPACE:default}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${OAUTH2_ISSUER_URI:http://localhost:6969/realms/fdsa}
+  springdoc:
+    OAuthFlow:
+      authorizationUrl: ${OAUTH2_AUTHORIZATION_URL:http://localhost:6969/realms/fdsa/protocol/openid-connect/auth}
+      tokenUrl: ${OAUTH2_TOKEN_URL:http://localhost:6969/realms/fdsa/protocol/openid-connect/token}
+springdoc:
+  swagger-ui:
+    oauth:
+      client-id: fdsa-backend
