@@ -50,6 +50,9 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new IllegalArgumentException("Repository identifier must be in format 'username/repository' (e.g., 'jk/human-helper-source-code')");
         }
 
+        // Validate that the current user is the owner in the identifier
+        authorizationService.validateOwnerMatchesCurrentUser(identifier);
+
         if (repositoryRepository.existsByIdentifier(identifier)) {
             throw new IllegalStateException("Repository with identifier '" + identifier + "' already exists");
         }
@@ -59,11 +62,14 @@ public class RepositoryServiceImpl implements RepositoryService {
 
         gitInitializer.initRepository(repoPath);
 
+        String ownerId = authorizationService.extractOwnerFromIdentifier(identifier);
+
         RepositoryEntity entity = RepositoryEntity.builder()
                 .id(UUID.randomUUID())
                 .identifier(identifier)
                 .description(request.getDescription())
                 .filesystemPath(repoPath.toString())
+                .ownerId(ownerId)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

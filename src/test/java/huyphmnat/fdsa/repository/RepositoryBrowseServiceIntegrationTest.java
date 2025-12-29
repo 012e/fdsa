@@ -16,7 +16,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RepositoryBrowseServiceTest extends BaseIntegrationTest {
+public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private RepositoryService repositoryService;
@@ -32,7 +32,7 @@ public class RepositoryBrowseServiceTest extends BaseIntegrationTest {
     @BeforeEach
     public void setUp() {
         // Create a test repository with a known structure
-        String identifier = "browse-test/repo-" + UUID.randomUUID();
+        String identifier = "test-user/repo-" + UUID.randomUUID();
         repositoryService.createRepository(CreateRepositoryRequest.builder()
                 .identifier(identifier)
                 .description("Repository for browsing tests")

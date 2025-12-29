@@ -8,6 +8,7 @@ import huyphmnat.fdsa.repository.internal.repositories.RepositoryRepository;
 import huyphmnat.fdsa.repository.interfaces.RepositoryFileService;
 import huyphmnat.fdsa.repository.interfaces.RepositoryService;
 import org.eclipse.jgit.api.Git;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,7 +34,7 @@ public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
     @Test
     public void testAddUpdateDeleteFileAndFoldersWithGitCommits() throws Exception {
         // 1. Create a repository
-        String identifier = "file-ops-user/repo-file-ops-" + UUID.randomUUID();
+        String identifier = "test-user/repo-file-ops-" + UUID.randomUUID();
         Repository repo = repositoryService.createRepository(CreateRepositoryRequest.builder()
                 .identifier(identifier)
                 .description("Repository for file operations integration test")

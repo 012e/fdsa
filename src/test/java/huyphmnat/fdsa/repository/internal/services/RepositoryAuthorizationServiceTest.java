@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.Profile;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -28,7 +29,7 @@ class RepositoryAuthorizationServiceTest {
     private JwtHelper jwtHelper;
 
     @InjectMocks
-    private RepositoryAuthorizationService authorizationService;
+    private RepositoryAuthorizationServiceImpl authorizationService;
 
     private static final String USER_ID = "95b54e9e-bbe3-4675-9c12-790ccf41dbb3";
     private static final String OTHER_USER_ID = "other-user-id";
