@@ -20,10 +20,14 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
     private final RepositoryPathResolver repositoryPathResolver;
     private final GitRepositoryService gitRepositoryService;
+    private final RepositoryAuthorizationService authorizationService;
 
     @Override
     @Transactional
     public void addFile(UUID repositoryId, String path, byte[] content, String commitMessage) {
+        // Check ownership before allowing file addition
+        authorizationService.requireOwnership(repositoryId);
+
         Path repoRoot = repositoryPathResolver.getRepositoryRoot(repositoryId);
         Path targetPath = resolvePath(repoRoot, path);
 
@@ -87,6 +91,9 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
     @Override
     @Transactional
     public void createFolder(UUID repositoryId, String path, String commitMessage) {
+        // Check ownership before allowing folder creation
+        authorizationService.requireOwnership(repositoryId);
+
         Path repoRoot = repositoryPathResolver.getRepositoryRoot(repositoryId);
         Path folderPath = resolvePath(repoRoot, path);
 
@@ -107,6 +114,9 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
     @Override
     @Transactional
     public void deleteFolder(UUID repositoryId, String path, String commitMessage) {
+        // Check ownership before allowing folder deletion
+        authorizationService.requireOwnership(repositoryId);
+
         Path repoRoot = repositoryPathResolver.getRepositoryRoot(repositoryId);
         Path folderPath = resolvePath(repoRoot, path);
 

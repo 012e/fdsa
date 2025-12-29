@@ -13,4 +13,5 @@ public class Repository {
     private String filesystemPath;
     private String description;
     private String identifier;
+    private String ownerId;
 }

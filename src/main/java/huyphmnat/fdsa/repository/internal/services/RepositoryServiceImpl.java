@@ -32,6 +32,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     private final ModelMapper mapper;
     private final GitInitializer gitInitializer;
     private final EventService eventService;
+    private final RepositoryAuthorizationService authorizationService;
 
     @Value("${repository.base-dir:./tmp/repos}")
     private String baseDir;
@@ -98,6 +99,9 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new IllegalArgumentException("Repository identifier must be in format 'username/repository' (e.g., 'jk/human-helper-source-code')");
         }
 
+        // Validate that the current user is the owner in the identifier
+        authorizationService.validateOwnerMatchesCurrentUser(identifier);
+
         if (repositoryRepository.existsByIdentifier(identifier)) {
             throw new IllegalStateException("Repository with identifier '" + identifier + "' already exists");
         }
@@ -118,11 +122,14 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new RuntimeException("Failed to clone repository from " + sourceUrl, e);
         }
 
+        String ownerId = authorizationService.extractOwnerFromIdentifier(identifier);
+
         RepositoryEntity entity = RepositoryEntity.builder()
                 .id(UUID.randomUUID())
                 .identifier(trimSlashes(identifier))
                 .description(request.getDescription())
                 .filesystemPath(repoPath.toString())
+                .ownerId(ownerId)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

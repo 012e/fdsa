@@ -34,6 +34,9 @@ public class RepositoryEntity {
     private String filesystemPath;
 
     @Column(nullable = false)
+    private String ownerId;
+
+    @Column(nullable = false)
     private Instant createdAt;
 
     @Column(nullable = false)
