@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfiguration {
-    @Value("${spring.springdoc.OAuthFlow.authorizationUrl}")
+    @Value("${springdoc.OAuthFlow.authorizationUrl}")
     private String authorizationUrl;
 
-    @Value("${spring.springdoc.OAuthFlow.tokenUrl}")
+    @Value("${springdoc.OAuthFlow.tokenUrl}")
     private String tokenUrl;
 
     @Bean
@@ -20,7 +20,7 @@ public class OpenApiConfiguration {
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement().addList("Oauth2"))
                 .components(new Components()
-                        .addSecuritySchemes("Oauth",
+                        .addSecuritySchemes("Oauth2",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.OAUTH2)
                                         .scheme("bearer")

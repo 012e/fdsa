@@ -5,9 +5,12 @@ import huyphmnat.fdsa.snippet.dtos.Snippet;
 import huyphmnat.fdsa.snippet.dtos.SnippetFile;
 import huyphmnat.fdsa.snippet.dtos.UpdateSnippetRequest;
 import huyphmnat.fdsa.snippet.interfaces.SnippetService;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
