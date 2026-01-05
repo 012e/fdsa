@@ -1,6 +1,4 @@
 spring:
-  config:
-    import: optional:application-secret.yaml
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
@@ -30,6 +28,8 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${OAUTH2_ISSUER_URI:http://localhost:6969/realms/fdsa/protocol/openid-connect/certs}
+  config:
+    import: optional:./application-secret.yaml
 springdoc:
   swagger-ui:
     oauth:
