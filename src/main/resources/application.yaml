@@ -1,4 +1,9 @@
 spring:
+  config:
+    import: optional:application-secret.yaml
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
   application:
     name: demo
   datasource:
@@ -16,13 +21,6 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     enable.metrics.push: false
-  openai:
-    api:
-      key: ${OPENAI_API_KEY}
-      base-url: ${OPENAI_API_BASE_URL:https://api.openai.com/v1}
-    model: ${OPENAI_MODEL:gpt-4o-mini}
-    embedding:
-      model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-large}
   opensearch:
     host: ${OPENSEARCH_HOST:localhost}
     port: ${OPENSEARCH_PORT:9200}

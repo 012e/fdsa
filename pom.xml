@@ -176,6 +176,11 @@
 			<version>4.12.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.ai</groupId>
+			<artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+			<version>1.0.0-M6</version>
+		</dependency>
 		<!-- Awaitility for async testing -->
 		<dependency>
 			<groupId>org.awaitility</groupId>

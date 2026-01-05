@@ -1,8 +1,0 @@
-[parallel]
-start: start-worker start-handler
-
-start-worker:
-  uv run worker.py
-
-start-handler:
-  uv run main.py
