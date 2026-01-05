@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -214,7 +215,7 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
             .fileExtension("java")
             .page(0)
             .size(10)
-            .highlightFields(Arrays.asList("content"))
+            .highlightFields(List.of("content"))
             .build();
 
         MvcResult result = mockMvc.perform(post("/api/search/code")
