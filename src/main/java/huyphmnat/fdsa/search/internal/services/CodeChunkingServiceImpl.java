@@ -32,14 +32,14 @@ public class CodeChunkingServiceImpl implements CodeChunkingService {
         StringBuilder currentChunk = new StringBuilder();
 
         for (String line : lines) {
-            if (currentChunk.length() + line.length() + 1 > chunkSizeInChars && currentChunk.length() > 0) {
+            if (currentChunk.length() + line.length() + 1 > chunkSizeInChars && !currentChunk.isEmpty()) {
                 chunks.add(currentChunk.toString());
                 currentChunk = new StringBuilder();
             }
             currentChunk.append(line).append("\n");
         }
 
-        if (currentChunk.length() > 0) {
+        if (!currentChunk.isEmpty()) {
             chunks.add(currentChunk.toString());
         }
 
