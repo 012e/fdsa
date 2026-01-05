@@ -1,16 +1,24 @@
 package huyphmnat.fdsa.shared;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@EnableAsync
 public class GeneralConfigurations {
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 
     @Bean

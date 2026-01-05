@@ -16,9 +16,17 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     enable.metrics.push: false
-  temporal:
-    url: ${TEMPORAL_URL:localhost:7233}
-    namespace: ${TEMPORAL_NAMESPACE:default}
+  openai:
+    api:
+      key: ${OPENAI_API_KEY}
+      base-url: ${OPENAI_API_BASE_URL:https://api.openai.com/v1}
+    model: ${OPENAI_MODEL:gpt-4o-mini}
+    embedding:
+      model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-large}
+  opensearch:
+    host: ${OPENSEARCH_HOST:localhost}
+    port: ${OPENSEARCH_PORT:9200}
+    scheme: ${OPENSEARCH_SCHEME:http}
   security:
     oauth2:
       resourceserver:
