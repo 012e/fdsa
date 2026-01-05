@@ -6,6 +6,7 @@ import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
 import huyphmnat.fdsa.search.internal.services.OpenSearchIndexingService;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -228,7 +230,8 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = objectMapper.readValue(content, CodeSearchResponse.class);
 
         assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 2);
+        assertThat(response.getTotalHits())
+                .isGreaterThan(2);
         response.getResults().forEach(r -> {
             assertEquals(testRepositoryId, r.getRepositoryId());
             assertEquals(testRepositoryIdentifier, r.getRepositoryIdentifier());
