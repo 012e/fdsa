@@ -1,4 +1,7 @@
 spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
   application:
     name: demo
   datasource:
@@ -16,14 +19,17 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     enable.metrics.push: false
-  temporal:
-    url: ${TEMPORAL_URL:localhost:7233}
-    namespace: ${TEMPORAL_NAMESPACE:default}
+  opensearch:
+    host: ${OPENSEARCH_HOST:localhost}
+    port: ${OPENSEARCH_PORT:9200}
+    scheme: ${OPENSEARCH_SCHEME:http}
   security:
     oauth2:
       resourceserver:
         jwt:
           jwk-set-uri: ${OAUTH2_ISSUER_URI:http://localhost:6969/realms/fdsa/protocol/openid-connect/certs}
+  config:
+    import: optional:./application-secret.yaml
 springdoc:
   swagger-ui:
     oauth:
