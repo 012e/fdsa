@@ -7,13 +7,13 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 
-public class OpenSearchIntegrationTest extends BaseIntegrationTest{
+public class OpenSearchIntegrationTest extends BaseIntegrationTest {
     @Container
     static GenericContainer<?> openSearchContainer = new OpenSearchContainer<>(DockerImageName.parse("opensearchproject/opensearch:3.4.0"));
 
     private static void setupOpenSearch(DynamicPropertyRegistry registry) {
-        registry.add("spring.opensearch.host", () -> openSearchContainer.getHost());
-        registry.add("spring.opensearch.port", () -> openSearchContainer.getFirstMappedPort());
+        registry.add("spring.opensearch.host", openSearchContainer::getHost);
+        registry.add("spring.opensearch.port", openSearchContainer::getFirstMappedPort);
     }
 
     @DynamicPropertySource
