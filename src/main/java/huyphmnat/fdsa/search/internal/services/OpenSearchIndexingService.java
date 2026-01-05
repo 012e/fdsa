@@ -1,6 +1,5 @@
-package huyphmnat.fdsa.shared.ingestion;
+package huyphmnat.fdsa.search.internal.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -18,9 +17,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class OpenSearchIndexingService {
-
     private final OpenSearchClient openSearchClient;
-    private final ObjectMapper objectMapper;
 
     private static final String INDEX_NAME = "code_snippets";
 

@@ -1,4 +1,4 @@
-package huyphmnat.fdsa.shared.ingestion;
+package huyphmnat.fdsa.search.internal.services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -8,11 +8,12 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class CodeChunkingService {
+public class CodeChunkingServiceImpl implements CodeChunkingService {
 
     private static final int CHUNK_SIZE = 512; // tokens
     private static final int CHARS_PER_TOKEN = 4; // rough estimate
 
+    @Override
     public List<String> chunkCode(String code) {
         log.info("Chunking code...");
 
