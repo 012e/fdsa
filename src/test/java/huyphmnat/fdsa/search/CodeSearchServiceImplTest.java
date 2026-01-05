@@ -42,7 +42,7 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
     }
 
     private void indexTestDocuments() {
-        List<CodeFileDocument> documents = Arrays.asList(
+        List<CodeFileDocument> documents = List.of(
             CodeFileDocument.builder()
                 .id(UUID.randomUUID().toString())
                 .repositoryId(testRepositoryId)
