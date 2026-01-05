@@ -1,6 +1,7 @@
 package huyphmnat.fdsa.search;
 
 import huyphmnat.fdsa.search.internal.services.LanguageDetectionService;
+import huyphmnat.fdsa.search.internal.services.LanguageDetectionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -14,7 +15,7 @@ class LanguageDetectionServiceTest {
 
     @BeforeEach
     void setUp() {
-        languageDetectionService = new LanguageDetectionService();
+        languageDetectionService = new LanguageDetectionServiceImpl();
     }
 
     @ParameterizedTest
