@@ -18,7 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
 
@@ -64,18 +65,18 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
 
         GetResponse<Map> response = openSearchClient.get(getRequest, Map.class);
 
-        assertTrue(response.found());
+        assertThat(response.found()).isTrue();
         Map<String, Object> source = response.source();
-        assertNotNull(source);
-        assertEquals(documentId, source.get("id"));
-        assertEquals(repositoryId.toString(), source.get("repository_id"));
-        assertEquals("test-owner/test-repo", source.get("repository_identifier"));
-        assertEquals("src/main/java/Main.java", source.get("file_path"));
-        assertEquals("Main.java", source.get("file_name"));
-        assertEquals("java", source.get("file_extension"));
-        assertEquals("Java", source.get("language"));
-        assertEquals("public class Main { }", source.get("content"));
-        assertEquals(24, ((Number) source.get("size")).intValue());
+        assertThat(source).isNotNull();
+        assertThat(source.get("id")).isEqualTo(documentId);
+        assertThat(source.get("repository_id")).isEqualTo(repositoryId.toString());
+        assertThat(source.get("repository_identifier")).isEqualTo("test-owner/test-repo");
+        assertThat(source.get("file_path")).isEqualTo("src/main/java/Main.java");
+        assertThat(source.get("file_name")).isEqualTo("Main.java");
+        assertThat(source.get("file_extension")).isEqualTo("java");
+        assertThat(source.get("language")).isEqualTo("Java");
+        assertThat(source.get("content")).isEqualTo("public class Main { }");
+        assertThat(((Number) source.get("size")).intValue()).isEqualTo(24);
     }
 
     @Test
@@ -127,22 +128,22 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
 
         GetResponse<Map> response = openSearchClient.get(getRequest, Map.class);
 
-        assertTrue(response.found());
+        assertThat(response.found()).isTrue();
         Map<String, Object> source = response.source();
-        assertNotNull(source);
+        assertThat(source).isNotNull();
 
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> indexedChunks = (List<Map<String, Object>>) source.get("chunks");
-        assertNotNull(indexedChunks);
-        assertEquals(2, indexedChunks.size());
+        assertThat(indexedChunks).isNotNull();
+        assertThat(indexedChunks).hasSize(2);
 
-        assertEquals(0, indexedChunks.get(0).get("index"));
-        assertEquals("chunk 1 content", indexedChunks.get(0).get("content"));
-        assertEquals(1, indexedChunks.get(0).get("start_line"));
-        assertEquals(10, indexedChunks.get(0).get("end_line"));
+        assertThat(indexedChunks.get(0).get("index")).isEqualTo(0);
+        assertThat(indexedChunks.get(0).get("content")).isEqualTo("chunk 1 content");
+        assertThat(indexedChunks.get(0).get("start_line")).isEqualTo(1);
+        assertThat(indexedChunks.get(0).get("end_line")).isEqualTo(10);
 
-        assertEquals(1, indexedChunks.get(1).get("index"));
-        assertEquals("chunk 2 content", indexedChunks.get(1).get("content"));
+        assertThat(indexedChunks.get(1).get("index")).isEqualTo(1);
+        assertThat(indexedChunks.get(1).get("content")).isEqualTo("chunk 2 content");
     }
 
     @Test
@@ -186,7 +187,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
 
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
-        assertEquals(5, searchResponse.hits().total().value());
+        assertThat(searchResponse.hits().total().value()).isEqualTo(5);
     }
 
     @Test
@@ -195,7 +196,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         List<CodeFileDocument> emptyList = new ArrayList<>();
 
         // When & Then
-        assertDoesNotThrow(() -> indexingService.bulkIndexCodeFiles(emptyList));
+        assertThatCode(() -> indexingService.bulkIndexCodeFiles(emptyList)).doesNotThrowAnyException();
     }
 
     @Test
@@ -240,7 +241,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
 
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
-        assertEquals(150, searchResponse.hits().total().value());
+        assertThat(searchResponse.hits().total().value()).isEqualTo(150);
     }
 }
 

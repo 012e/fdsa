@@ -6,7 +6,6 @@ import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
 import huyphmnat.fdsa.search.internal.services.OpenSearchIndexingService;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -120,12 +118,12 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
         String content = result.getResponse().getContentAsString();
         CodeSearchResponse response = objectMapper.readValue(content, CodeSearchResponse.class);
 
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 2);
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(2);
         response.getResults().forEach(r -> {
-            assertEquals(testRepositoryId, r.getRepositoryId());
-            assertEquals("Java", r.getLanguage());
-            assertEquals("java", r.getFileExtension());
+            assertThat(r.getRepositoryId()).isEqualTo(testRepositoryId);
+            assertThat(r.getLanguage()).isEqualTo("Java");
+            assertThat(r.getFileExtension()).isEqualTo("java");
         });
     }
 
@@ -153,9 +151,9 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
         String content = result.getResponse().getContentAsString();
         CodeSearchResponse response = objectMapper.readValue(content, CodeSearchResponse.class);
 
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         response.getResults().forEach(r ->
-            assertEquals(testRepositoryIdentifier, r.getRepositoryIdentifier())
+            assertThat(r.getRepositoryIdentifier()).isEqualTo(testRepositoryIdentifier)
         );
     }
 
@@ -182,10 +180,10 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
         String content = result.getResponse().getContentAsString();
         CodeSearchResponse response = objectMapper.readValue(content, CodeSearchResponse.class);
 
-        assertNotNull(response);
-        assertTrue(response.getResults().size() <= 1);
-        assertEquals(0, response.getPage());
-        assertEquals(1, response.getSize());
+        assertThat(response).isNotNull();
+        assertThat(response.getResults()).hasSizeLessThanOrEqualTo(1);
+        assertThat(response.getPage()).isEqualTo(0);
+        assertThat(response.getSize()).isEqualTo(1);
     }
 
     @Test
@@ -229,14 +227,14 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
         String content = result.getResponse().getContentAsString();
         CodeSearchResponse response = objectMapper.readValue(content, CodeSearchResponse.class);
 
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertThat(response.getTotalHits())
                 .isGreaterThan(2);
         response.getResults().forEach(r -> {
-            assertEquals(testRepositoryId, r.getRepositoryId());
-            assertEquals(testRepositoryIdentifier, r.getRepositoryIdentifier());
-            assertEquals("Java", r.getLanguage());
-            assertEquals("java", r.getFileExtension());
+            assertThat(r.getRepositoryId()).isEqualTo(testRepositoryId);
+            assertThat(r.getRepositoryIdentifier()).isEqualTo(testRepositoryIdentifier);
+            assertThat(r.getLanguage()).isEqualTo("Java");
+            assertThat(r.getFileExtension()).isEqualTo("java");
         });
     }
 

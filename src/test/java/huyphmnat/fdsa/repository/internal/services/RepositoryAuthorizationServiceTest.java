@@ -11,12 +11,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Profile;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,14 +42,14 @@ class RepositoryAuthorizationServiceTest {
     @Test
     void extractOwnerFromIdentifier_validIdentifier_returnsOwner() {
         String owner = authorizationService.extractOwnerFromIdentifier("jk/my-repo");
-        assertEquals("jk", owner);
+        assertThat(owner).isEqualTo("jk");
     }
 
     @Test
     void extractOwnerFromIdentifier_invalidIdentifier_throwsException() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThatThrownBy(() ->
             authorizationService.extractOwnerFromIdentifier("invalid-identifier")
-        );
+        ).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -58,21 +57,18 @@ class RepositoryAuthorizationServiceTest {
         String identifier = USER_ID + "/my-repo";
 
         // Should not throw exception
-        assertDoesNotThrow(() ->
+        assertThatCode(() ->
             authorizationService.validateOwnerMatchesCurrentUser(identifier)
-        );
+        ).doesNotThrowAnyException();
     }
 
     @Test
     void validateOwnerMatchesCurrentUser_differentOwner_throwsAccessDenied() {
         String identifier = OTHER_USER_ID + "/my-repo";
 
-        RepositoryAccessDeniedException exception = assertThrows(
-            RepositoryAccessDeniedException.class,
-            () -> authorizationService.validateOwnerMatchesCurrentUser(identifier)
-        );
-
-        assertTrue(exception.getMessage().contains("Access denied"));
+        assertThatThrownBy(() -> authorizationService.validateOwnerMatchesCurrentUser(identifier))
+            .isInstanceOf(RepositoryAccessDeniedException.class)
+            .hasMessageContaining("Access denied");
     }
 
     @Test
@@ -86,9 +82,9 @@ class RepositoryAuthorizationServiceTest {
         when(repositoryRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
 
         // Should not throw exception
-        assertDoesNotThrow(() ->
+        assertThatCode(() ->
             authorizationService.requireOwnership(REPO_ID)
-        );
+        ).doesNotThrowAnyException();
     }
 
     @Test
@@ -101,21 +97,17 @@ class RepositoryAuthorizationServiceTest {
 
         when(repositoryRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
 
-        RepositoryAccessDeniedException exception = assertThrows(
-            RepositoryAccessDeniedException.class,
-            () -> authorizationService.requireOwnership(REPO_ID)
-        );
-
-        assertTrue(exception.getMessage().contains("Access denied"));
+        assertThatThrownBy(() -> authorizationService.requireOwnership(REPO_ID))
+            .isInstanceOf(RepositoryAccessDeniedException.class)
+            .hasMessageContaining("Access denied");
     }
 
     @Test
     void requireOwnership_repositoryNotFound_throwsNotFoundException() {
         when(repositoryRepository.findById(REPO_ID)).thenReturn(Optional.empty());
 
-        assertThrows(RepositoryNotFoundException.class,
-            () -> authorizationService.requireOwnership(REPO_ID)
-        );
+        assertThatThrownBy(() -> authorizationService.requireOwnership(REPO_ID))
+            .isInstanceOf(RepositoryNotFoundException.class);
     }
 
     @Test
@@ -130,9 +122,9 @@ class RepositoryAuthorizationServiceTest {
         when(repositoryRepository.findByIdentifier(identifier)).thenReturn(Optional.of(repo));
 
         // Should not throw exception
-        assertDoesNotThrow(() ->
+        assertThatCode(() ->
             authorizationService.requireOwnershipByIdentifier(identifier)
-        );
+        ).doesNotThrowAnyException();
     }
 
     @Test
@@ -146,12 +138,8 @@ class RepositoryAuthorizationServiceTest {
 
         when(repositoryRepository.findByIdentifier(identifier)).thenReturn(Optional.of(repo));
 
-        RepositoryAccessDeniedException exception = assertThrows(
-            RepositoryAccessDeniedException.class,
-            () -> authorizationService.requireOwnershipByIdentifier(identifier)
-        );
-
-        assertTrue(exception.getMessage().contains("Access denied"));
+        assertThatThrownBy(() -> authorizationService.requireOwnershipByIdentifier(identifier))
+            .isInstanceOf(RepositoryAccessDeniedException.class)
+            .hasMessageContaining("Access denied");
     }
 }
-

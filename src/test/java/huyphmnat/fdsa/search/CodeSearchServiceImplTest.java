@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
 
@@ -116,11 +116,11 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 2, "Should find at least 2 documents with 'Hello World'");
-        assertFalse(response.getResults().isEmpty());
-        assertEquals(0, response.getPage());
-        assertTrue(response.getTookMs() > 0);
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(2);
+        assertThat(response.getResults()).isNotEmpty();
+        assertThat(response.getPage()).isEqualTo(0);
+        assertThat(response.getTookMs()).isGreaterThan(0);
     }
 
     @Test
@@ -137,10 +137,10 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 3, "Should find at least 3 Java files in test repository");
-        response.getResults().forEach(result -> 
-            assertEquals(testRepositoryId, result.getRepositoryId())
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(3);
+        response.getResults().forEach(result ->
+            assertThat(result.getRepositoryId()).isEqualTo(testRepositoryId)
         );
     }
 
@@ -158,9 +158,9 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertEquals(1, response.getTotalHits(), "Should find only 1 Python file");
-        assertEquals("Python", response.getResults().get(0).getLanguage());
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isEqualTo(1);
+        assertThat(response.getResults().get(0).getLanguage()).isEqualTo("Python");
     }
 
     @Test
@@ -177,10 +177,10 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 3, "Should find at least 3 Java files");
-        response.getResults().forEach(result -> 
-            assertEquals("java", result.getFileExtension())
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(3);
+        response.getResults().forEach(result ->
+            assertThat(result.getFileExtension()).isEqualTo("java")
         );
     }
 
@@ -198,10 +198,10 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 1, "Should find test files");
-        response.getResults().forEach(result -> 
-            assertTrue(result.getFilePath().contains("/test/"))
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(1);
+        response.getResults().forEach(result ->
+            assertThat(result.getFilePath()).contains("/test/")
         );
     }
 
@@ -218,11 +218,11 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 3);
-        assertEquals(2, response.getResults().size(), "Should return exactly 2 results");
-        assertEquals(0, response.getPage());
-        assertTrue(response.getTotalPages() >= 2);
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(3);
+        assertThat(response.getResults()).hasSize(2);
+        assertThat(response.getPage()).isEqualTo(0);
+        assertThat(response.getTotalPages()).isGreaterThanOrEqualTo(2);
     }
 
     @Test
@@ -239,13 +239,13 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 1);
-        
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(1);
+
         // At least one result should have highlights
         boolean hasHighlights = response.getResults().stream()
             .anyMatch(result -> result.getHighlights() != null && !result.getHighlights().isEmpty());
-        assertTrue(hasHighlights, "At least one result should have highlights");
+        assertThat(hasHighlights).isTrue();
     }
 
     @Test
@@ -264,12 +264,12 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 3);
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(3);
         response.getResults().forEach(result -> {
-            assertEquals(testRepositoryIdentifier, result.getRepositoryIdentifier());
-            assertEquals("Java", result.getLanguage());
-            assertEquals("java", result.getFileExtension());
+            assertThat(result.getRepositoryIdentifier()).isEqualTo(testRepositoryIdentifier);
+            assertThat(result.getLanguage()).isEqualTo("Java");
+            assertThat(result.getFileExtension()).isEqualTo("java");
         });
     }
 
@@ -286,10 +286,10 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertEquals(0, response.getTotalHits());
-        assertTrue(response.getResults().isEmpty());
-        assertEquals(0, response.getTotalPages());
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isEqualTo(0);
+        assertThat(response.getResults()).isEmpty();
+        assertThat(response.getTotalPages()).isEqualTo(0);
     }
 
     @Test
@@ -305,21 +305,20 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         CodeSearchResponse response = codeSearchService.searchCode(request);
 
         // Then
-        assertNotNull(response);
-        assertTrue(response.getTotalHits() >= 1);
-        
+        assertThat(response).isNotNull();
+        assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(1);
+
         CodeSearchResult result = response.getResults().get(0);
-        assertNotNull(result.getId());
-        assertNotNull(result.getRepositoryId());
-        assertNotNull(result.getRepositoryIdentifier());
-        assertNotNull(result.getFilePath());
-        assertNotNull(result.getFileName());
-        assertNotNull(result.getFileExtension());
-        assertNotNull(result.getLanguage());
-        assertNotNull(result.getContent());
-        assertNotNull(result.getSize());
-        assertNotNull(result.getScore());
-        assertTrue(result.getScore() > 0, "Score should be greater than 0");
+        assertThat(result.getId()).isNotNull();
+        assertThat(result.getRepositoryId()).isNotNull();
+        assertThat(result.getRepositoryIdentifier()).isNotNull();
+        assertThat(result.getFilePath()).isNotNull();
+        assertThat(result.getFileName()).isNotNull();
+        assertThat(result.getFileExtension()).isNotNull();
+        assertThat(result.getLanguage()).isNotNull();
+        assertThat(result.getContent()).isNotNull();
+        assertThat(result.getSize()).isNotNull();
+        assertThat(result.getScore()).isNotNull();
+        assertThat(result.getScore()).isGreaterThan(0);
     }
 }
-

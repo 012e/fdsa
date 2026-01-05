@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class CodeChunkingServiceImplTest {
 
@@ -23,8 +23,8 @@ class CodeChunkingServiceImplTest {
 
         List<String> chunks = chunkingService.chunkCode(code);
 
-        assertEquals(1, chunks.size());
-        assertEquals(code, chunks.get(0));
+        assertThat(chunks).hasSize(1);
+        assertThat(chunks.get(0)).isEqualTo(code);
     }
 
     @Test
@@ -33,8 +33,8 @@ class CodeChunkingServiceImplTest {
 
         List<String> chunks = chunkingService.chunkCode(code);
 
-        assertEquals(1, chunks.size());
-        assertEquals("", chunks.get(0));
+        assertThat(chunks).hasSize(1);
+        assertThat(chunks.get(0)).isEqualTo("");
     }
 
     @Test
@@ -50,16 +50,16 @@ class CodeChunkingServiceImplTest {
 
         List<String> chunks = chunkingService.chunkCode(largeCode.toString());
 
-        assertTrue(chunks.size() > 1, "Large code should be split into multiple chunks");
+        assertThat(chunks.size()).isGreaterThan(1);
 
         // Verify each chunk is not empty
         for (String chunk : chunks) {
-            assertFalse(chunk.isEmpty());
+            assertThat(chunk).isNotEmpty();
         }
 
         // Verify chunks when concatenated approximately equal original (may have trailing newlines)
         String concatenated = String.join("", chunks);
-        assertTrue(concatenated.length() >= largeCode.length() - chunks.size());
+        assertThat(concatenated.length()).isGreaterThanOrEqualTo(largeCode.length() - chunks.size());
     }
 
     @Test
@@ -74,7 +74,7 @@ class CodeChunkingServiceImplTest {
 
         // Each chunk should end with newline (except possibly the last one if original didn't)
         for (int i = 0; i < chunks.size() - 1; i++) {
-            assertTrue(chunks.get(i).endsWith("\n"), "Chunk should end with newline");
+            assertThat(chunks.get(i)).endsWith("\n");
         }
     }
 
@@ -92,8 +92,8 @@ class CodeChunkingServiceImplTest {
 
         List<String> chunks = chunkingService.chunkCode(code.toString());
 
-        assertNotNull(chunks);
-        assertFalse(chunks.isEmpty());
+        assertThat(chunks).isNotNull();
+        assertThat(chunks).isNotEmpty();
     }
 
     @Test
@@ -102,12 +102,11 @@ class CodeChunkingServiceImplTest {
 
         List<String> chunks = chunkingService.chunkCode(code);
 
-        assertNotNull(chunks);
-        assertFalse(chunks.isEmpty());
+        assertThat(chunks).isNotNull();
+        assertThat(chunks).isNotEmpty();
 
         // Verify newlines are preserved
         String concatenated = String.join("", chunks);
-        assertTrue(concatenated.contains("\n\n\n"));
+        assertThat(concatenated).contains("\n\n\n");
     }
 }
-

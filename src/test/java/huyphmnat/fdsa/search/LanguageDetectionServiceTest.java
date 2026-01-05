@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 class LanguageDetectionServiceTest {
 
@@ -43,37 +43,37 @@ class LanguageDetectionServiceTest {
     })
     void testDetectLanguage_ShouldReturnCorrectLanguage(String fileName, String expectedLanguage) {
         String detectedLanguage = languageDetectionService.detectLanguage(fileName);
-        assertEquals(expectedLanguage, detectedLanguage);
+        assertThat(detectedLanguage).isEqualTo(expectedLanguage);
     }
 
     @Test
     void testDetectLanguage_NullFileName_ShouldReturnUnknown() {
         String result = languageDetectionService.detectLanguage(null);
-        assertEquals("Unknown", result);
+        assertThat(result).isEqualTo("Unknown");
     }
 
     @Test
     void testDetectLanguage_EmptyFileName_ShouldReturnUnknown() {
         String result = languageDetectionService.detectLanguage("");
-        assertEquals("Unknown", result);
+        assertThat(result).isEqualTo("Unknown");
     }
 
     @Test
     void testDetectLanguage_NoExtension_ShouldReturnUnknown() {
         String result = languageDetectionService.detectLanguage("Makefile");
-        assertEquals("Unknown", result);
+        assertThat(result).isEqualTo("Unknown");
     }
 
     @Test
     void testDetectLanguage_DotFileWithoutExtension_ShouldReturnUnknown() {
         String result = languageDetectionService.detectLanguage(".gitignore");
-        assertEquals("Unknown", result);
+        assertThat(result).isEqualTo("Unknown");
     }
 
     @Test
     void testDetectLanguage_MultipleDotsInFileName_ShouldUseLastExtension() {
         String result = languageDetectionService.detectLanguage("test.component.ts");
-        assertEquals("TypeScript", result);
+        assertThat(result).isEqualTo("TypeScript");
     }
 
     @ParameterizedTest
@@ -89,25 +89,25 @@ class LanguageDetectionServiceTest {
     })
     void testIsCodeFile_ShouldIdentifyCodeFiles(String fileName, boolean expectedIsCode) {
         boolean result = languageDetectionService.isCodeFile(fileName);
-        assertEquals(expectedIsCode, result);
+        assertThat(result).isEqualTo(expectedIsCode);
     }
 
     @Test
     void testIsCodeFile_NullFileName_ShouldReturnFalse() {
         boolean result = languageDetectionService.isCodeFile(null);
-        assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     @Test
     void testIsCodeFile_EmptyFileName_ShouldReturnFalse() {
         boolean result = languageDetectionService.isCodeFile("");
-        assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     @Test
     void testDetectLanguage_CaseInsensitive() {
-        assertEquals("Java", languageDetectionService.detectLanguage("Main.JAVA"));
-        assertEquals("Python", languageDetectionService.detectLanguage("script.PY"));
-        assertEquals("TypeScript", languageDetectionService.detectLanguage("app.TS"));
+        assertThat(languageDetectionService.detectLanguage("Main.JAVA")).isEqualTo("Java");
+        assertThat(languageDetectionService.detectLanguage("script.PY")).isEqualTo("Python");
+        assertThat(languageDetectionService.detectLanguage("app.TS")).isEqualTo("TypeScript");
     }
 }

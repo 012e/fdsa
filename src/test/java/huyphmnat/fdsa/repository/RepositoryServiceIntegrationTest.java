@@ -13,7 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class RepositoryServiceIntegrationTest extends BaseIntegrationTest {
 
@@ -29,22 +29,22 @@ public class RepositoryServiceIntegrationTest extends BaseIntegrationTest {
                 .description("A test repository")
                 .build());
 
-        assertNotNull(repo);
-        assertEquals(identifier, repo.getIdentifier());
-        assertNotNull(repo.getFilesystemPath());
+        assertThat(repo).isNotNull();
+        assertThat(repo.getIdentifier()).isEqualTo(identifier);
+        assertThat(repo.getFilesystemPath()).isNotNull();
 
         Path repoPath = Paths.get(repo.getFilesystemPath());
-        assertTrue(Files.exists(repoPath));
-        assertTrue(Files.isDirectory(repoPath));
+        assertThat(Files.exists(repoPath)).isTrue();
+        assertThat(Files.isDirectory(repoPath)).isTrue();
 
         // Verify that a git repository has been initialized at this path
         File gitDir = repoPath.resolve(".git").toFile();
-        assertTrue(gitDir.exists(), ".git directory should exist");
-        assertTrue(gitDir.isDirectory(), ".git should be a directory");
+        assertThat(gitDir.exists()).isTrue();
+        assertThat(gitDir.isDirectory()).isTrue();
 
         // Optionally, ensure JGit can open the repository
         try (Git opened = Git.open(repoPath.toFile())) {
-            assertNotNull(opened.getRepository());
+            assertThat(opened.getRepository()).isNotNull();
         }
     }
 
@@ -56,11 +56,10 @@ public class RepositoryServiceIntegrationTest extends BaseIntegrationTest {
                 .identifier(identifier)
                 .build());
 
-        assertThrows(IllegalStateException.class, () -> {
-            repositoryService.createRepository(CreateRepositoryRequest.builder()
+        assertThatThrownBy(() -> repositoryService.createRepository(CreateRepositoryRequest.builder()
                     .identifier(identifier)
-                    .build());
-        });
+                    .build()))
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -74,6 +73,6 @@ public class RepositoryServiceIntegrationTest extends BaseIntegrationTest {
                 .build());
 
         var testUserRepos = repositoryService.listRepositoriesByOwner("test-user");
-        assertTrue(testUserRepos.size() >= 2, "Should have at least 2 repositories for test-user");
+        assertThat(testUserRepos.size()).isGreaterThanOrEqualTo(2);
     }
 }

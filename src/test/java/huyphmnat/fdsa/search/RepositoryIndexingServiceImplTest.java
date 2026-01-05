@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -98,7 +98,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
-        assertEquals(2, searchResponse.hits().total().value(), "Should index 2 files");
+        assertThat(searchResponse.hits().total().value()).isEqualTo(2);
 
         verify(repositoryFileService, times(1)).listDirectory(repositoryId, "/");
         verify(repositoryFileService, times(1)).readFile(repositoryId, "/Main.java");
@@ -196,7 +196,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
-        assertEquals(3, searchResponse.hits().total().value(), "Should index 3 files");
+        assertThat(searchResponse.hits().total().value()).isEqualTo(3);
 
         verify(repositoryFileService, times(1)).listDirectory(repositoryId, "/");
         verify(repositoryFileService, times(1)).listDirectory(repositoryId, "/src");
@@ -262,7 +262,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
-        assertEquals(1, searchResponse.hits().total().value(), "Should only index code files");
+        assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Should not attempt to read non-code files
         verify(repositoryFileService, never()).readFile(repositoryId, "/image.png");
@@ -323,7 +323,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
-        assertEquals(1, searchResponse.hits().total().value(), "Should skip large files");
+        assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Should not attempt to read large file
         verify(repositoryFileService, never()).readFile(repositoryId, "/VeryLarge.java");
@@ -386,15 +386,15 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
-        assertEquals(1, searchResponse.hits().total().value());
+        assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Verify chunks were created
         Map<String, Object> document = searchResponse.hits().hits().get(0).source();
-        assertNotNull(document.get("chunks"), "Large file should have chunks");
+        assertThat(document.get("chunks")).isNotNull();
 
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> chunks = (List<Map<String, Object>>) document.get("chunks");
-        assertTrue(chunks.size() > 1, "Large file should be split into multiple chunks");
+        assertThat(chunks.size()).isGreaterThan(1);
     }
 
     @Test
@@ -470,8 +470,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
         // Should index the successful files
-        assertEquals(2, searchResponse.hits().total().value(),
-            "Should index successful files despite error on one file");
+        assertThat(searchResponse.hits().total().value()).isEqualTo(2);
     }
 
     @Test
@@ -531,7 +530,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
 
-        assertEquals(150, searchResponse.hits().total().value(), "Should index all 150 files");
+        assertThat(searchResponse.hits().total().value()).isEqualTo(150);
     }
 }
 
