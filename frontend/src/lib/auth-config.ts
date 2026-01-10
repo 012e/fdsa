@@ -1,3 +1,5 @@
+"use client";
+
 import { AuthProviderProps } from "react-oidc-context";
 
 const keycloakUrl = import.meta.env["KEYCLOAK_URL"] ?? "http://localhost:6969";

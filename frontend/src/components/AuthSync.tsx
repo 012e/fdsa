@@ -8,10 +8,9 @@ export function AuthSync({ children }: { children: React.ReactNode }) {
   const setAccessToken = useSetAtom(accessTokenAtom);
 
   useEffect(() => {
-    if (auth.user?.access_token) {
-      setAccessToken(auth.user.access_token);
-    } else {
-      setAccessToken(null);
+    if (auth?.user?.access_token) {
+      setAccessToken(auth?.user.access_token);
+      console.log("token", auth.user.access_token);
     }
   }, [auth.user?.access_token, setAccessToken]);
 

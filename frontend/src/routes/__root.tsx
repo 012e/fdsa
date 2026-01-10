@@ -3,6 +3,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { AuthProvider } from "react-oidc-context";
 import { Provider as JotaiProvider } from "jotai";
+import store from "@/lib/store";
 
 import Header from "@/components/Header";
 import { AuthSync } from "@/components/AuthSync";
@@ -36,6 +37,7 @@ export const Route = createRootRoute({
       },
     ],
   }),
+  ssr: false,
 
   shellComponent: RootDocument,
 });
@@ -50,7 +52,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <AuthProvider {...oidcConfig}>
           <QueryClientProvider client={client}>
-            <JotaiProvider>
+            <JotaiProvider store={store}>
               <AuthSync>
                 <Header />
                 {children}

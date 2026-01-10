@@ -1,7 +1,8 @@
 import { RepositoryControllerApi, CodeSearchApi } from "@/lib/generated";
 import axios from "axios";
-import { getDefaultStore } from "jotai";
 import { accessTokenAtom } from "./auth-atoms";
+
+import store from "@/lib/store";
 
 const basePath = "http://localhost:8080";
 const axiosClient = axios.create({
@@ -10,10 +11,12 @@ const axiosClient = axios.create({
 
 axiosClient.interceptors.request.use(
   (config) => {
-    const store = getDefaultStore();
     const token = store.get(accessTokenAtom);
 
+    console.log("fuck", token);
     if (token) {
+      console.log(token);
+      console.log(token);
       config.headers.Authorization = `Bearer ${token}`;
     }
 
