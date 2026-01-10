@@ -1,5 +1,6 @@
 package huyphmnat.fdsa.search.internal.services;
 
+import huyphmnat.fdsa.search.FieldNames;
 import huyphmnat.fdsa.search.Indexes;
 import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
@@ -75,7 +76,7 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         if (request.getQuery() != null && !request.getQuery().isEmpty()) {
             Query multiMatchQuery = MultiMatchQuery.of(m -> m
                 .query(request.getQuery())
-                .fields("content^3", "file_name^2", "file_path")  // Boost content and filename
+                .fields(FieldNames.CONTENT + "^3", FieldNames.FILE_NAME + "^2", FieldNames.FILE_PATH)  // Boost content and filename
             ).toQuery();
             boolQuery.must(multiMatchQuery);
         }
@@ -85,35 +86,35 @@ public class CodeSearchServiceImpl implements CodeSearchService {
 
         if (request.getRepositoryId() != null) {
             filters.add(TermQuery.of(t -> t
-                .field("repository_id")
+                .field(FieldNames.REPOSITORY_ID)
                 .value(FieldValue.of(request.getRepositoryId().toString()))
             ).toQuery());
         }
 
         if (request.getRepositoryIdentifier() != null && !request.getRepositoryIdentifier().isEmpty()) {
             filters.add(TermQuery.of(t -> t
-                .field("repository_identifier.keyword")
+                .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
                 .value(FieldValue.of(request.getRepositoryIdentifier()))
             ).toQuery());
         }
 
         if (request.getLanguage() != null && !request.getLanguage().isEmpty()) {
             filters.add(TermQuery.of(t -> t
-                .field("language.keyword")
+                .field(FieldNames.LANGUAGE_KEYWORD)
                 .value(FieldValue.of(request.getLanguage()))
             ).toQuery());
         }
 
         if (request.getFileExtension() != null && !request.getFileExtension().isEmpty()) {
             filters.add(TermQuery.of(t -> t
-                .field("file_extension.keyword")
+                .field(FieldNames.FILE_EXTENSION_KEYWORD)
                 .value(FieldValue.of(request.getFileExtension()))
             ).toQuery());
         }
 
         if (request.getFilePathPattern() != null && !request.getFilePathPattern().isEmpty()) {
             filters.add(WildcardQuery.of(w -> w
-                .field("file_path")
+                .field(FieldNames.FILE_PATH)
                 .value(request.getFilePathPattern())
             ).toQuery());
         }
@@ -153,23 +154,23 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         Map<String, Object> source = hit.source();
 
         CodeSearchResult.CodeSearchResultBuilder builder = CodeSearchResult.builder()
-            .id((String) source.get("id"))
-            .repositoryId(UUID.fromString((String) source.get("repository_id")))
-            .repositoryIdentifier((String) source.get("repository_identifier"))
-            .filePath((String) source.get("file_path"))
-            .fileName((String) source.get("file_name"))
-            .fileExtension((String) source.get("file_extension"))
-            .language((String) source.get("language"))
-            .content((String) source.get("content"))
+            .id((String) source.get(FieldNames.ID))
+            .repositoryId(UUID.fromString((String) source.get(FieldNames.REPOSITORY_ID)))
+            .repositoryIdentifier((String) source.get(FieldNames.REPOSITORY_IDENTIFIER))
+            .filePath((String) source.get(FieldNames.FILE_PATH))
+            .fileName((String) source.get(FieldNames.FILE_NAME))
+            .fileExtension((String) source.get(FieldNames.FILE_EXTENSION))
+            .language((String) source.get(FieldNames.LANGUAGE))
+            .content((String) source.get(FieldNames.CONTENT))
             .score(hit.score())
-            .size(source.get("size") != null ? ((Number) source.get("size")).longValue() : null);
+            .size(source.get(FieldNames.SIZE) != null ? ((Number) source.get(FieldNames.SIZE)).longValue() : null);
 
         // Parse timestamps
-        if (source.get("created_at") != null) {
-            builder.createdAt(Instant.parse((String) source.get("created_at")));
+        if (source.get(FieldNames.CREATED_AT) != null) {
+            builder.createdAt(Instant.parse((String) source.get(FieldNames.CREATED_AT)));
         }
-        if (source.get("updated_at") != null) {
-            builder.updatedAt(Instant.parse((String) source.get("updated_at")));
+        if (source.get(FieldNames.UPDATED_AT) != null) {
+            builder.updatedAt(Instant.parse((String) source.get(FieldNames.UPDATED_AT)));
         }
 
         // Parse highlights
@@ -182,14 +183,14 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         }
 
         // Parse matched chunks if available
-        if (source.get("chunks") != null) {
-            List<Map<String, Object>> chunks = (List<Map<String, Object>>) source.get("chunks");
+        if (source.get(FieldNames.CHUNKS) != null) {
+            List<Map<String, Object>> chunks = (List<Map<String, Object>>) source.get(FieldNames.CHUNKS);
             List<CodeSearchResult.ChunkMatch> matchedChunks = chunks.stream()
                 .map(chunk -> CodeSearchResult.ChunkMatch.builder()
-                    .index(((Number) chunk.get("index")).intValue())
-                    .content((String) chunk.get("content"))
-                    .startLine(chunk.get("start_line") != null ? ((Number) chunk.get("start_line")).intValue() : 0)
-                    .endLine(chunk.get("end_line") != null ? ((Number) chunk.get("end_line")).intValue() : 0)
+                    .index(((Number) chunk.get(FieldNames.CHUNK_INDEX)).intValue())
+                    .content((String) chunk.get(FieldNames.CHUNK_CONTENT))
+                    .startLine(chunk.get(FieldNames.CHUNK_START_LINE) != null ? ((Number) chunk.get(FieldNames.CHUNK_START_LINE)).intValue() : 0)
+                    .endLine(chunk.get(FieldNames.CHUNK_END_LINE) != null ? ((Number) chunk.get(FieldNames.CHUNK_END_LINE)).intValue() : 0)
                     .build())
                 .collect(Collectors.toList());
             builder.matchedChunks(matchedChunks);

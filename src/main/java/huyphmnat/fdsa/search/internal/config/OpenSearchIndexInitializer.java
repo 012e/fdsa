@@ -1,5 +1,6 @@
 package huyphmnat.fdsa.search.internal.config;
 
+import huyphmnat.fdsa.search.Indexes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -24,8 +25,6 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
 
     private final OpenSearchClient openSearchClient;
 
-    private static final String CODE_FILES_INDEX = "code_files";
-    private static final String CODE_SNIPPETS_INDEX = "code_snippets";
 
     @Override
     public void run(@SuppressWarnings("NullableProblems") ApplicationArguments args) {
@@ -33,7 +32,6 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
 
         try {
             createCodeFilesIndexIfNotExists();
-            createCodeSnippetsIndexIfNotExists();
             log.info("OpenSearch indices initialized successfully");
         } catch (Exception e) {
             log.error("Failed to initialize OpenSearch indices", e);
@@ -42,12 +40,12 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
     }
 
     private void createCodeFilesIndexIfNotExists() throws Exception {
-        if (indexExists(CODE_FILES_INDEX)) {
-            log.info("Index '{}' already exists", CODE_FILES_INDEX);
+        if (indexExists(Indexes.CODE_FILE_INDEX)) {
+            log.info("Index '{}' already exists", Indexes.CODE_FILE_INDEX);
             return;
         }
 
-        log.info("Creating index '{}'", CODE_FILES_INDEX);
+        log.info("Creating index '{}'", Indexes.CODE_FILE_INDEX);
 
         String mappings = """
             {
@@ -91,7 +89,7 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
             """;
 
         CreateIndexRequest request = CreateIndexRequest.of(b -> b
-            .index(CODE_FILES_INDEX)
+            .index(Indexes.CODE_FILE_INDEX)
             .settings(IndexSettings.of(s -> s
                 .numberOfShards(1)
                 .numberOfReplicas(0)
@@ -100,56 +98,7 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
         );
 
         openSearchClient.indices().create(request);
-        log.info("Successfully created index '{}'", CODE_FILES_INDEX);
-    }
-
-    private void createCodeSnippetsIndexIfNotExists() throws Exception {
-        if (indexExists(CODE_SNIPPETS_INDEX)) {
-            log.info("Index '{}' already exists", CODE_SNIPPETS_INDEX);
-            return;
-        }
-
-        log.info("Creating index '{}'", CODE_SNIPPETS_INDEX);
-
-        String mappings = """
-            {
-              "properties": {
-                "snippet_id": { "type": "keyword" },
-                "code": { "type": "text" },
-                "overall_summary": { "type": "text" },
-                "overall_embedding": {
-                  "type": "dense_vector",
-                  "dims": 1536
-                },
-                "chunks": {
-                  "type": "nested",
-                  "properties": {
-                    "chunk_index": { "type": "integer" },
-                    "code": { "type": "text" },
-                    "summary": { "type": "text" },
-                    "embedding": {
-                      "type": "dense_vector",
-                      "dims": 1536
-                    }
-                  }
-                },
-                "created_at": { "type": "date" },
-                "updated_at": { "type": "date" }
-              }
-            }
-            """;
-
-        CreateIndexRequest request = CreateIndexRequest.of(b -> b
-            .index(CODE_SNIPPETS_INDEX)
-            .settings(IndexSettings.of(s -> s
-                .numberOfShards(1)
-                .numberOfReplicas(0)
-            ))
-            .mappings(m -> m.withJson(new StringReader(mappings)))
-        );
-
-        openSearchClient.indices().create(request);
-        log.info("Successfully created index '{}'", CODE_SNIPPETS_INDEX);
+        log.info("Successfully created index '{}'", Indexes.CODE_FILE_INDEX);
     }
 
     private boolean indexExists(String indexName) throws Exception {
