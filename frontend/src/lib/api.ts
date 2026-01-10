@@ -1,4 +1,4 @@
-import { RepositoryControllerApi } from "@/lib/generated";
+import { RepositoryControllerApi, CodeSearchApi } from "@/lib/generated";
 import axios from "axios";
 
 const basePath = "http://localhost:8080";
@@ -12,4 +12,10 @@ const repositoryApi = new RepositoryControllerApi(
   axiosClient,
 );
 
-export { repositoryApi };
+const codeSearchApi = new CodeSearchApi(
+  undefined,
+  basePath,
+  axiosClient,
+);
+
+export { repositoryApi, codeSearchApi };

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RepositoriesIndexRouteImport } from './routes/repositories/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
@@ -22,6 +23,11 @@ import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
 import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ssr.data-only'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -85,6 +91,7 @@ const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/search': typeof SearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/repositories': typeof RepositoriesIndexRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/search': typeof SearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/repositories': typeof RepositoriesIndexRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -114,6 +122,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/search': typeof SearchRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/repositories/': typeof RepositoriesIndexRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/search'
     | '/demo/tanstack-query'
     | '/repositories'
     | '/demo/api/names'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/search'
     | '/demo/tanstack-query'
     | '/repositories'
     | '/demo/api/names'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/search'
     | '/demo/tanstack-query'
     | '/repositories/'
     | '/demo/api/names'
@@ -173,6 +185,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SearchRoute: typeof SearchRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   RepositoriesIndexRoute: typeof RepositoriesIndexRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
@@ -188,6 +201,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -277,6 +297,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SearchRoute: SearchRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   RepositoriesIndexRoute: RepositoriesIndexRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,

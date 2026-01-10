@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router'
-
 import { useState } from 'react'
 import {
   ChevronDown,
@@ -11,6 +10,7 @@ import {
   StickyNote,
   X,
   GitBranch,
+  Search,
 } from 'lucide-react'
 
 export default function Header() {
@@ -81,6 +81,19 @@ export default function Header() {
           >
             <GitBranch size={20} />
             <span className="font-medium">Repositories</span>
+          </Link>
+
+          <Link
+            to="/search"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition-colors mb-2"
+            activeProps={{
+              className:
+                'flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2',
+            }}
+          >
+            <Search size={20} />
+            <span className="font-medium">Code Search</span>
           </Link>
 
           {/* Demo Links Start */}
