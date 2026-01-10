@@ -1,5 +1,6 @@
 package huyphmnat.fdsa.search.internal.services;
 
+import huyphmnat.fdsa.search.Indexes;
 import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.dtos.CodeSearchResult;
@@ -33,9 +34,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class CodeSearchServiceImpl implements CodeSearchService {
-
     private final OpenSearchClient openSearchClient;
-    private static final String FILES_INDEX_NAME = "code_files";
+    private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Override
     public CodeSearchResponse searchCode(CodeSearchRequest request) {

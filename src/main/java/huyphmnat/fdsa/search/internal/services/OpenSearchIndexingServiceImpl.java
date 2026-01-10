@@ -1,5 +1,6 @@
 package huyphmnat.fdsa.search.internal.services;
 
+import huyphmnat.fdsa.search.Indexes;
 import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,9 +13,7 @@ import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,68 +23,21 @@ import java.util.Map;
 public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService {
     private final OpenSearchClient openSearchClient;
 
-    private static final String SNIPPETS_INDEX_NAME = "code_snippets";
-    private static final String FILES_INDEX_NAME = "code_files";
-
-    @Override
-    public void indexSnippet(
-            String snippetId,
-            String code,
-            String overallSummary,
-            List<Double> overallEmbedding,
-            List<ChunkData> chunks) {
-
-        log.info("Indexing snippet {} to OpenSearch", snippetId);
-
-        Map<String, Object> document = new HashMap<>();
-        document.put("snippet_id", snippetId);
-        document.put("code", code);
-        document.put("overall_summary", overallSummary);
-        document.put("overall_embedding", overallEmbedding);
-        document.put("created_at", Instant.now().toString());
-        document.put("updated_at", Instant.now().toString());
-
-        List<Map<String, Object>> chunksData = new ArrayList<>();
-        for (ChunkData chunk : chunks) {
-            Map<String, Object> chunkMap = new HashMap<>();
-            chunkMap.put("chunk_index", chunk.index());
-            chunkMap.put("code", chunk.code());
-            chunkMap.put("summary", chunk.summary());
-            chunkMap.put("embedding", chunk.embedding());
-            chunksData.add(chunkMap);
-        }
-        document.put("chunks", chunksData);
-
-        try {
-            IndexRequest<Map<String, Object>> request = IndexRequest.of(i -> i
-                .index(SNIPPETS_INDEX_NAME)
-                .id(snippetId)
-                .document(document)
-            );
-
-            IndexResponse response = openSearchClient.index(request);
-            log.info("Indexed snippet {} with result: {}", snippetId, response.result());
-        } catch (Exception e) {
-            log.error("Failed to index snippet {} to OpenSearch", snippetId, e);
-            throw new RuntimeException("Failed to index to OpenSearch", e);
-        }
-    }
-
     /**
      * Index a single code file to OpenSearch
      */
     @Override
     public void indexCodeFile(CodeFileDocument document) {
         log.info("Indexing code file {} from repository {}",
-            document.getFilePath(), document.getRepositoryIdentifier());
+                document.getFilePath(), document.getRepositoryIdentifier());
 
         Map<String, Object> docMap = buildCodeFileDocumentMap(document);
 
         try {
             IndexRequest<Map<String, Object>> request = IndexRequest.of(i -> i
-                .index(FILES_INDEX_NAME)
-                .id(document.getId())
-                .document(docMap)
+                    .index(Indexes.CODE_FILE_INDEX)
+                    .id(document.getId())
+                    .document(docMap)
             );
 
             IndexResponse response = openSearchClient.index(request);
@@ -113,26 +65,26 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
             Map<String, Object> docMap = buildCodeFileDocumentMap(document);
 
             operations.add(BulkOperation.of(b -> b
-                .index(IndexOperation.of(i -> i
-                    .index(FILES_INDEX_NAME)
-                    .id(document.getId())
-                    .document(docMap)
-                ))
+                    .index(IndexOperation.of(i -> i
+                            .index(Indexes.CODE_FILE_INDEX)
+                            .id(document.getId())
+                            .document(docMap)
+                    ))
             ));
         }
 
         try {
             BulkRequest bulkRequest = BulkRequest.of(b -> b
-                .operations(operations)
+                    .operations(operations)
             );
 
             BulkResponse response = openSearchClient.bulk(bulkRequest);
 
             if (response.errors()) {
                 log.warn("Bulk indexing completed with errors. Failed items: {}",
-                    response.items().stream()
-                        .filter(item -> item.error() != null)
-                        .count());
+                        response.items().stream()
+                                .filter(item -> item.error() != null)
+                                .count());
             } else {
                 log.info("Successfully bulk indexed {} code files", documents.size());
             }

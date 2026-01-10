@@ -8,13 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface OpenSearchIndexingService {
-    void indexSnippet(
-            String snippetId,
-            String code,
-            String overallSummary,
-            List<Double> overallEmbedding,
-            List<ChunkData> chunks);
-
     void indexCodeFile(CodeFileDocument document);
 
     void bulkIndexCodeFiles(List<CodeFileDocument> documents);
@@ -49,6 +42,6 @@ public interface OpenSearchIndexingService {
         return docMap;
     }
 
-    public record ChunkData(int index, String code, String summary, List<Double> embedding) {
+    record ChunkData(int index, String code, String summary, List<Double> embedding) {
     }
 }

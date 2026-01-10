@@ -33,7 +33,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
     @Autowired
     private OpenSearchClient openSearchClient;
 
-    private static final String FILES_INDEX_NAME = "code_files";
+    private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Test
     void testIngestRepository_SimpleStructure_ShouldIndexAllFiles() throws Exception {
@@ -512,9 +512,6 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
