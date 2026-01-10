@@ -185,7 +185,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .id(documentId)
         );
 
-        GetResponse<Map<String, Object>> response = openSearchClient.get(getRequest, Map.class);
+        GetResponse<Map> response = openSearchClient.get(getRequest, Map.class);
 
         assertThat(response.found()).isTrue();
         Map<String, Object> source = response.source();
@@ -248,7 +248,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .id(documentId)
         );
 
-        GetResponse<Map<String, Object>> response = openSearchClient.get(getRequest, Map.class);
+        GetResponse<Map> response = openSearchClient.get(getRequest, Map.class);
 
         assertThat(response.found()).isTrue();
         Map<String, Object> source = response.source();
