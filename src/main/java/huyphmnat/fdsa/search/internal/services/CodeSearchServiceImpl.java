@@ -7,6 +7,7 @@ import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.dtos.CodeSearchResult;
 import huyphmnat.fdsa.search.interfaces.CodeSearchService;
+import huyphmnat.fdsa.search.internal.config.OpenSearchIndexInitializer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -28,7 +29,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CodeSearchServiceImpl implements CodeSearchService {
     private final OpenSearchClient openSearchClient;
-    private final EmbeddingModel embeddingService;
     private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Override
@@ -71,27 +71,15 @@ public class CodeSearchServiceImpl implements CodeSearchService {
      * Combines full-text search with vector search
      */
     private SearchRequest buildHybridSearchRequest(CodeSearchRequest request) {
-        log.info("Building hybrid search request with RRF");
-
-        // Get or generate query embedding
-        float[] queryEmbedding = request.getQueryEmbedding();
-        if (queryEmbedding == null && request.getQuery() != null && !request.getQuery().isEmpty()) {
-            queryEmbedding = embeddingService.embed(request.getQuery());
-        }
-
-        if (queryEmbedding == null) {
-            log.warn("No query embedding available, falling back to keyword search");
-            return buildKeywordSearchRequest(request);
-        }
-
         try {
             // Build hybrid query with RRF
-            Query hybridQuery = buildHybridQuery(request, queryEmbedding);
+            Query hybridQuery = buildHybridQuery(request);
 
             SearchRequest.Builder searchBuilder = new SearchRequest.Builder()
                     .index(FILES_INDEX_NAME)
                     .query(hybridQuery)
                     .from(request.getPage() * request.getSize())
+                    .pipeline()
                     .size(request.getSize());
 
             // Add highlighting if requested
@@ -189,19 +177,11 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         }
     }
 
-    private static List<Float> mapArrayToList(float[] array) {
-        List<Float> list = new ArrayList<>(array.length);
-        for (float v : array) {
-            list.add(v);
-        }
-        return list;
-    }
-
     /**
      * Builds a hybrid query that combines keyword and vector search with RRF
      * This uses OpenSearch's native HybridQuery API
      */
-    private Query buildHybridQuery(CodeSearchRequest request, float[] queryEmbedding) {
+    private Query buildHybridQuery(CodeSearchRequest request) {
         List<Query> queries = new ArrayList<>();
 
         // 1. Keyword search query (multi_match)
@@ -212,9 +192,9 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         queries.add(keywordQuery);
 
         // 2. Vector search query (kNN)
-        Query vectorQuery = KnnQuery.of(k -> k
+        Query vectorQuery = NeuralQuery.of(k -> k
                 .field(FieldNames.CONTENT_EMBEDDING)
-                .vector(mapArrayToList((queryEmbedding)))
+                .modelId(OpenSearchIndexInitializer.MODEL_ID)
                 .k(request.getSize() * 2)
         ).toQuery();
         queries.add(vectorQuery);

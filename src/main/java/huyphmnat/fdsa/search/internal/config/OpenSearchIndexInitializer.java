@@ -1,13 +1,17 @@
 package huyphmnat.fdsa.search.internal.config;
 
+import huyphmnat.fdsa.search.FieldNames;
 import huyphmnat.fdsa.search.Indexes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.mapping.*;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.opensearch.ingest.Processor;
+import org.opensearch.client.opensearch.ingest.PutPipelineRequest;
+import org.opensearch.client.opensearch.ingest.PutPipelineResponse;
 import org.opensearch.client.opensearch.ml.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
@@ -17,7 +21,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.Map;
 
 @Component
@@ -33,25 +36,27 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
 
     private static final String PIPELINE_ID = "code-files-pipeline";
 
+    public static String MODEL_ID = null;
+    private PutPipelineResponse createSearchPipeline() {
+        var processors = Processor.of(e -> e.pipeline(t -> t.))
+        PutPipelineRequest request = PutPipelineRequest.of(e -> e.processors())
+
+    }
     @Override
-    public void run(ApplicationArguments args) {
-        try {
-            log.info("Starting OpenSearch Semantic Search Configuration...");
+    public void run(ApplicationArguments args) throws Exception {
+        log.info("Starting OpenSearch Semantic Search Configuration...");
 
-            var connector = setupOpenAIConnector();
-            var group = registerModelGroup();
-            var model = registerModel(connector, group);
-            deployModel(model);
+        var connector = setupOpenAIConnector();
+        var group = registerModelGroup();
+        var model = registerModel(connector, group);
+        deployModel(model);
+        MODEL_ID = model.modelId();
 
 
-            setupIngestPipeline(model.modelId());
-            createCodeFilesIndexIfNotExists();
+        setupIngestPipeline(model.modelId());
+        createCodeFilesIndexIfNotExists();
 
-            log.info("OpenSearch initialization complete.");
-        } catch (Exception e) {
-            log.error("Failed to initialize OpenSearch", e);
-            System.exit(SpringApplication.exit(context));
-        }
+        log.info("OpenSearch initialization complete.");
     }
 
     private DeployModelResponse deployModel(RegisterModelResponse model) throws IOException {
@@ -109,7 +114,7 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
         var textEmbeddingProcessor = new Processor.Builder()
                 .textEmbedding(t -> t
                         .modelId(modelId)
-                        .fieldMap(Map.of("content", "content_embedding")))
+                        .fieldMap(Map.of(FieldNames.CONTENT, FieldNames.CONTENT_EMBEDDING)))
                 .build();
 
         openSearchClient.ingest().putPipeline(p -> p
@@ -126,78 +131,48 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
             return;
         }
 
-        String mappings = """
-                {
-                  "properties": {
-                    "id": { "type": "keyword" },
-                    "repository_id": { "type": "keyword" },
-                    "repository_identifier": { "type": "keyword" },
-                    "file_path": {
-                      "type": "text",
-                      "fields": {
-                        "keyword": { "type": "keyword" }
-                      }
-                    },
-                    "file_name": {
-                      "type": "text",
-                      "fields": {
-                        "keyword": { "type": "keyword" }
-                      }
-                    },
-                    "file_extension": { "type": "keyword" },
-                    "language": { "type": "keyword" },
-                    "content": {
-                      "type": "text"
-                    },
-                    "content_embedding": {
-                      "type": "knn_vector",
-                      "dimension": 1536,
-                      "method": {
-                        "name": "hnsw",
-                        "space_type": "cosinesimil",
-                        "engine": "nmslib"
-                      }
-                    },
-                    "size": { "type": "long" },
-                    "chunks": {
-                      "type": "nested",
-                      "properties": {
-                        "index": { "type": "integer" },
-                        "content": {
-                          "type": "text"
-                        },
-                        "embedding": {
-                          "type": "knn_vector",
-                          "dimension": 1536,
-                          "method": {
-                            "name": "hnsw",
-                            "space_type": "cosinesimil",
-                            "engine": "faiss",
-                            "parameters": {
-                              "ef_construction": 128,
-                              "m": 16
-                            }
-                          }
-                        },
-                        "start_line": { "type": "integer" },
-                        "end_line": { "type": "integer" }
-                      }
-                    },
-                    "created_at": { "type": "string" },
-                    "updated_at": { "type": "string" }
-                  }
-                }
-                """;
-
         CreateIndexRequest request = CreateIndexRequest.of(b -> b
                 .index(Indexes.CODE_FILE_INDEX)
                 .settings(IndexSettings.of(s -> s
                         .numberOfShards(1)
                         .numberOfReplicas(0)
                         .knn(true)
-//                        .defaultPipeline(PIPELINE_ID)
+                        .defaultPipeline(PIPELINE_ID)
                 ))
-                .mappings(m -> m.withJson(new StringReader(mappings)))
+                .mappings(m -> m
+                        .properties(FieldNames.ID, Property.of(p -> p.keyword(k -> k)))
+                        .properties(FieldNames.REPOSITORY_ID, Property.of(p -> p.keyword(k -> k)))
+                        .properties(FieldNames.REPOSITORY_IDENTIFIER, Property.of(p -> p.keyword(k -> k)))
+                        .properties(FieldNames.FILE_PATH, Property.of(p -> p.text(t -> t
+                                .fields("keyword", Property.of(f -> f.keyword(k -> k))))))
+                        .properties(FieldNames.FILE_NAME, Property.of(p -> p.text(t -> t
+                                .fields("keyword", Property.of(f -> f.keyword(k -> k))))))
+                        .properties(FieldNames.FILE_EXTENSION, Property.of(p -> p.keyword(k -> k)))
+                        .properties(FieldNames.LANGUAGE, Property.of(p -> p.keyword(k -> k)))
+                        .properties(FieldNames.CONTENT, Property.of(p -> p.text(t -> t)))
+                        .properties(FieldNames.CONTENT_EMBEDDING, Property.of(p -> p.knnVector(knn -> knn
+                                .dimension(1536)
+                                .method(method -> method
+                                        .name("hnsw")
+                                        .spaceType("cosinesimil")
+                                        .engine("faiss")))))
+                        .properties(FieldNames.SIZE, Property.of(p -> p.long_(l -> l)))
+                        .properties(FieldNames.CHUNKS, Property.of(p -> p.nested(n -> n
+                                .properties(FieldNames.CHUNK_INDEX, Property.of(cp -> cp.integer(i -> i)))
+                                .properties(FieldNames.CHUNK_CONTENT, Property.of(cp -> cp.text(t -> t)))
+                                .properties(FieldNames.CHUNK_EMBEDDING, Property.of(cp -> cp.knnVector(knn -> knn
+                                        .dimension(1536)
+                                        .method(method -> method
+                                                .name("hnsw")
+                                                .spaceType("cosinesimil")
+                                                .engine("faiss")
+                                                .parameters("ef_construction", JsonData.of(128))
+                                                .parameters("m", JsonData.of(16))))))
+                                .properties(FieldNames.CHUNK_START_LINE, Property.of(cp -> cp.integer(i -> i)))
+                                .properties(FieldNames.CHUNK_END_LINE, Property.of(cp -> cp.integer(i -> i))))))
+                        .properties(FieldNames.CREATED_AT, Property.of(p -> p.keyword(k -> k)))
+                        .properties(FieldNames.UPDATED_AT, Property.of(p -> p.keyword(k -> k)))
+                )
         );
 
         openSearchClient.indices().create(request);
