@@ -49,6 +49,9 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
 
         String mappings = """
             {
+              "settings": {
+                "index.knn": true,
+              },
               "properties": {
                 "id": { "type": "keyword" },
                 "repository_id": { "type": "keyword" },
@@ -70,13 +73,39 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                 "content": {
                   "type": "text"
                 },
+                "content_embedding": {
+                  "type": "knn_vector",
+                  "dimension": 1536,
+                  "method": {
+                    "name": "hnsw",
+                    "space_type": "cosinesimil",
+                    "engine": "nmslib",
+                    "parameters": {
+                      "ef_construction": 128,
+                      "m": 16
+                    }
+                  }
+                },
                 "size": { "type": "long" },
-                "codeChunks": {
+                "chunks": {
                   "type": "nested",
                   "properties": {
                     "index": { "type": "integer" },
                     "content": {
                       "type": "text"
+                    },
+                    "embedding": {
+                      "type": "knn_vector",
+                      "dimension": 1536,
+                      "method": {
+                        "name": "hnsw",
+                        "space_type": "cosinesimil",
+                        "engine": "faiss",
+                        "parameters": {
+                          "ef_construction": 128,
+                          "m": 16
+                        }
+                      }
                     },
                     "start_line": { "type": "integer" },
                     "end_line": { "type": "integer" }

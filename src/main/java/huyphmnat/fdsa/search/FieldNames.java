@@ -35,6 +35,10 @@ public final class FieldNames {
     public static final String CHUNK_CONTENT = "content";
     public static final String CHUNK_START_LINE = "start_line";
     public static final String CHUNK_END_LINE = "end_line";
+    public static final String CHUNK_EMBEDDING = "embedding";
+
+    // Embedding fields
+    public static final String CONTENT_EMBEDDING = "content_embedding";
 
     private FieldNames() {
         // Prevent instantiation
