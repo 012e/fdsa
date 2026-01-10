@@ -82,8 +82,8 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                     "end_line": { "type": "integer" }
                   }
                 },
-                "created_at": { "type": "date" },
-                "updated_at": { "type": "date" }
+                "created_at": { "type": "string" },
+                "updated_at": { "type": "string" }
               }
             }
             """;

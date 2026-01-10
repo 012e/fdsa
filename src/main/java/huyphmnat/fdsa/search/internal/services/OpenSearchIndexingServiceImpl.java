@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -31,13 +30,11 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
         log.info("Indexing code file {} from repository {}",
                 document.getFilePath(), document.getRepositoryIdentifier());
 
-        Map<String, Object> docMap = buildCodeFileDocumentMap(document);
-
         try {
-            IndexRequest<Map<String, Object>> request = IndexRequest.of(i -> i
+            IndexRequest<CodeFileDocument> request = IndexRequest.of(i -> i
                     .index(Indexes.CODE_FILE_INDEX)
                     .id(document.getId().toString())
-                    .document(docMap)
+                    .document(document)
             );
 
             IndexResponse response = openSearchClient.index(request);
@@ -62,13 +59,11 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
 
         List<BulkOperation> operations = new ArrayList<>();
         for (CodeFileDocument document : documents) {
-            Map<String, Object> docMap = buildCodeFileDocumentMap(document);
-
             operations.add(BulkOperation.of(b -> b
                     .index(IndexOperation.of(i -> i
                             .index(Indexes.CODE_FILE_INDEX)
                             .id(document.getId().toString())
-                            .document(docMap)
+                            .document(document)
                     ))
             ));
         }
@@ -94,5 +89,15 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
         }
     }
 
+    @Override
+    public void refreshIndex() {
+        try {
+            openSearchClient.indices().refresh(r -> r.index(Indexes.CODE_FILE_INDEX));
+            log.info("Refreshed index '{}'", Indexes.CODE_FILE_INDEX);
+        } catch (Exception e) {
+            log.error("Failed to refresh index '{}'", Indexes.CODE_FILE_INDEX, e);
+            throw new RuntimeException("Failed to refresh index", e);
+        }
+    }
 }
 
