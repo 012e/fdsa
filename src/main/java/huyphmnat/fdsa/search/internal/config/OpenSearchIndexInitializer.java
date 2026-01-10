@@ -6,21 +6,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.opensearch._types.mapping.*;
+import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.opensearch.ingest.Processor;
-import org.opensearch.client.opensearch.ingest.PutPipelineRequest;
-import org.opensearch.client.opensearch.ingest.PutPipelineResponse;
 import org.opensearch.client.opensearch.ml.*;
+import org.opensearch.client.opensearch.search_pipeline.ScoreCombinationTechnique;
+import org.opensearch.client.opensearch.search_pipeline.ScoreNormalizationTechnique;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 @Component
@@ -34,14 +34,11 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
     @Value("${spring.ai.openai.api-key}")
     private String openAiApiKey;
 
-    private static final String PIPELINE_ID = "code-files-pipeline";
+    private static final String INGEST_PIPELINE_ID = "code-files-ingest-pipeline";
+    private static final String SEARCH_PIPELINE_ID = "code-files-search-pipeline";
 
     public static String MODEL_ID = null;
-    private PutPipelineResponse createSearchPipeline() {
-        var processors = Processor.of(e -> e.pipeline(t -> t.))
-        PutPipelineRequest request = PutPipelineRequest.of(e -> e.processors())
 
-    }
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("Starting OpenSearch Semantic Search Configuration...");
@@ -52,11 +49,29 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
         deployModel(model);
         MODEL_ID = model.modelId();
 
-
         setupIngestPipeline(model.modelId());
+
+        createSearchPipeline();
+
         createCodeFilesIndexIfNotExists();
 
         log.info("OpenSearch initialization complete.");
+    }
+
+    private void createSearchPipeline() throws IOException {
+        log.info("Configuring Search Pipeline '{}'...", SEARCH_PIPELINE_ID);
+
+        openSearchClient.searchPipeline()
+                .put(e -> e
+                        .id(SEARCH_PIPELINE_ID)
+                        .phaseResultsProcessors(t -> t
+                                .normalizationProcessor(f -> f
+                                        .description("Post processor for hybrid search")
+                                        .normalization(g -> g.technique(ScoreNormalizationTechnique.MinMax))
+                                        .combination(g -> g.technique(ScoreCombinationTechnique.ArithmeticMean)
+                                                .parameters(z -> z.weights(0.3f, 0.7f))))
+                        ));
+        log.info("Search pipeline created.");
     }
 
     private DeployModelResponse deployModel(RegisterModelResponse model) throws IOException {
@@ -106,7 +121,6 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                 )
         );
 
-
         return openSearchClient.ml().createConnector(request);
     }
 
@@ -118,11 +132,11 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                 .build();
 
         openSearchClient.ingest().putPipeline(p -> p
-                .id(PIPELINE_ID)
+                .id(INGEST_PIPELINE_ID)
                 .description("Pipeline for generating embeddings from code files")
                 .processors(textEmbeddingProcessor)
         );
-        log.info("Ingest pipeline '{}' configured.", PIPELINE_ID);
+        log.info("Ingest pipeline '{}' configured.", INGEST_PIPELINE_ID);
     }
 
     private void createCodeFilesIndexIfNotExists() throws Exception {
@@ -137,7 +151,8 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                         .numberOfShards(1)
                         .numberOfReplicas(0)
                         .knn(true)
-                        .defaultPipeline(PIPELINE_ID)
+                        .defaultPipeline(INGEST_PIPELINE_ID)
+                        .search(search -> search.defaultPipeline(SEARCH_PIPELINE_ID))
                 ))
                 .mappings(m -> m
                         .properties(FieldNames.ID, Property.of(p -> p.keyword(k -> k)))

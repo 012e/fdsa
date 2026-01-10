@@ -79,7 +79,6 @@ public class CodeSearchServiceImpl implements CodeSearchService {
                     .index(FILES_INDEX_NAME)
                     .query(hybridQuery)
                     .from(request.getPage() * request.getSize())
-                    .pipeline()
                     .size(request.getSize());
 
             // Add highlighting if requested
@@ -193,6 +192,7 @@ public class CodeSearchServiceImpl implements CodeSearchService {
 
         // 2. Vector search query (kNN)
         Query vectorQuery = NeuralQuery.of(k -> k
+                .queryText(request.getQuery())
                 .field(FieldNames.CONTENT_EMBEDDING)
                 .modelId(OpenSearchIndexInitializer.MODEL_ID)
                 .k(request.getSize() * 2)
