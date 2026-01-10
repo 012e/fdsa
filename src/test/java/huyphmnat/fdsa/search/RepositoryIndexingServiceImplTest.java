@@ -3,7 +3,9 @@ package huyphmnat.fdsa.search;
 import huyphmnat.fdsa.base.OpenSearchIntegrationTest;
 import huyphmnat.fdsa.repository.dtos.*;
 import huyphmnat.fdsa.repository.interfaces.RepositoryFileService;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import huyphmnat.fdsa.search.interfaces.RepositoryIngestionService;
+import huyphmnat.fdsa.search.internal.services.OpenSearchIndexingService;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
@@ -15,10 +17,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -27,13 +28,16 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
     @Autowired
     private RepositoryIngestionService ingestionService;
 
+    @Autowired
+    private OpenSearchIndexingService indexingService;
+
     @MockitoBean
     private RepositoryFileService repositoryFileService;
 
     @Autowired
     private OpenSearchClient openSearchClient;
 
-    private static final String FILES_INDEX_NAME = "code_files";
+    private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Test
     void testIngestRepository_SimpleStructure_ShouldIndexAllFiles() throws Exception {
@@ -81,24 +85,25 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        Thread.sleep(1500);
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
-        assertEquals(2, searchResponse.hits().total().value(), "Should index 2 files");
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
+        assertThat(searchResponse.hits().total().value()).isEqualTo(2);
 
         verify(repositoryFileService, times(1)).listDirectory(repositoryId, "/");
         verify(repositoryFileService, times(1)).readFile(repositoryId, "/Main.java");
@@ -179,24 +184,25 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        Thread.sleep(1500);
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
-        assertEquals(3, searchResponse.hits().total().value(), "Should index 3 files");
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
+        assertThat(searchResponse.hits().total().value()).isEqualTo(3);
 
         verify(repositoryFileService, times(1)).listDirectory(repositoryId, "/");
         verify(repositoryFileService, times(1)).listDirectory(repositoryId, "/src");
@@ -245,24 +251,25 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        Thread.sleep(1500);
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
-        assertEquals(1, searchResponse.hits().total().value(), "Should only index code files");
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
+        assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Should not attempt to read non-code files
         verify(repositoryFileService, never()).readFile(repositoryId, "/image.png");
@@ -306,24 +313,25 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        Thread.sleep(1500);
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
-        assertEquals(1, searchResponse.hits().total().value(), "Should skip large files");
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
+        assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Should not attempt to read large file
         verify(repositoryFileService, never()).readFile(repositoryId, "/VeryLarge.java");
@@ -369,32 +377,32 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        Thread.sleep(1500);
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
-        assertEquals(1, searchResponse.hits().total().value());
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
+        assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Verify chunks were created
-        Map<String, Object> document = searchResponse.hits().hits().get(0).source();
-        assertNotNull(document.get("chunks"), "Large file should have chunks");
-
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> chunks = (List<Map<String, Object>>) document.get("chunks");
-        assertTrue(chunks.size() > 1, "Large file should be split into multiple chunks");
+        assertThat(searchResponse.hits().hits()).isNotEmpty();
+        CodeFileDocument document = searchResponse.hits().hits().get(0).source();
+        assertThat(document).isNotNull();
+        assertThat(document.getCodeChunks()).isNotNull();
+        assertThat(document.getCodeChunks().size()).isGreaterThan(1);
     }
 
     @Test
@@ -452,26 +460,26 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        Thread.sleep(1500);
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         // Should index the successful files
-        assertEquals(2, searchResponse.hits().total().value(),
-            "Should index successful files despite error on one file");
+        assertThat(searchResponse.hits().total().value()).isEqualTo(2);
     }
 
     @Test
@@ -513,25 +521,26 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        Thread.sleep(2000);
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
             .size(200)
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
-        assertEquals(150, searchResponse.hits().total().value(), "Should index all 150 files");
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
+        assertThat(searchResponse.hits().total().value()).isEqualTo(150);
     }
 }
 

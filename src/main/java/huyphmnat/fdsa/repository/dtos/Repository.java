@@ -1,5 +1,6 @@
 package huyphmnat.fdsa.repository.dtos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.NoArgsConstructor;
 import lombok.Data;
 import lombok.Builder;
@@ -10,7 +11,8 @@ import lombok.AllArgsConstructor;
 @Builder
 @Data
 public class Repository {
-    private String filesystemPath;
+    @JsonIgnore
+    private String fileSystemPath;
     private String description;
     private String identifier;
     private String ownerId;

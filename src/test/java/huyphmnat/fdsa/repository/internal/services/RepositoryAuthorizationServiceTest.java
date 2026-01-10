@@ -11,15 +11,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Profile;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class RepositoryAuthorizationServiceTest {
 
     @Mock
@@ -31,127 +33,156 @@ class RepositoryAuthorizationServiceTest {
     @InjectMocks
     private RepositoryAuthorizationServiceImpl authorizationService;
 
-    private static final String USER_ID = "95b54e9e-bbe3-4675-9c12-790ccf41dbb3";
-    private static final String OTHER_USER_ID = "other-user-id";
+    private static final String USERNAME = "jk";
+    private static final String OTHER_USERNAME = "other-user";
     private static final UUID REPO_ID = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        lenient().when(jwtHelper.getCurrentUserId()).thenReturn(USER_ID);
+        lenient().when(jwtHelper.getPreferredUsername()).thenReturn(USERNAME);
     }
 
     @Test
     void extractOwnerFromIdentifier_validIdentifier_returnsOwner() {
         String owner = authorizationService.extractOwnerFromIdentifier("jk/my-repo");
-        assertEquals("jk", owner);
+        assertThat(owner).isEqualTo("jk");
     }
 
     @Test
     void extractOwnerFromIdentifier_invalidIdentifier_throwsException() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThatThrownBy(() ->
             authorizationService.extractOwnerFromIdentifier("invalid-identifier")
-        );
+        ).isInstanceOf(IllegalArgumentException.class);
     }
+
 
     @Test
     void validateOwnerMatchesCurrentUser_matchingOwner_succeeds() {
-        String identifier = USER_ID + "/my-repo";
+        String identifier = USERNAME + "/my-repo";
 
         // Should not throw exception
-        assertDoesNotThrow(() ->
+        assertThatCode(() ->
             authorizationService.validateOwnerMatchesCurrentUser(identifier)
-        );
+        ).doesNotThrowAnyException();
     }
 
     @Test
     void validateOwnerMatchesCurrentUser_differentOwner_throwsAccessDenied() {
-        String identifier = OTHER_USER_ID + "/my-repo";
+        String identifier = OTHER_USERNAME + "/my-repo";
 
-        RepositoryAccessDeniedException exception = assertThrows(
-            RepositoryAccessDeniedException.class,
-            () -> authorizationService.validateOwnerMatchesCurrentUser(identifier)
-        );
-
-        assertTrue(exception.getMessage().contains("Access denied"));
+        assertThatThrownBy(() -> authorizationService.validateOwnerMatchesCurrentUser(identifier))
+            .isInstanceOf(RepositoryAccessDeniedException.class)
+            .hasMessageContaining("Access denied");
     }
 
     @Test
     void requireOwnership_userIsOwner_succeeds() {
         RepositoryEntity repo = RepositoryEntity.builder()
             .id(REPO_ID)
-            .identifier(USER_ID + "/test-repo")
-            .ownerId(USER_ID)
+            .identifier(USERNAME + "/test-repo")
+            .ownerId(USERNAME)
             .build();
 
         when(repositoryRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
 
         // Should not throw exception
-        assertDoesNotThrow(() ->
+        assertThatCode(() ->
             authorizationService.requireOwnership(REPO_ID)
-        );
+        ).doesNotThrowAnyException();
     }
 
     @Test
     void requireOwnership_userIsNotOwner_throwsAccessDenied() {
         RepositoryEntity repo = RepositoryEntity.builder()
             .id(REPO_ID)
-            .identifier(OTHER_USER_ID + "/test-repo")
-            .ownerId(OTHER_USER_ID)
+            .identifier(OTHER_USERNAME + "/test-repo")
+            .ownerId(OTHER_USERNAME)
             .build();
 
         when(repositoryRepository.findById(REPO_ID)).thenReturn(Optional.of(repo));
 
-        RepositoryAccessDeniedException exception = assertThrows(
-            RepositoryAccessDeniedException.class,
-            () -> authorizationService.requireOwnership(REPO_ID)
-        );
-
-        assertTrue(exception.getMessage().contains("Access denied"));
+        assertThatThrownBy(() -> authorizationService.requireOwnership(REPO_ID))
+            .isInstanceOf(RepositoryAccessDeniedException.class)
+            .hasMessageContaining("Access denied");
     }
 
     @Test
     void requireOwnership_repositoryNotFound_throwsNotFoundException() {
         when(repositoryRepository.findById(REPO_ID)).thenReturn(Optional.empty());
 
-        assertThrows(RepositoryNotFoundException.class,
-            () -> authorizationService.requireOwnership(REPO_ID)
-        );
+        assertThatThrownBy(() -> authorizationService.requireOwnership(REPO_ID))
+            .isInstanceOf(RepositoryNotFoundException.class);
     }
 
     @Test
     void requireOwnershipByIdentifier_userIsOwner_succeeds() {
-        String identifier = USER_ID + "/test-repo";
+        String identifier = USERNAME + "/test-repo";
         RepositoryEntity repo = RepositoryEntity.builder()
             .id(REPO_ID)
             .identifier(identifier)
-            .ownerId(USER_ID)
+            .ownerId(USERNAME)
             .build();
 
         when(repositoryRepository.findByIdentifier(identifier)).thenReturn(Optional.of(repo));
 
         // Should not throw exception
-        assertDoesNotThrow(() ->
+        assertThatCode(() ->
             authorizationService.requireOwnershipByIdentifier(identifier)
-        );
+        ).doesNotThrowAnyException();
     }
 
     @Test
     void requireOwnershipByIdentifier_userIsNotOwner_throwsAccessDenied() {
-        String identifier = OTHER_USER_ID + "/test-repo";
+        String identifier = OTHER_USERNAME + "/test-repo";
         RepositoryEntity repo = RepositoryEntity.builder()
             .id(REPO_ID)
             .identifier(identifier)
-            .ownerId(OTHER_USER_ID)
+            .ownerId(OTHER_USERNAME)
             .build();
 
         when(repositoryRepository.findByIdentifier(identifier)).thenReturn(Optional.of(repo));
 
-        RepositoryAccessDeniedException exception = assertThrows(
-            RepositoryAccessDeniedException.class,
-            () -> authorizationService.requireOwnershipByIdentifier(identifier)
-        );
+        assertThatThrownBy(() -> authorizationService.requireOwnershipByIdentifier(identifier))
+            .isInstanceOf(RepositoryAccessDeniedException.class)
+            .hasMessageContaining("Access denied");
+    }
 
-        assertTrue(exception.getMessage().contains("Access denied"));
+    @Test
+    void requireOwnership_noUsernameInToken_throwsIllegalStateException() {
+        when(jwtHelper.getPreferredUsername()).thenReturn(null);
+
+
+        assertThatThrownBy(() -> authorizationService.requireOwnership(REPO_ID))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("No username found in JWT token");
+    }
+
+    @Test
+    void requireOwnershipByIdentifier_noUsernameInToken_throwsIllegalStateException() {
+        when(jwtHelper.getPreferredUsername()).thenReturn(null);
+
+        String identifier = USERNAME + "/test-repo";
+        RepositoryEntity repo = RepositoryEntity.builder()
+            .id(REPO_ID)
+            .identifier(identifier)
+            .ownerId(USERNAME)
+            .build();
+
+        when(repositoryRepository.findByIdentifier(identifier)).thenReturn(Optional.of(repo));
+
+        assertThatThrownBy(() -> authorizationService.requireOwnershipByIdentifier(identifier))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("No username found in JWT token");
+    }
+
+    @Test
+    void validateOwnerMatchesCurrentUser_noUsernameInToken_throwsIllegalStateException() {
+        when(jwtHelper.getPreferredUsername()).thenReturn(null);
+
+        String identifier = USERNAME + "/my-repo";
+
+        assertThatThrownBy(() -> authorizationService.validateOwnerMatchesCurrentUser(identifier))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("No username found in JWT token");
     }
 }
-

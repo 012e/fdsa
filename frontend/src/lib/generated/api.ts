@@ -23,10 +23,52 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
+export interface ChunkMatch {
+    'index'?: number;
+    'content'?: string;
+    'startLine'?: number;
+    'endLine'?: number;
+    'highlights'?: Array<string>;
+}
 export interface CloneRepositoryInput {
     'sourceUrl'?: string;
     'identifier'?: string;
     'description'?: string;
+}
+export interface CodeSearchRequest {
+    'query'?: string;
+    'repositoryId'?: string;
+    'repositoryIdentifier'?: string;
+    'language'?: string;
+    'fileExtension'?: string;
+    'filePathPattern'?: string;
+    'page'?: number;
+    'size'?: number;
+    'highlightFields'?: Array<string>;
+}
+export interface CodeSearchResponse {
+    'results'?: Array<CodeSearchResult>;
+    'totalHits'?: number;
+    'page'?: number;
+    'size'?: number;
+    'totalPages'?: number;
+    'tookMs'?: number;
+}
+export interface CodeSearchResult {
+    'id'?: string;
+    'repositoryId'?: string;
+    'repositoryIdentifier'?: string;
+    'filePath'?: string;
+    'fileName'?: string;
+    'fileExtension'?: string;
+    'language'?: string;
+    'content'?: string;
+    'size'?: number;
+    'score'?: number;
+    'highlights'?: { [key: string]: Array<string>; };
+    'createdAt'?: string;
+    'updatedAt'?: string;
+    'matchedChunks'?: Array<ChunkMatch>;
 }
 export interface DirectoryContent {
     'path'?: string;
@@ -66,9 +108,9 @@ export interface FileEntry extends Entry {
 
 
 export interface Repository {
-    'filesystemPath'?: string;
     'description'?: string;
     'identifier'?: string;
+    'ownerId'?: string;
 }
 export interface RepositoryFileChangeInput {
     'path'?: string;
@@ -92,23 +134,251 @@ export interface RepositoryPathChangeInput {
     'path'?: string;
     'commitMessage'?: string;
 }
-export interface Snippet {
-    'id'?: string;
-    'owner'?: string;
-    'path'?: string;
-    'code'?: string;
+
+/**
+ * CodeSearchApi - axios parameter creator
+ */
+export const CodeSearchApiAxiosParamCreator = function (configuration?: Configuration) {
+    return {
+        /**
+         * Performs full-text search across indexed code files with optional filters
+         * @summary Search for code files
+         * @param {string} q Search query text
+         * @param {string} [repositoryId] Filter by repository ID
+         * @param {string} [repositoryIdentifier] Filter by repository identifier (owner/name)
+         * @param {string} [language] Filter by programming language
+         * @param {string} [fileExtension] Filter by file extension
+         * @param {string} [filePathPattern] Filter by file path pattern (supports wildcards)
+         * @param {number} [page] Page number (0-based)
+         * @param {number} [size] Number of results per page
+         * @param {string} [highlight] Fields to highlight (comma-separated)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchCode: async (q: string, repositoryId?: string, repositoryIdentifier?: string, language?: string, fileExtension?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'q' is not null or undefined
+            assertParamExists('searchCode', 'q', q)
+            const localVarPath = `/api/search/code`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
+            if (q !== undefined) {
+                localVarQueryParameter['q'] = q;
+            }
+
+            if (repositoryId !== undefined) {
+                localVarQueryParameter['repositoryId'] = repositoryId;
+            }
+
+            if (repositoryIdentifier !== undefined) {
+                localVarQueryParameter['repositoryIdentifier'] = repositoryIdentifier;
+            }
+
+            if (language !== undefined) {
+                localVarQueryParameter['language'] = language;
+            }
+
+            if (fileExtension !== undefined) {
+                localVarQueryParameter['fileExtension'] = fileExtension;
+            }
+
+            if (filePathPattern !== undefined) {
+                localVarQueryParameter['filePathPattern'] = filePathPattern;
+            }
+
+            if (page !== undefined) {
+                localVarQueryParameter['page'] = page;
+            }
+
+            if (size !== undefined) {
+                localVarQueryParameter['size'] = size;
+            }
+
+            if (highlight !== undefined) {
+                localVarQueryParameter['highlight'] = highlight;
+            }
+
+            localVarHeaderParameter['Accept'] = 'application/json,*/*';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Performs full-text search across indexed code files with optional filters using POST request
+         * @summary Search for code files (POST)
+         * @param {CodeSearchRequest} codeSearchRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchCodePost: async (codeSearchRequest: CodeSearchRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'codeSearchRequest' is not null or undefined
+            assertParamExists('searchCodePost', 'codeSearchRequest', codeSearchRequest)
+            const localVarPath = `/api/search/code`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+            localVarHeaderParameter['Accept'] = 'application/json,*/*';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(codeSearchRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+    }
+};
+
+/**
+ * CodeSearchApi - functional programming interface
+ */
+export const CodeSearchApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = CodeSearchApiAxiosParamCreator(configuration)
+    return {
+        /**
+         * Performs full-text search across indexed code files with optional filters
+         * @summary Search for code files
+         * @param {string} q Search query text
+         * @param {string} [repositoryId] Filter by repository ID
+         * @param {string} [repositoryIdentifier] Filter by repository identifier (owner/name)
+         * @param {string} [language] Filter by programming language
+         * @param {string} [fileExtension] Filter by file extension
+         * @param {string} [filePathPattern] Filter by file path pattern (supports wildcards)
+         * @param {number} [page] Page number (0-based)
+         * @param {number} [size] Number of results per page
+         * @param {string} [highlight] Fields to highlight (comma-separated)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async searchCode(q: string, repositoryId?: string, repositoryIdentifier?: string, language?: string, fileExtension?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CodeSearchResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.searchCode(q, repositoryId, repositoryIdentifier, language, fileExtension, filePathPattern, page, size, highlight, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CodeSearchApi.searchCode']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Performs full-text search across indexed code files with optional filters using POST request
+         * @summary Search for code files (POST)
+         * @param {CodeSearchRequest} codeSearchRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async searchCodePost(codeSearchRequest: CodeSearchRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CodeSearchResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.searchCodePost(codeSearchRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CodeSearchApi.searchCodePost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+    }
+};
+
+/**
+ * CodeSearchApi - factory interface
+ */
+export const CodeSearchApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = CodeSearchApiFp(configuration)
+    return {
+        /**
+         * Performs full-text search across indexed code files with optional filters
+         * @summary Search for code files
+         * @param {string} q Search query text
+         * @param {string} [repositoryId] Filter by repository ID
+         * @param {string} [repositoryIdentifier] Filter by repository identifier (owner/name)
+         * @param {string} [language] Filter by programming language
+         * @param {string} [fileExtension] Filter by file extension
+         * @param {string} [filePathPattern] Filter by file path pattern (supports wildcards)
+         * @param {number} [page] Page number (0-based)
+         * @param {number} [size] Number of results per page
+         * @param {string} [highlight] Fields to highlight (comma-separated)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchCode(q: string, repositoryId?: string, repositoryIdentifier?: string, language?: string, fileExtension?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig): AxiosPromise<CodeSearchResponse> {
+            return localVarFp.searchCode(q, repositoryId, repositoryIdentifier, language, fileExtension, filePathPattern, page, size, highlight, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Performs full-text search across indexed code files with optional filters using POST request
+         * @summary Search for code files (POST)
+         * @param {CodeSearchRequest} codeSearchRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchCodePost(codeSearchRequest: CodeSearchRequest, options?: RawAxiosRequestConfig): AxiosPromise<CodeSearchResponse> {
+            return localVarFp.searchCodePost(codeSearchRequest, options).then((request) => request(axios, basePath));
+        },
+    };
+};
+
+/**
+ * CodeSearchApi - object-oriented interface
+ */
+export class CodeSearchApi extends BaseAPI {
+    /**
+     * Performs full-text search across indexed code files with optional filters
+     * @summary Search for code files
+     * @param {string} q Search query text
+     * @param {string} [repositoryId] Filter by repository ID
+     * @param {string} [repositoryIdentifier] Filter by repository identifier (owner/name)
+     * @param {string} [language] Filter by programming language
+     * @param {string} [fileExtension] Filter by file extension
+     * @param {string} [filePathPattern] Filter by file path pattern (supports wildcards)
+     * @param {number} [page] Page number (0-based)
+     * @param {number} [size] Number of results per page
+     * @param {string} [highlight] Fields to highlight (comma-separated)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public searchCode(q: string, repositoryId?: string, repositoryIdentifier?: string, language?: string, fileExtension?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig) {
+        return CodeSearchApiFp(this.configuration).searchCode(q, repositoryId, repositoryIdentifier, language, fileExtension, filePathPattern, page, size, highlight, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Performs full-text search across indexed code files with optional filters using POST request
+     * @summary Search for code files (POST)
+     * @param {CodeSearchRequest} codeSearchRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public searchCodePost(codeSearchRequest: CodeSearchRequest, options?: RawAxiosRequestConfig) {
+        return CodeSearchApiFp(this.configuration).searchCodePost(codeSearchRequest, options).then((request) => request(this.axios, this.basePath));
+    }
 }
-export interface SnippetFile {
-    'id'?: string;
-    'owner'?: string;
-    'path'?: string;
-    'directory'?: boolean;
-}
-export interface SnippetInput {
-    'owner'?: string;
-    'path'?: string;
-    'code'?: string;
-}
+
+
 
 /**
  * RepositoryControllerApi - axios parameter creator
@@ -145,6 +415,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = '*/*';
 
@@ -180,6 +454,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
 
@@ -214,6 +492,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
 
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = 'application/json';
@@ -258,6 +540,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = '*/*';
 
@@ -300,6 +586,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
 
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = '*/*';
@@ -344,6 +634,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = '*/*';
 
@@ -375,6 +669,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
 
             localVarHeaderParameter['Accept'] = 'application/json';
 
@@ -409,6 +707,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
 
             localVarHeaderParameter['Accept'] = 'application/json';
 
@@ -448,6 +750,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
             localVarHeaderParameter['Accept'] = 'application/json';
 
             setSearchParams(localVarUrlObj, localVarQueryParameter);
@@ -486,6 +792,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
 
             if (path !== undefined) {
                 localVarQueryParameter['path'] = path;
@@ -532,6 +842,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
             if (path !== undefined) {
                 localVarQueryParameter['path'] = path;
             }
@@ -576,6 +890,10 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
 
             localVarHeaderParameter['Content-Type'] = 'application/json';
             localVarHeaderParameter['Accept'] = '*/*';
@@ -1063,579 +1381,6 @@ export class RepositoryControllerApi extends BaseAPI {
      */
     public updateRepositoryFile(owner: string, repository: string, repositoryFileChangeInput: RepositoryFileChangeInput, options?: RawAxiosRequestConfig) {
         return RepositoryControllerApiFp(this.configuration).updateRepositoryFile(owner, repository, repositoryFileChangeInput, options).then((request) => request(this.axios, this.basePath));
-    }
-}
-
-
-
-/**
- * SnippetControllerApi - axios parameter creator
- */
-export const SnippetControllerApiAxiosParamCreator = function (configuration?: Configuration) {
-    return {
-        /**
-         * 
-         * @param {SnippetInput} snippetInput 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        createSnippet: async (snippetInput: SnippetInput, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'snippetInput' is not null or undefined
-            assertParamExists('createSnippet', 'snippetInput', snippetInput)
-            const localVarPath = `/api/snippets`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = '*/*';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(snippetInput, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteSnippet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('deleteSnippet', 'id', id)
-            const localVarPath = `/api/snippets/{id}`
-                .replace(`{${"id"}}`, String(id));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = '*/*';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getAllSnippets: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/snippets`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = '*/*';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getSnippet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('getSnippet', 'id', id)
-            const localVarPath = `/api/snippets/{id}`
-                .replace(`{${"id"}}`, String(id));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = '*/*';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {string} path 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getSnippetByPath: async (owner: string, path: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'owner' is not null or undefined
-            assertParamExists('getSnippetByPath', 'owner', owner)
-            // verify required parameter 'path' is not null or undefined
-            assertParamExists('getSnippetByPath', 'path', path)
-            const localVarPath = `/api/snippets/by-path`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (owner !== undefined) {
-                localVarQueryParameter['owner'] = owner;
-            }
-
-            if (path !== undefined) {
-                localVarQueryParameter['path'] = path;
-            }
-
-            localVarHeaderParameter['Accept'] = '*/*';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getSnippetsByOwner: async (owner: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'owner' is not null or undefined
-            assertParamExists('getSnippetsByOwner', 'owner', owner)
-            const localVarPath = `/api/snippets/by-owner/{owner}`
-                .replace(`{${"owner"}}`, String(owner));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Accept'] = '*/*';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {string} path 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        listFilesByPath: async (owner: string, path: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'owner' is not null or undefined
-            assertParamExists('listFilesByPath', 'owner', owner)
-            // verify required parameter 'path' is not null or undefined
-            assertParamExists('listFilesByPath', 'path', path)
-            const localVarPath = `/api/snippets/files`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            if (owner !== undefined) {
-                localVarQueryParameter['owner'] = owner;
-            }
-
-            if (path !== undefined) {
-                localVarQueryParameter['path'] = path;
-            }
-
-            localVarHeaderParameter['Accept'] = '*/*';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {SnippetInput} snippetInput 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        updateSnippet: async (id: string, snippetInput: SnippetInput, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'id' is not null or undefined
-            assertParamExists('updateSnippet', 'id', id)
-            // verify required parameter 'snippetInput' is not null or undefined
-            assertParamExists('updateSnippet', 'snippetInput', snippetInput)
-            const localVarPath = `/api/snippets/{id}`
-                .replace(`{${"id"}}`, String(id));
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-            localVarHeaderParameter['Accept'] = '*/*';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(snippetInput, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-    }
-};
-
-/**
- * SnippetControllerApi - functional programming interface
- */
-export const SnippetControllerApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = SnippetControllerApiAxiosParamCreator(configuration)
-    return {
-        /**
-         * 
-         * @param {SnippetInput} snippetInput 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async createSnippet(snippetInput: SnippetInput, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Snippet>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.createSnippet(snippetInput, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SnippetControllerApi.createSnippet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async deleteSnippet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteSnippet(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SnippetControllerApi.deleteSnippet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getAllSnippets(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Snippet>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getAllSnippets(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SnippetControllerApi.getAllSnippets']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getSnippet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Snippet>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getSnippet(id, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SnippetControllerApi.getSnippet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {string} path 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getSnippetByPath(owner: string, path: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Snippet>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getSnippetByPath(owner, path, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SnippetControllerApi.getSnippetByPath']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async getSnippetsByOwner(owner: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<Snippet>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.getSnippetsByOwner(owner, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SnippetControllerApi.getSnippetsByOwner']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {string} path 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async listFilesByPath(owner: string, path: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<SnippetFile>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.listFilesByPath(owner, path, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SnippetControllerApi.listFilesByPath']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {SnippetInput} snippetInput 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async updateSnippet(id: string, snippetInput: SnippetInput, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Snippet>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.updateSnippet(id, snippetInput, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SnippetControllerApi.updateSnippet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-    }
-};
-
-/**
- * SnippetControllerApi - factory interface
- */
-export const SnippetControllerApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = SnippetControllerApiFp(configuration)
-    return {
-        /**
-         * 
-         * @param {SnippetInput} snippetInput 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        createSnippet(snippetInput: SnippetInput, options?: RawAxiosRequestConfig): AxiosPromise<Snippet> {
-            return localVarFp.createSnippet(snippetInput, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        deleteSnippet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<boolean> {
-            return localVarFp.deleteSnippet(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getAllSnippets(options?: RawAxiosRequestConfig): AxiosPromise<Array<Snippet>> {
-            return localVarFp.getAllSnippets(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getSnippet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<Snippet> {
-            return localVarFp.getSnippet(id, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {string} path 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getSnippetByPath(owner: string, path: string, options?: RawAxiosRequestConfig): AxiosPromise<Snippet> {
-            return localVarFp.getSnippetByPath(owner, path, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        getSnippetsByOwner(owner: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<Snippet>> {
-            return localVarFp.getSnippetsByOwner(owner, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} owner 
-         * @param {string} path 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        listFilesByPath(owner: string, path: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<SnippetFile>> {
-            return localVarFp.listFilesByPath(owner, path, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * 
-         * @param {string} id 
-         * @param {SnippetInput} snippetInput 
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        updateSnippet(id: string, snippetInput: SnippetInput, options?: RawAxiosRequestConfig): AxiosPromise<Snippet> {
-            return localVarFp.updateSnippet(id, snippetInput, options).then((request) => request(axios, basePath));
-        },
-    };
-};
-
-/**
- * SnippetControllerApi - object-oriented interface
- */
-export class SnippetControllerApi extends BaseAPI {
-    /**
-     * 
-     * @param {SnippetInput} snippetInput 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public createSnippet(snippetInput: SnippetInput, options?: RawAxiosRequestConfig) {
-        return SnippetControllerApiFp(this.configuration).createSnippet(snippetInput, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} id 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public deleteSnippet(id: string, options?: RawAxiosRequestConfig) {
-        return SnippetControllerApiFp(this.configuration).deleteSnippet(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public getAllSnippets(options?: RawAxiosRequestConfig) {
-        return SnippetControllerApiFp(this.configuration).getAllSnippets(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} id 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public getSnippet(id: string, options?: RawAxiosRequestConfig) {
-        return SnippetControllerApiFp(this.configuration).getSnippet(id, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} owner 
-     * @param {string} path 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public getSnippetByPath(owner: string, path: string, options?: RawAxiosRequestConfig) {
-        return SnippetControllerApiFp(this.configuration).getSnippetByPath(owner, path, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} owner 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public getSnippetsByOwner(owner: string, options?: RawAxiosRequestConfig) {
-        return SnippetControllerApiFp(this.configuration).getSnippetsByOwner(owner, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} owner 
-     * @param {string} path 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public listFilesByPath(owner: string, path: string, options?: RawAxiosRequestConfig) {
-        return SnippetControllerApiFp(this.configuration).listFilesByPath(owner, path, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @param {string} id 
-     * @param {SnippetInput} snippetInput 
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     */
-    public updateSnippet(id: string, snippetInput: SnippetInput, options?: RawAxiosRequestConfig) {
-        return SnippetControllerApiFp(this.configuration).updateSnippet(id, snippetInput, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

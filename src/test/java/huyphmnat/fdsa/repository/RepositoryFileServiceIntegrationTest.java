@@ -8,7 +8,6 @@ import huyphmnat.fdsa.repository.internal.repositories.RepositoryRepository;
 import huyphmnat.fdsa.repository.interfaces.RepositoryFileService;
 import huyphmnat.fdsa.repository.interfaces.RepositoryService;
 import org.eclipse.jgit.api.Git;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,7 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
 
@@ -40,9 +39,9 @@ public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
                 .description("Repository for file operations integration test")
                 .build());
 
-        assertNotNull(repo);
-        Path repoPath = Paths.get(repo.getFilesystemPath());
-        assertTrue(Files.exists(repoPath));
+        assertThat(repo).isNotNull();
+        Path repoPath = Paths.get(repo.getFileSystemPath());
+        assertThat(Files.exists(repoPath)).isTrue();
 
         // Load the underlying entity to get the UUID id used by RepositoryFileService
         RepositoryEntity entity = repositoryRepository.findByIdentifier(identifier)
@@ -50,7 +49,7 @@ public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
 
         // Ensure git repo is initialized and clean initially
         try (Git git = Git.open(repoPath.toFile())) {
-            assertTrue(git.status().call().isClean(), "Repository should be clean after initialization");
+            assertThat(git.status().call().isClean()).as("Repository should be clean after initialization").isTrue();
         }
 
         // 2. Create a folder and verify .gitkeep and commit
@@ -59,14 +58,14 @@ public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
         repositoryFileService.createFolder(entity.getId(), folderPath, createFolderCommit);
 
         Path folder = repoPath.resolve(folderPath);
-        assertTrue(Files.exists(folder));
-        assertTrue(Files.isDirectory(folder));
+        assertThat(Files.exists(folder)).isTrue();
+        assertThat(Files.isDirectory(folder)).isTrue();
         Path gitkeep = folder.resolve(".gitkeep");
-        assertTrue(Files.exists(gitkeep), ".gitkeep should be created in new folder");
+        assertThat(Files.exists(gitkeep)).withFailMessage(".gitkeep should be created in new folder").isTrue();
 
         try (Git git = Git.open(repoPath.toFile())) {
-            assertTrue(git.status().call().isClean(), "Repository should be clean after createFolder commit");
-            assertEquals(createFolderCommit, git.log().setMaxCount(1).call().iterator().next().getFullMessage());
+            assertThat(git.status().call().isClean()).as("Repository should be clean after createFolder commit").isTrue();
+            assertThat(git.log().setMaxCount(1).call().iterator().next().getFullMessage()).isEqualTo(createFolderCommit);
         }
 
         // 3. Add a new file and verify content and commit
@@ -76,12 +75,12 @@ public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
         repositoryFileService.addFile(entity.getId(), filePath, fileContent.getBytes(StandardCharsets.UTF_8), addFileCommit);
 
         Path file = repoPath.resolve(filePath);
-        assertTrue(Files.exists(file));
-        assertEquals(fileContent, Files.readString(file));
+        assertThat(Files.exists(file)).isTrue();
+        assertThat(Files.readString(file)).isEqualTo(fileContent);
 
         try (Git git = Git.open(repoPath.toFile())) {
-            assertTrue(git.status().call().isClean(), "Repository should be clean after addFile commit");
-            assertEquals(addFileCommit, git.log().setMaxCount(1).call().iterator().next().getFullMessage());
+            assertThat(git.status().call().isClean()).as("Repository should be clean after addFile commit").isTrue();
+            assertThat(git.log().setMaxCount(1).call().iterator().next().getFullMessage()).isEqualTo(addFileCommit);
         }
 
         // 4. Update the file and verify new content and commit
@@ -89,33 +88,33 @@ public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
         String updateFileCommit = "Update App.java";
         repositoryFileService.updateFile(entity.getId(), filePath, updatedContent.getBytes(StandardCharsets.UTF_8), updateFileCommit);
 
-        assertEquals(updatedContent, Files.readString(file));
+        assertThat(Files.readString(file)).isEqualTo(updatedContent);
 
         try (Git git = Git.open(repoPath.toFile())) {
-            assertTrue(git.status().call().isClean(), "Repository should be clean after updateFile commit");
-            assertEquals(updateFileCommit, git.log().setMaxCount(1).call().iterator().next().getFullMessage());
+            assertThat(git.status().call().isClean()).as("Repository should be clean after updateFile commit").isTrue();
+            assertThat(git.log().setMaxCount(1).call().iterator().next().getFullMessage()).isEqualTo(updateFileCommit);
         }
 
         // 5. Delete the file and verify removal and commit
         String deleteFileCommit = "Delete App.java";
         repositoryFileService.deleteFile(entity.getId(), filePath, deleteFileCommit);
 
-        assertFalse(Files.exists(file));
+        assertThat(Files.exists(file)).isFalse();
 
         try (Git git = Git.open(repoPath.toFile())) {
-            assertTrue(git.status().call().isClean(), "Repository should be clean after deleteFile commit");
-            assertEquals(deleteFileCommit, git.log().setMaxCount(1).call().iterator().next().getFullMessage());
+            assertThat(git.status().call().isClean()).as("Repository should be clean after deleteFile commit").isTrue();
+            assertThat(git.log().setMaxCount(1).call().iterator().next().getFullMessage()).isEqualTo(deleteFileCommit);
         }
 
         // 6. Delete folder recursively and verify commit
         String deleteFolderCommit = "Delete src/main/java folder";
         repositoryFileService.deleteFolder(entity.getId(), folderPath, deleteFolderCommit);
 
-        assertFalse(Files.exists(folder));
+        assertThat(Files.exists(folder)).isFalse();
 
         try (Git git = Git.open(repoPath.toFile())) {
-            assertTrue(git.status().call().isClean(), "Repository should be clean after deleteFolder commit");
-            assertEquals(deleteFolderCommit, git.log().setMaxCount(1).call().iterator().next().getFullMessage());
+            assertThat(git.status().call().isClean()).as("Repository should be clean after deleteFolder commit").isTrue();
+            assertThat(git.log().setMaxCount(1).call().iterator().next().getFullMessage()).isEqualTo(deleteFolderCommit);
         }
     }
 }

@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest {
 
@@ -80,75 +80,74 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
     public void testListRootDirectory() {
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, null);
 
-        assertNotNull(content);
-        assertEquals("/", content.getPath());
-        assertNotNull(content.getEntries());
+        assertThat(content).isNotNull();
+        assertThat(content.getPath()).isEqualTo("/");
+        assertThat(content.getEntries()).isNotNull();
 
         // Should have: README.md, src/, docs/
         List<Entry> entries = content.getEntries();
-        assertTrue(entries.size() >= 3, "Should have at least 3 entries in root");
-
+        assertThat(entries).hasSizeGreaterThanOrEqualTo(3);
 
         // Verify we have the expected entries
-        assertTrue(entries.stream().anyMatch(e -> e.getName().equals("README.md") && e.getType() == FileEntryType.FILE));
-        assertTrue(entries.stream().anyMatch(e -> e.getName().equals("src") && e.getType() == FileEntryType.DIRECTORY));
-        assertTrue(entries.stream().anyMatch(e -> e.getName().equals("docs") && e.getType() == FileEntryType.DIRECTORY));
+        assertThat(entries).anyMatch(e -> e.getName().equals("README.md") && e.getType() == FileEntryType.FILE);
+        assertThat(entries).anyMatch(e -> e.getName().equals("src") && e.getType() == FileEntryType.DIRECTORY);
+        assertThat(entries).anyMatch(e -> e.getName().equals("docs") && e.getType() == FileEntryType.DIRECTORY);
     }
 
     @Test
     public void testListRootDirectoryWithSlash() {
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "/");
 
-        assertNotNull(content);
-        assertEquals("/", content.getPath());
-        assertTrue(content.getEntries().size() >= 3);
+        assertThat(content).isNotNull();
+        assertThat(content.getPath()).isEqualTo("/");
+        assertThat(content.getEntries()).hasSizeGreaterThanOrEqualTo(3);
     }
 
     @Test
     public void testListRootDirectoryWithEmptyString() {
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "");
 
-        assertNotNull(content);
-        assertEquals("/", content.getPath());
-        assertTrue(content.getEntries().size() >= 3);
+        assertThat(content).isNotNull();
+        assertThat(content.getPath()).isEqualTo("/");
+        assertThat(content.getEntries()).hasSizeGreaterThanOrEqualTo(3);
     }
 
     @Test
     public void testListSubdirectory() {
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "src");
 
-        assertNotNull(content);
-        assertEquals("src", content.getPath());
-        assertNotNull(content.getEntries());
+        assertThat(content).isNotNull();
+        assertThat(content.getPath()).isEqualTo("src");
+        assertThat(content.getEntries()).isNotNull();
 
         // Should have: main/, test/
         List<Entry> entries = content.getEntries();
-        assertTrue(entries.size() >= 2, "src/ should have main and test subdirectories");
+        assertThat(entries).hasSizeGreaterThanOrEqualTo(2);
 
-        assertTrue(entries.stream().anyMatch(e -> e.getName().equals("main") && e.getType() == FileEntryType.DIRECTORY));
-        assertTrue(entries.stream().anyMatch(e -> e.getName().equals("test") && e.getType() == FileEntryType.DIRECTORY));
+        assertThat(entries).anyMatch(e -> e.getName().equals("main") && e.getType() == FileEntryType.DIRECTORY);
+        assertThat(entries).anyMatch(e -> e.getName().equals("test") && e.getType() == FileEntryType.DIRECTORY);
     }
 
     @Test
     public void testListNestedDirectory() {
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "src/main");
 
-        assertNotNull(content);
-        assertEquals("src/main", content.getPath());
+        assertThat(content).isNotNull();
+        assertThat(content.getPath()).isEqualTo("src/main");
 
         List<Entry> entries = content.getEntries();
-        assertTrue(entries.size() >= 2, "src/main should have java and resources");
+        assertThat(entries).hasSizeGreaterThanOrEqualTo(2);
 
-        assertTrue(entries.stream().anyMatch(e -> e.getName().equals("java") && e.getType() == FileEntryType.DIRECTORY));
-        assertTrue(entries.stream().anyMatch(e -> e.getName().equals("resources") && e.getType() == FileEntryType.DIRECTORY));
+        assertThat(entries).anyMatch(e -> e.getName().equals("java") && e.getType() == FileEntryType.DIRECTORY);
+        assertThat(entries).anyMatch(e -> e.getName().equals("resources") && e.getType() == FileEntryType.DIRECTORY);
     }
 
     @Test
     public void testListDirectoryWithFiles() {
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "src/main/java");
 
-        assertNotNull(content);
-        assertEquals("src/main/java", content.getPath());
+        assertThat(content).isNotNull();
+        assertThat(content.getPath()).isEqualTo("src/main/java");
 
         List<Entry> entries = content.getEntries();
 
@@ -158,20 +157,19 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
             .findFirst()
             .orElseThrow(() -> new AssertionError("Should have App.java"));
 
-
-        assertInstanceOf(FileEntry.class, app);
+        assertThat(app).isInstanceOf(FileEntry.class);
         FileEntry appJava = (FileEntry) app;
-        assertEquals(FileEntryType.FILE, appJava.getType());
-        assertNotNull(appJava.getSize());
-        assertTrue(appJava.getSize() > 0, "App.java should have content");
-        assertEquals("src/main/java/App.java", appJava.getPath());
+        assertThat(appJava.getType()).isEqualTo(FileEntryType.FILE);
+        assertThat(appJava.getSize()).isNotNull();
+        assertThat(appJava.getSize()).isGreaterThan(0);
+        assertThat(appJava.getPath()).isEqualTo("src/main/java/App.java");
     }
 
     @Test
     public void testListDirectoryWithMixedContent() {
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "docs");
 
-        assertNotNull(content);
+        assertThat(content).isNotNull();
 
         List<Entry> entries = content.getEntries();
 
@@ -181,112 +179,112 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
             .findFirst()
             .orElseThrow(() -> new AssertionError("Should have guide.md"));
 
-        assertInstanceOf(FileEntry.class, guideMdEntry);
+        assertThat(guideMdEntry).isInstanceOf(FileEntry.class);
         FileEntry guideMd = (FileEntry) guideMdEntry;
 
-        assertEquals(FileEntryType.FILE, guideMd.getType());
-        assertNotNull(guideMd.getSize());
-        assertTrue(guideMd.getSize() > 0);
+        assertThat(guideMd.getType()).isEqualTo(FileEntryType.FILE);
+        assertThat(guideMd.getSize()).isNotNull();
+        assertThat(guideMd.getSize()).isGreaterThan(0);
     }
 
     @Test
     public void testListEmptyDirectory() {
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "src/test");
 
-        assertNotNull(content);
-        assertEquals("src/test", content.getPath());
+        assertThat(content).isNotNull();
+        assertThat(content.getPath()).isEqualTo("src/test");
 
         // May contain .gitkeep
         List<Entry> entries = content.getEntries();
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
     }
 
     @Test
     public void testListNonExistentDirectory() {
-        RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> repositoryFileService.listDirectory(repositoryId, "non/existent/path"));
+        Throwable exception = catchThrowable(() -> repositoryFileService.listDirectory(repositoryId, "non/existent/path"));
 
-        assertTrue(exception.getMessage().contains("Directory not found"));
+        assertThat(exception).isInstanceOf(RuntimeException.class);
+        assertThat(exception.getMessage()).contains("Directory not found");
     }
 
     @Test
     public void testListDirectoryOnFilePath() {
-        RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> repositoryFileService.listDirectory(repositoryId, "README.md"));
+        Throwable exception = catchThrowable(() -> repositoryFileService.listDirectory(repositoryId, "README.md"));
 
-        assertTrue(exception.getMessage().contains("not a directory"));
+        assertThat(exception).isInstanceOf(RuntimeException.class);
+        assertThat(exception.getMessage()).contains("not a directory");
     }
 
     @Test
     public void testReadFile() {
         FileContent fileContent = repositoryFileService.readFile(repositoryId, "README.md");
 
-        assertNotNull(fileContent);
-        assertEquals("README.md", fileContent.getPath());
-        assertEquals("README.md", fileContent.getName());
-        assertNotNull(fileContent.getSize());
-        assertTrue(fileContent.getSize() > 0);
-        assertNotNull(fileContent.getContent());
+        assertThat(fileContent).isNotNull();
+        assertThat(fileContent.getPath()).isEqualTo("README.md");
+        assertThat(fileContent.getName()).isEqualTo("README.md");
+        assertThat(fileContent.getSize()).isNotNull();
+        assertThat(fileContent.getSize()).isGreaterThan(0);
+        assertThat(fileContent.getContent()).isNotNull();
 
         String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
-        assertTrue(content.contains("Test Repository"));
-        assertTrue(content.contains("This is a test"));
+        assertThat(content).contains("Test Repository");
+        assertThat(content).contains("This is a test");
     }
 
     @Test
     public void testReadNestedFile() {
         FileContent fileContent = repositoryFileService.readFile(repositoryId, "src/main/java/App.java");
 
-        assertNotNull(fileContent);
-        assertEquals("src/main/java/App.java", fileContent.getPath());
-        assertEquals("App.java", fileContent.getName());
-        assertNotNull(fileContent.getSize());
-        assertNotNull(fileContent.getContent());
+        assertThat(fileContent).isNotNull();
+        assertThat(fileContent.getPath()).isEqualTo("src/main/java/App.java");
+        assertThat(fileContent.getName()).isEqualTo("App.java");
+        assertThat(fileContent.getSize()).isNotNull();
+        assertThat(fileContent.getContent()).isNotNull();
 
         String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
-        assertTrue(content.contains("public class App"));
-        assertTrue(content.contains("main"));
-        assertTrue(content.contains("System.out.println"));
+        assertThat(content).contains("public class App");
+        assertThat(content).contains("main");
+        assertThat(content).contains("System.out.println");
     }
 
     @Test
     public void testReadPropertiesFile() {
         FileContent fileContent = repositoryFileService.readFile(repositoryId, "src/main/resources/config.properties");
 
-        assertNotNull(fileContent);
-        assertEquals("config.properties", fileContent.getName());
+        assertThat(fileContent).isNotNull();
+        assertThat(fileContent.getName()).isEqualTo("config.properties");
 
         String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
-        assertTrue(content.contains("app.name=TestApp"));
-        assertTrue(content.contains("app.version=1.0"));
+        assertThat(content).contains("app.name=TestApp");
+        assertThat(content).contains("app.version=1.0");
     }
 
     @Test
     public void testReadMarkdownFile() {
         FileContent fileContent = repositoryFileService.readFile(repositoryId, "docs/guide.md");
 
-        assertNotNull(fileContent);
-        assertEquals("guide.md", fileContent.getName());
+        assertThat(fileContent).isNotNull();
+        assertThat(fileContent.getName()).isEqualTo("guide.md");
 
         String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
-        assertTrue(content.contains("User Guide"));
-        assertTrue(content.contains("Getting Started"));
+        assertThat(content).contains("User Guide");
+        assertThat(content).contains("Getting Started");
     }
 
     @Test
     public void testReadNonExistentFile() {
-        RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> repositoryFileService.readFile(repositoryId, "non/existent/file.txt"));
+        Throwable exception = catchThrowable(() -> repositoryFileService.readFile(repositoryId, "non/existent/file.txt"));
 
-        assertTrue(exception.getMessage().contains("File not found"));
+        assertThat(exception).isInstanceOf(RuntimeException.class);
+        assertThat(exception.getMessage()).contains("File not found");
     }
 
     @Test
     public void testReadDirectoryAsFile() {
-        RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> repositoryFileService.readFile(repositoryId, "src"));
+        Throwable exception = catchThrowable(() -> repositoryFileService.readFile(repositoryId, "src"));
 
-        assertTrue(exception.getMessage().contains("not a file"));
+        assertThat(exception).isInstanceOf(RuntimeException.class);
+        assertThat(exception.getMessage()).contains("not a file");
     }
 
     @Test
@@ -297,13 +295,17 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
 
         // Directories should come before files
         boolean seenFile = false;
+        boolean directoryAfterFile = false;
         for (Entry entry : entries) {
             if (entry.getType() == FileEntryType.FILE) {
                 seenFile = true;
             } else if (entry.getType() == FileEntryType.DIRECTORY && seenFile) {
-                fail("Directories should come before files in sorted list");
+                directoryAfterFile = true;
+                break;
             }
         }
+
+        assertThat(directoryAfterFile).isFalse();
 
         // Within each type, entries should be alphabetically sorted
         List<String> dirNames = entries.stream()
@@ -312,8 +314,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
             .toList();
 
         for (int i = 1; i < dirNames.size(); i++) {
-            assertTrue(dirNames.get(i - 1).compareTo(dirNames.get(i)) <= 0,
-                "Directory names should be alphabetically sorted");
+            assertThat(dirNames.get(i - 1).compareTo(dirNames.get(i))).isLessThanOrEqualTo(0);
         }
     }
 
@@ -326,13 +327,13 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
             .findFirst()
             .orElseThrow(() -> new AssertionError("Should have README.md"));
 
-        assertEquals("README.md", readmeEntryBase.getName());
-        assertEquals("README.md", readmeEntryBase.getPath());
-        assertEquals(FileEntryType.FILE, readmeEntryBase.getType());
-        assertInstanceOf(FileEntry.class, readmeEntryBase);
+        assertThat(readmeEntryBase.getName()).isEqualTo("README.md");
+        assertThat(readmeEntryBase.getPath()).isEqualTo("README.md");
+        assertThat(readmeEntryBase.getType()).isEqualTo(FileEntryType.FILE);
+        assertThat(readmeEntryBase).isInstanceOf(FileEntry.class);
         FileEntry readmeEntry = (FileEntry) readmeEntryBase;
-        assertNotNull(readmeEntry.getSize());
-        assertTrue(readmeEntry.getSize() > 0);
+        assertThat(readmeEntry.getSize()).isNotNull();
+        assertThat(readmeEntry.getSize()).isGreaterThan(0);
     }
 
     @Test
@@ -343,10 +344,10 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
             .filter(e -> e.getType() == FileEntryType.DIRECTORY)
             .toList();
 
-        assertFalse(directories.isEmpty(), "Should have some directories");
+        assertThat(directories).isNotEmpty();
 
         for (Entry dir : directories) {
-            assertInstanceOf(DirectoryEntry.class, dir, "Directory entries should be DirectoryEntry instances");
+            assertThat(dir).isInstanceOf(DirectoryEntry.class);
             // DirectoryEntry doesn't have a size field, so we can't access it
             // The fact that it's a DirectoryEntry is sufficient validation
         }
@@ -355,11 +356,10 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
     @Test
     public void testPathTraversalProtection() {
         // Try to access outside repository
-        RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> repositoryFileService.listDirectory(repositoryId, "../../../etc"));
+        Throwable exception = catchThrowable(() -> repositoryFileService.listDirectory(repositoryId, "../../../etc"));
 
-        assertTrue(exception.getMessage().contains("Invalid path") ||
-                   exception.getMessage().contains("outside repository"));
+        assertThat(exception).isInstanceOf(RuntimeException.class);
+        assertThat(exception.getMessage()).containsAnyOf("Invalid path", "outside repository");
     }
 
     @Test
@@ -373,7 +373,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         FileContent fileContent = repositoryFileService.readFile(repositoryId, "README.md");
 
         String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
-        assertEquals(newContent, content);
+        assertThat(content).isEqualTo(newContent);
     }
 
     @Test
@@ -385,8 +385,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         // List directory
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "/");
 
-        assertTrue(content.getEntries().stream()
-            .anyMatch(e -> e.getName().equals("NEW_FILE.txt")));
+        assertThat(content.getEntries()).anyMatch(e -> e.getName().equals("NEW_FILE.txt"));
     }
 
     @Test
@@ -397,8 +396,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         // List directory
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "/");
 
-        assertFalse(content.getEntries().stream()
-            .anyMatch(e -> e.getName().equals("README.md")));
+        assertThat(content.getEntries()).noneMatch(e -> e.getName().equals("README.md"));
     }
 
     @Test
@@ -406,9 +404,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         DirectoryContent content = repositoryFileService.listDirectory(repositoryId, "/");
 
         // .git directory should not be listed
-        assertFalse(content.getEntries().stream()
-            .anyMatch(e -> e.getName().startsWith(".git")),
-            ".git files/folders should be excluded from listing");
+        assertThat(content.getEntries()).noneMatch(e -> e.getName().startsWith(".git"));
     }
 }
 

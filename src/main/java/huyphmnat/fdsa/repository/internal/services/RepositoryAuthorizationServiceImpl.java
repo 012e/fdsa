@@ -48,18 +48,22 @@ public class RepositoryAuthorizationServiceImpl implements RepositoryAuthorizati
      */
     @Override
     public void requireOwnership(UUID repositoryId) {
-        String currentUserId = jwtHelper.getCurrentUserId();
+        String currentUsername = jwtHelper.getPreferredUsername();
+        if (currentUsername == null || currentUsername.isBlank()) {
+            throw new IllegalStateException("No username found in JWT token");
+        }
+
         RepositoryEntity repository = repositoryRepository.findById(repositoryId)
                 .orElseThrow(() -> new RepositoryNotFoundException("Repository not found: " + repositoryId));
 
-        if (!currentUserId.equals(repository.getOwnerId())) {
+        if (!currentUsername.equals(repository.getOwnerId())) {
             log.warn("Access denied: User {} attempted to access repository {} owned by {}",
-                    currentUserId, repository.getIdentifier(), repository.getOwnerId());
+                    currentUsername, repository.getIdentifier(), repository.getOwnerId());
             throw new RepositoryAccessDeniedException(
                     "Access denied: You don't have permission to modify this repository");
         }
 
-        log.debug("Access granted: User {} is owner of repository {}", currentUserId, repository.getIdentifier());
+        log.debug("Access granted: User {} is owner of repository {}", currentUsername, repository.getIdentifier());
     }
 
     /**
@@ -68,38 +72,46 @@ public class RepositoryAuthorizationServiceImpl implements RepositoryAuthorizati
      */
     @Override
     public void requireOwnershipByIdentifier(String identifier) {
-        String currentUserId = jwtHelper.getCurrentUserId();
+        String currentUsername = jwtHelper.getPreferredUsername();
+        if (currentUsername == null || currentUsername.isBlank()) {
+            throw new IllegalStateException("No username found in JWT token");
+        }
+
         RepositoryEntity repository = repositoryRepository.findByIdentifier(identifier)
                 .orElseThrow(() -> new RepositoryNotFoundException("Repository not found: " + identifier));
 
-        if (!currentUserId.equals(repository.getOwnerId())) {
+        if (!currentUsername.equals(repository.getOwnerId())) {
             log.warn("Access denied: User {} attempted to access repository {} owned by {}",
-                    currentUserId, repository.getIdentifier(), repository.getOwnerId());
+                    currentUsername, repository.getIdentifier(), repository.getOwnerId());
             throw new RepositoryAccessDeniedException(
                     "Access denied: You don't have permission to modify this repository");
         }
 
-        log.debug("Access granted: User {} is owner of repository {}", currentUserId, repository.getIdentifier());
+        log.debug("Access granted: User {} is owner of repository {}", currentUsername, repository.getIdentifier());
     }
 
     /**
-     * Validate that the requesting user's ID matches the owner in the repository identifier.
+     * Validate that the requesting user's username matches the owner in the repository identifier.
      * For example, if user "jk" tries to create "other-user/repo", this will fail.
      */
     @Override
     public void validateOwnerMatchesCurrentUser(String identifier) {
-        String currentUserId = jwtHelper.getCurrentUserId();
-        String ownerFromIdentifier = extractOwnerFromIdentifier(identifier);
-
-        if (!currentUserId.equals(ownerFromIdentifier)) {
-            log.warn("Access denied: User {} attempted to create/clone repository with identifier {} (owner mismatch)",
-                    currentUserId, identifier);
-            throw new RepositoryAccessDeniedException(
-                    "Access denied: You can only create repositories under your own username. " +
-                    "Expected identifier starting with '" + currentUserId + "/', but got '" + identifier + "'");
+        String currentUsername = jwtHelper.getPreferredUsername();
+        if (currentUsername == null || currentUsername.isBlank()) {
+            throw new IllegalStateException("No username found in JWT token");
         }
 
-        log.debug("Owner validation passed: User {} matches owner in identifier {}", currentUserId, identifier);
+        String ownerFromIdentifier = extractOwnerFromIdentifier(identifier);
+
+        if (!currentUsername.equals(ownerFromIdentifier)) {
+            log.warn("Access denied: User {} attempted to create/clone repository with identifier {} (owner mismatch)",
+                    currentUsername, identifier);
+            throw new RepositoryAccessDeniedException(
+                    "Access denied: You can only create repositories under your own username. " +
+                    "Expected identifier starting with '" + currentUsername + "/', but got '" + identifier + "'");
+        }
+
+        log.debug("Owner validation passed: User {} matches owner in identifier {}", currentUsername, identifier);
     }
 }
 

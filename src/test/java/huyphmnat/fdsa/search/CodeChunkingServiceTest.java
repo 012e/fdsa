@@ -1,4 +1,4 @@
-package huyphmnat.fdsa.shared.ingestion;
+package huyphmnat.fdsa.search;
 
 import huyphmnat.fdsa.search.internal.services.CodeChunkingService;
 import huyphmnat.fdsa.search.internal.services.CodeChunkingServiceImpl;
