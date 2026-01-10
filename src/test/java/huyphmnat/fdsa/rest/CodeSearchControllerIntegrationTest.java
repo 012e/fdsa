@@ -206,10 +206,8 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
     void testSearchCodePost_WithAllFilters_ShouldReturnFilteredResults() throws Exception {
         CodeSearchRequest request = CodeSearchRequest.builder()
             .query("class")
-            .repositoryId(testRepositoryId)
             .repositoryIdentifier(testRepositoryIdentifier)
             .language("Java")
-            .fileExtension("java")
             .page(0)
             .size(10)
             .highlightFields(List.of("content"))

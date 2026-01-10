@@ -4,8 +4,6 @@ import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.interfaces.CodeSearchService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -17,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/search")
@@ -33,35 +30,6 @@ public class CodeSearchController {
         operationId = "searchCode",
         summary = "Search for code files",
         description = "Performs full-text search across indexed code files with optional filters",
-        parameters = {
-            @Parameter(in = ParameterIn.QUERY, name = "q", required = true,
-                description = "Search query text",
-                schema = @Schema(type = "string")),
-            @Parameter(in = ParameterIn.QUERY, name = "repositoryId",
-                description = "Filter by repository ID",
-                schema = @Schema(type = "string", format = "uuid")),
-            @Parameter(in = ParameterIn.QUERY, name = "repositoryIdentifier",
-                description = "Filter by repository identifier (owner/name)",
-                schema = @Schema(type = "string")),
-            @Parameter(in = ParameterIn.QUERY, name = "language",
-                description = "Filter by programming language",
-                schema = @Schema(type = "string")),
-            @Parameter(in = ParameterIn.QUERY, name = "fileExtension",
-                description = "Filter by file extension",
-                schema = @Schema(type = "string")),
-            @Parameter(in = ParameterIn.QUERY, name = "filePathPattern",
-                description = "Filter by file path pattern (supports wildcards)",
-                schema = @Schema(type = "string")),
-            @Parameter(in = ParameterIn.QUERY, name = "page",
-                description = "Page number (0-based)",
-                schema = @Schema(type = "integer", defaultValue = "0")),
-            @Parameter(in = ParameterIn.QUERY, name = "size",
-                description = "Number of results per page",
-                schema = @Schema(type = "integer", defaultValue = "10")),
-            @Parameter(in = ParameterIn.QUERY, name = "highlight",
-                description = "Fields to highlight (comma-separated)",
-                schema = @Schema(type = "string"))
-        },
         responses = {
             @ApiResponse(
                 responseCode = "200",
@@ -77,10 +45,8 @@ public class CodeSearchController {
     )
     public ResponseEntity<CodeSearchResponse> searchCode(
             @RequestParam("q") String query,
-            @RequestParam(required = false) UUID repositoryId,
             @RequestParam(required = false) String repositoryIdentifier,
             @RequestParam(required = false) String language,
-            @RequestParam(required = false) String fileExtension,
             @RequestParam(required = false) String filePathPattern,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -96,10 +62,8 @@ public class CodeSearchController {
 
         CodeSearchRequest request = CodeSearchRequest.builder()
             .query(query)
-            .repositoryId(repositoryId)
             .repositoryIdentifier(repositoryIdentifier)
             .language(language)
-            .fileExtension(fileExtension)
             .filePathPattern(filePathPattern)
             .page(page)
             .size(size)

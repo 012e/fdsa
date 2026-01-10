@@ -23,11 +23,6 @@ public class CodeSearchRequest {
     private String query;
 
     /**
-     * Filter by specific repository ID (optional)
-     */
-    private UUID repositoryId;
-
-    /**
      * Filter by repository identifier (owner/name) (optional)
      */
     private String repositoryIdentifier;
@@ -36,11 +31,6 @@ public class CodeSearchRequest {
      * Filter by programming language (optional)
      */
     private String language;
-
-    /**
-     * Filter by file extension (optional)
-     */
-    private String fileExtension;
 
     /**
      * Filter by file path pattern (optional)

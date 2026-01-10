@@ -84,13 +84,6 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         // Add filters
         List<Query> filters = new ArrayList<>();
 
-        if (request.getRepositoryId() != null) {
-            filters.add(TermQuery.of(t -> t
-                    .field(FieldNames.REPOSITORY_ID)
-                    .value(FieldValue.of(request.getRepositoryId().toString()))
-            ).toQuery());
-        }
-
         if (request.getRepositoryIdentifier() != null && !request.getRepositoryIdentifier().isEmpty()) {
             filters.add(TermQuery.of(t -> t
                     .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
@@ -102,13 +95,6 @@ public class CodeSearchServiceImpl implements CodeSearchService {
             filters.add(TermQuery.of(t -> t
                     .field(FieldNames.LANGUAGE_KEYWORD)
                     .value(FieldValue.of(request.getLanguage()))
-            ).toQuery());
-        }
-
-        if (request.getFileExtension() != null && !request.getFileExtension().isEmpty()) {
-            filters.add(TermQuery.of(t -> t
-                    .field(FieldNames.FILE_EXTENSION_KEYWORD)
-                    .value(FieldValue.of(request.getFileExtension()))
             ).toQuery());
         }
 

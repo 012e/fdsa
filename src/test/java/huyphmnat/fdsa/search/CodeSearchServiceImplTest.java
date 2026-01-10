@@ -207,7 +207,6 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         // Given
         CodeSearchRequest request = CodeSearchRequest.builder()
             .query("class")
-            .repositoryId(testRepositoryId)
             .page(0)
             .size(10)
             .build();
@@ -249,7 +248,6 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         // Given
         CodeSearchRequest request = CodeSearchRequest.builder()
             .query("class")
-            .fileExtension("java")
             .page(0)
             .size(10)
             .build();
@@ -336,7 +334,6 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
             .query("class")
             .repositoryIdentifier(testRepositoryIdentifier)
             .language("Java")
-            .fileExtension("java")
             .page(0)
             .size(10)
             .build();
