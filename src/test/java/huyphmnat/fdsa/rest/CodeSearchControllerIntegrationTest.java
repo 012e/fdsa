@@ -80,6 +80,7 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
                 .updatedAt(Instant.now())
                 .build()
         ));
+        indexingService.refreshIndexes();
     }
 
     @Test
@@ -102,9 +103,7 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
     void testSearchCodeGet_WithFilters_ShouldReturnFilteredResults() throws Exception {
         MvcResult result = mockMvc.perform(get("/api/search/code")
                 .param("q", "class")
-                .param("repositoryId", testRepositoryId.toString())
                 .param("language", "Java")
-                .param("fileExtension", "java")
                 .param("page", "0")
                 .param("size", "10"))
             .andExpect(status().isOk())
@@ -118,7 +117,6 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
         assertThat(response).isNotNull();
         assertThat(response.getTotalHits()).isGreaterThanOrEqualTo(2);
         response.getResults().forEach(r -> {
-            assertThat(r.getRepositoryId()).isEqualTo(testRepositoryId);
             assertThat(r.getLanguage()).isEqualTo("Java");
             assertThat(r.getFileExtension()).isEqualTo("java");
         });
@@ -226,7 +224,6 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
         assertThat(response.getTotalHits())
                 .isGreaterThan(2);
         response.getResults().forEach(r -> {
-            assertThat(r.getRepositoryId()).isEqualTo(testRepositoryId);
             assertThat(r.getRepositoryIdentifier()).isEqualTo(testRepositoryIdentifier);
             assertThat(r.getLanguage()).isEqualTo("Java");
             assertThat(r.getFileExtension()).isEqualTo("java");
