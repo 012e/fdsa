@@ -202,7 +202,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .size(1100)
         );
 
-        indexingService.refreshIndex();
+        indexingService.refreshIndexes();
         SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
         assertThat(searchResponse).isNotNull();

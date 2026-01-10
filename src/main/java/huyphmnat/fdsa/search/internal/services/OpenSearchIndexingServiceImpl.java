@@ -90,7 +90,7 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
     }
 
     @Override
-    public void refreshIndex() {
+    public void refreshIndexes() {
         try {
             openSearchClient.indices().refresh(r -> r.index(Indexes.CODE_FILE_INDEX));
             log.info("Refreshed index '{}'", Indexes.CODE_FILE_INDEX);

@@ -139,6 +139,7 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         totalFilesWithHelloWorld++; // Some of the generated files will have this
 
         indexingService.bulkIndexCodeFiles(documents);
+        indexingService.refreshIndexes();
     }
 
     private String generateJavaClass(String className) {
@@ -374,10 +375,11 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
     void testSearchCode_ResultsShouldContainMetadata() {
         // Given
         CodeSearchRequest request = CodeSearchRequest.builder()
-            .query("User")
+            .query("class")
             .page(0)
             .size(10)
             .build();
+
 
         // When
         CodeSearchResponse response = codeSearchService.searchCode(request);
