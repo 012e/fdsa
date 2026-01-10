@@ -4,6 +4,7 @@ import huyphmnat.fdsa.search.FieldNames;
 import huyphmnat.fdsa.search.Indexes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.BuiltinScriptLanguage;
@@ -23,8 +24,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 @Slf4j
@@ -42,32 +46,36 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
     private static final String FAKE_EMBEDDING_SCRIPT_ID = "fake_embedding_post_process";
 
     private void registerFakeEmbeddingPostProcessScript() throws IOException {
+
         openSearchClient.putScript(r -> r
                 .id(FAKE_EMBEDDING_SCRIPT_ID)
                 .script(s -> s
                         .lang(a -> a.builtin(BuiltinScriptLanguage.Painless))
-                        .source("""
+                        .source(getScript())
+                )
+        );
+
+        log.info("Stored script '{}' registered with hard-coded 1536-dim vector.", FAKE_EMBEDDING_SCRIPT_ID);
+    }
+
+    private static @NonNull String getScript() {
+        // Generate the hard-coded array string: [0.0, 0.0, ..., 0.0]
+        String hardCodedData = IntStream.range(0, 1536)
+                .mapToObj(i -> "0.0")
+                .collect(Collectors.joining(",", "[", "]"));
+        return String.format("""
                 def name = "sentence_embedding";
                 def dataType = "FLOAT32";
-                def data = [];
-
-                for (int i = 0; i < 1536; i++) {
-                    data.add(0.0d);
-                }
-
+                def data = %s;
                 def shape = [data.size()];
-
+                
                 return "{"
                     + "\\"name\\":\\"" + name + "\\","
                     + "\\"data_type\\":\\"" + dataType + "\\","
                     + "\\"shape\\":" + shape + ","
                     + "\\"data\\":" + data
                     + "}";
-                """)
-                )
-        );
-
-        log.info("Stored script '{}' registered.", FAKE_EMBEDDING_SCRIPT_ID);
+                """, hardCodedData);
     }
 
     public static String MODEL_ID = null;
@@ -95,7 +103,11 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
 
     private void configurateCluster() throws IOException {
         var request = PutClusterSettingsRequest.of(t ->
-                t.persistent("plugins.ml_commons.trusted_connector_endpoints_regex", JsonData.of(List.of(".*")))
+                t.persistent(Map.of("plugins.ml_commons.trusted_connector_endpoints_regex", JsonData.of(List.of(".*")),
+                                "script.max_compilations_rate", JsonData.of("100000/1m")
+                        )
+                )
+
         );
         openSearchClient.cluster().putSettings(request);
     }
@@ -162,7 +174,7 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                         .headers(t -> t.metadata(Map.of("Authorization", JsonData.of("Bearer ${credential.api_key}"))))
                         .requestBody("{ \"input\": ${parameters.input} }")
                         // 2. Override the standard OpenAI post-processor with a custom Painless script
-                        .postProcessFunction(FAKE_EMBEDDING_SCRIPT_ID)
+                        .postProcessFunction(getScript())
                 )
         );
 
