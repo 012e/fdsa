@@ -59,7 +59,7 @@ const { status, data } = await apiInstance.addRepositoryFile(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -110,7 +110,7 @@ const { status, data } = await apiInstance.cloneRepository(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -161,7 +161,7 @@ const { status, data } = await apiInstance.createRepository(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -218,7 +218,7 @@ const { status, data } = await apiInstance.createRepositoryFolder(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -275,7 +275,7 @@ const { status, data } = await apiInstance.deleteRepositoryFile(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -332,7 +332,7 @@ const { status, data } = await apiInstance.deleteRepositoryFolder(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -375,7 +375,7 @@ void (empty response body)
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -425,7 +425,7 @@ void (empty response body)
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -478,7 +478,7 @@ const { status, data } = await apiInstance.getRepository(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -534,7 +534,7 @@ const { status, data } = await apiInstance.listRepositoryDirectory(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -590,7 +590,7 @@ const { status, data } = await apiInstance.readRepositoryFile(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 
@@ -647,7 +647,7 @@ const { status, data } = await apiInstance.updateRepositoryFile(
 
 ### Authorization
 
-No authorization required
+[Oauth2](../README.md#Oauth2)
 
 ### HTTP request headers
 

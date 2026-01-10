@@ -4,7 +4,12 @@ api.ts
 base.ts
 common.ts
 configuration.ts
+docs/ChunkMatch.md
 docs/CloneRepositoryInput.md
+docs/CodeSearchApi.md
+docs/CodeSearchRequest.md
+docs/CodeSearchResponse.md
+docs/CodeSearchResult.md
 docs/DirectoryContent.md
 docs/DirectoryContentEntriesInner.md
 docs/DirectoryEntry.md
@@ -16,9 +21,5 @@ docs/RepositoryControllerApi.md
 docs/RepositoryFileChangeInput.md
 docs/RepositoryInput.md
 docs/RepositoryPathChangeInput.md
-docs/Snippet.md
-docs/SnippetControllerApi.md
-docs/SnippetFile.md
-docs/SnippetInput.md
 git_push.sh
 index.ts
