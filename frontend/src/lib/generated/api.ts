@@ -108,7 +108,6 @@ export interface FileEntry extends Entry {
 
 
 export interface Repository {
-    'filesystemPath'?: string;
     'description'?: string;
     'identifier'?: string;
     'ownerId'?: string;

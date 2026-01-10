@@ -5,7 +5,6 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**filesystemPath** | **string** |  | [optional] [default to undefined]
 **description** | **string** |  | [optional] [default to undefined]
 **identifier** | **string** |  | [optional] [default to undefined]
 **ownerId** | **string** |  | [optional] [default to undefined]
@@ -16,7 +15,6 @@ Name | Type | Description | Notes
 import { Repository } from './api';
 
 const instance: Repository = {
-    filesystemPath,
     description,
     identifier,
     ownerId,

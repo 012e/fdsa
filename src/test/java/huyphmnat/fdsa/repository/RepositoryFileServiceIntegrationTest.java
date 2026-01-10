@@ -40,7 +40,7 @@ public class RepositoryFileServiceIntegrationTest extends BaseIntegrationTest {
                 .build());
 
         assertThat(repo).isNotNull();
-        Path repoPath = Paths.get(repo.getFilesystemPath());
+        Path repoPath = Paths.get(repo.getFileSystemPath());
         assertThat(Files.exists(repoPath)).isTrue();
 
         // Load the underlying entity to get the UUID id used by RepositoryFileService

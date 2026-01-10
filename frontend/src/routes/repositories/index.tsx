@@ -380,12 +380,6 @@ function RepositoriesPage() {
                               <CardDescription className="mb-3">
                                 {repo.description || "No description provided"}
                               </CardDescription>
-                              <div className="flex gap-2 items-center text-sm text-muted-foreground">
-                                <Folder className="w-4 h-4" />
-                                <code className="py-1 px-2 text-xs rounded bg-muted">
-                                  {repo.filesystemPath}
-                                </code>
-                              </div>
                             </div>
                             <Badge variant="outline">Repository</Badge>
                           </div>

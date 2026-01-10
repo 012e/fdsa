@@ -31,9 +31,9 @@ public class RepositoryServiceIntegrationTest extends BaseIntegrationTest {
 
         assertThat(repo).isNotNull();
         assertThat(repo.getIdentifier()).isEqualTo(identifier);
-        assertThat(repo.getFilesystemPath()).isNotNull();
+        assertThat(repo.getFileSystemPath()).isNotNull();
 
-        Path repoPath = Paths.get(repo.getFilesystemPath());
+        Path repoPath = Paths.get(repo.getFileSystemPath());
         assertThat(Files.exists(repoPath)).isTrue();
         assertThat(Files.isDirectory(repoPath)).isTrue();
 
