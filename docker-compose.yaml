@@ -33,16 +33,6 @@ services:
     volumes:
         - ./tmp/kafka_data:/kafka/data
 
-  temporal:
-    image: temporalio/temporal:1.5.1
-    container_name: temporal
-    command: [ "server", "start-dev", "--ip", "0.0.0.0" ]
-    volumes:
-      - ./tmp/temporal_data:/var/lib/temporal
-    ports:
-      - "7233:7233" # Temporal Frontend gRPC port
-      - "8233:8233" # Temporal Web UI port
-
   keycloak:
     image: quay.io/keycloak/keycloak:23.0.7
     environment:
