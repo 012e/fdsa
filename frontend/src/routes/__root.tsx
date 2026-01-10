@@ -45,36 +45,31 @@ export const Route = createRootRoute({
 const client = new QueryClient();
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <AuthProvider {...oidcConfig}>
-          <QueryClientProvider client={client}>
-            <JotaiProvider store={store}>
-              <AuthSync>
-                <Header />
-                {children}
-                <TanStackDevtools
-                  config={{
-                    position: "bottom-right",
-                  }}
-                  plugins={[
-                    {
-                      name: "Tanstack Router",
-                      render: <TanStackRouterDevtoolsPanel />,
-                    },
-                    TanStackQueryDevtools,
-                  ]}
-                />
-              </AuthSync>
-            </JotaiProvider>
-          </QueryClientProvider>
-        </AuthProvider>
-        <Scripts />
-        <Toaster richColors />
-      </body>
-    </html>
+    <>
+      <AuthProvider {...oidcConfig}>
+        <QueryClientProvider client={client}>
+          <JotaiProvider store={store}>
+            <AuthSync>
+              <Header />
+              {children}
+              <TanStackDevtools
+                config={{
+                  position: "bottom-right",
+                }}
+                plugins={[
+                  {
+                    name: "Tanstack Router",
+                    render: <TanStackRouterDevtoolsPanel />,
+                  },
+                  TanStackQueryDevtools,
+                ]}
+              />
+            </AuthSync>
+          </JotaiProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+      <Scripts />
+      <Toaster richColors />
+    </>
   );
 }

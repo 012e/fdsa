@@ -13,10 +13,7 @@ axiosClient.interceptors.request.use(
   (config) => {
     const token = store.get(accessTokenAtom);
 
-    console.log("fuck", token);
     if (token) {
-      console.log(token);
-      console.log(token);
       config.headers.Authorization = `Bearer ${token}`;
     }
 
