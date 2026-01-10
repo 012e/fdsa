@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.BuiltinScriptLanguage;
 import org.opensearch.client.opensearch._types.mapping.Property;
+import org.opensearch.client.opensearch.cluster.PutClusterSettingsRequest;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
 import org.opensearch.client.opensearch.ingest.Processor;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -36,12 +39,44 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
 
     private static final String INGEST_PIPELINE_ID = "code-files-ingest-pipeline";
     private static final String SEARCH_PIPELINE_ID = "code-files-search-pipeline";
+    private static final String FAKE_EMBEDDING_SCRIPT_ID = "fake_embedding_post_process";
+
+    private void registerFakeEmbeddingPostProcessScript() throws IOException {
+        openSearchClient.putScript(r -> r
+                .id(FAKE_EMBEDDING_SCRIPT_ID)
+                .script(s -> s
+                        .lang(a -> a.builtin(BuiltinScriptLanguage.Painless))
+                        .source("""
+                def name = "sentence_embedding";
+                def dataType = "FLOAT32";
+                def data = [];
+
+                for (int i = 0; i < 1536; i++) {
+                    data.add(0.0d);
+                }
+
+                def shape = [data.size()];
+
+                return "{"
+                    + "\\"name\\":\\"" + name + "\\","
+                    + "\\"data_type\\":\\"" + dataType + "\\","
+                    + "\\"shape\\":" + shape + ","
+                    + "\\"data\\":" + data
+                    + "}";
+                """)
+                )
+        );
+
+        log.info("Stored script '{}' registered.", FAKE_EMBEDDING_SCRIPT_ID);
+    }
 
     public static String MODEL_ID = null;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("Starting OpenSearch Semantic Search Configuration...");
+        configurateCluster();
+        registerFakeEmbeddingPostProcessScript();
 
         var connector = setupOpenAIConnector();
         var group = registerModelGroup();
@@ -56,6 +91,13 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
         createCodeFilesIndexIfNotExists();
 
         log.info("OpenSearch initialization complete.");
+    }
+
+    private void configurateCluster() throws IOException {
+        var request = PutClusterSettingsRequest.of(t ->
+                t.persistent("plugins.ml_commons.trusted_connector_endpoints_regex", JsonData.of(List.of(".*")))
+        );
+        openSearchClient.cluster().putSettings(request);
     }
 
     private void createSearchPipeline() throws IOException {
@@ -101,27 +143,51 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
     }
 
     private CreateConnectorResponse setupOpenAIConnector() throws Exception {
-        log.info("Registering OpenAI Connector...");
+
+        log.info("Registering FAKE OpenAI Connector...");
 
         CreateConnectorRequest request = CreateConnectorRequest.of(c -> c
-                .name("openai-connector")
-                .description("Connector for OpenAI Embeddings")
+                .name("openai-connector-fake")
+                .description("Fake Connector for Testing")
                 .protocol("http")
                 .parameters(Map.of("model", JsonData.of("text-embedding-3-small")))
-                .credential(t -> t.metadata(Map.of("api_key", JsonData.of(openAiApiKey))))
+                .credential(t -> t.metadata(Map.of("api_key", JsonData.of("fake-key"))))
                 .version(1)
                 .actions(a -> a
                         .actionType("predict")
                         .method("POST")
-                        .url("https://api.openai.com/v1/embeddings")
+                        // 1. Point to a URL that always succeeds (even a local non-existent one if using dry-runs)
+                        // Or use an echo service: https://postman-echo.com/post
+                        .url("https://postman-echo.com/post")
                         .headers(t -> t.metadata(Map.of("Authorization", JsonData.of("Bearer ${credential.api_key}"))))
-                        .requestBody("{ \"input\": ${parameters.input}, \"model\": \"${parameters.model}\" }")
-                        .preProcessFunction("connector.pre_process.openai.embedding")
-                        .postProcessFunction("connector.post_process.openai.embedding")
+                        .requestBody("{ \"input\": ${parameters.input} }")
+                        // 2. Override the standard OpenAI post-processor with a custom Painless script
+                        .postProcessFunction(FAKE_EMBEDDING_SCRIPT_ID)
                 )
         );
 
         return openSearchClient.ml().createConnector(request);
+//        log.info("Registering OpenAI Connector...");
+//
+//        CreateConnectorRequest request = CreateConnectorRequest.of(c -> c
+//                .name("openai-connector")
+//                .description("Connector for OpenAI Embeddings")
+//                .protocol("http")
+//                .parameters(Map.of("model", JsonData.of("text-embedding-3-small")))
+//                .credential(t -> t.metadata(Map.of("api_key", JsonData.of(openAiApiKey))))
+//                .version(1)
+//                .actions(a -> a
+//                        .actionType("predict")
+//                        .method("POST")
+//                        .url("https://api.openai.com/v1/embeddings")
+//                        .headers(t -> t.metadata(Map.of("Authorization", JsonData.of("Bearer ${credential.api_key}"))))
+//                        .requestBody("{ \"input\": ${parameters.input}, \"model\": \"${parameters.model}\" }")
+//                        .preProcessFunction("connector.pre_process.openai.embedding")
+//                        .postProcessFunction("connector.post_process.openai.embedding")
+//                )
+//        );
+//
+//        return openSearchClient.ml().createConnector(request);
     }
 
     private void setupIngestPipeline(String modelId) throws Exception {
