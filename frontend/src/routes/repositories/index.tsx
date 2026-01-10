@@ -365,7 +365,7 @@ function RepositoriesPage() {
                       key={repo.identifier}
                       to="/repositories/$owner/$repo"
                       params={{ owner, repo: repoName }}
-                      search={{ path: "/" }}
+                      search={{ path: undefined }}
                     >
                       <Card className="transition-colors cursor-pointer hover:border-primary">
                         <CardHeader>
