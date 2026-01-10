@@ -3,7 +3,9 @@ package huyphmnat.fdsa.search;
 import huyphmnat.fdsa.base.OpenSearchIntegrationTest;
 import huyphmnat.fdsa.repository.dtos.*;
 import huyphmnat.fdsa.repository.interfaces.RepositoryFileService;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import huyphmnat.fdsa.search.interfaces.RepositoryIngestionService;
+import huyphmnat.fdsa.search.internal.services.OpenSearchIndexingService;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
@@ -15,7 +17,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -26,6 +27,9 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
     @Autowired
     private RepositoryIngestionService ingestionService;
+
+    @Autowired
+    private OpenSearchIndexingService indexingService;
 
     @MockitoBean
     private RepositoryFileService repositoryFileService;
@@ -81,23 +85,24 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(2);
 
         verify(repositoryFileService, times(1)).listDirectory(repositoryId, "/");
@@ -179,23 +184,24 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(3);
 
         verify(repositoryFileService, times(1)).listDirectory(repositoryId, "/");
@@ -245,23 +251,24 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Should not attempt to read non-code files
@@ -306,23 +313,24 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Should not attempt to read large file
@@ -369,32 +377,32 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(1);
 
         // Verify chunks were created
-        Map<String, Object> document = searchResponse.hits().hits().get(0).source();
-        assertThat(document.get("chunks")).isNotNull();
-
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> chunks = (List<Map<String, Object>>) document.get("chunks");
-        assertThat(chunks.size()).isGreaterThan(1);
+        assertThat(searchResponse.hits().hits()).isNotEmpty();
+        CodeFileDocument document = searchResponse.hits().hits().get(0).source();
+        assertThat(document).isNotNull();
+        assertThat(document.getCodeChunks()).isNotNull();
+        assertThat(document.getCodeChunks().size()).isGreaterThan(1);
     }
 
     @Test
@@ -452,23 +460,24 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
-
-        // Wait for indexing
-        
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         // Should index the successful files
         assertThat(searchResponse.hits().total().value()).isEqualTo(2);
     }
@@ -512,21 +521,25 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
 
         // When
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
+        indexingService.refreshIndexes();
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_id")
-                    .value(FieldValue.of(repositoryId.toString()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(repositoryIdentifier))
                 )
             )
             .size(200)
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(150);
     }
 }
