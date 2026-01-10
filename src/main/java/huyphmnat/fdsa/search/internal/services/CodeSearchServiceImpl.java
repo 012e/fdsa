@@ -100,7 +100,7 @@ public class CodeSearchServiceImpl implements CodeSearchService {
 
         if (request.getFilePathPattern() != null && !request.getFilePathPattern().isEmpty()) {
             filters.add(WildcardQuery.of(w -> w
-                    .field(FieldNames.FILE_PATH)
+                    .field(FieldNames.FILE_PATH_KEYWORD)
                     .value(request.getFilePathPattern())
             ).toQuery());
         }

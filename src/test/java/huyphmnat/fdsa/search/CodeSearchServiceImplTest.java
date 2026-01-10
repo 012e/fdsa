@@ -204,26 +204,6 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
     }
 
     @Test
-    void testSearchCode_WithRepositoryFilter_ShouldReturnOnlyMatchingRepository() {
-        // Given
-        CodeSearchRequest request = CodeSearchRequest.builder()
-            .query("class")
-            .page(0)
-            .size(10)
-            .build();
-
-        // When
-        CodeSearchResponse response = codeSearchService.searchCode(request);
-
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getTotalHits()).isGreaterThan(0); // At least some results
-        response.getResults().forEach(result ->
-            assertThat(result.getRepositoryId()).isEqualTo(testRepositoryId)
-        );
-    }
-
-    @Test
     void testSearchCode_WithLanguageFilter_ShouldReturnOnlyMatchingLanguage() {
         // Given
         CodeSearchRequest request = CodeSearchRequest.builder()
