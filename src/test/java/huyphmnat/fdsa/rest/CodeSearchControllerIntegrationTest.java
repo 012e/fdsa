@@ -2,9 +2,9 @@ package huyphmnat.fdsa.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import huyphmnat.fdsa.base.OpenSearchIntegrationTest;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
-import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
 import huyphmnat.fdsa.search.internal.services.OpenSearchIndexingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,21 +42,18 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
     private String testRepositoryIdentifier;
 
     @BeforeEach
-    void setUp() throws InterruptedException {
+    void setUp() {
         testRepositoryId = UUID.randomUUID();
         testRepositoryIdentifier = "test-owner/test-repo";
 
         // Index test documents
         indexTestDocuments();
-
-        // Wait for indexing
-        
     }
 
     private void indexTestDocuments() {
         indexingService.bulkIndexCodeFiles(Arrays.asList(
             CodeFileDocument.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID())
                 .repositoryId(testRepositoryId)
                 .repositoryIdentifier(testRepositoryIdentifier)
                 .filePath("src/main/java/Main.java")
@@ -70,7 +67,7 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
                 .build(),
 
             CodeFileDocument.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID())
                 .repositoryId(testRepositoryId)
                 .repositoryIdentifier(testRepositoryIdentifier)
                 .filePath("src/main/java/User.java")

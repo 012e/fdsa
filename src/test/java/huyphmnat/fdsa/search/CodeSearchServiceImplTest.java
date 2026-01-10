@@ -1,11 +1,11 @@
 package huyphmnat.fdsa.search;
 
 import huyphmnat.fdsa.base.OpenSearchIntegrationTest;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.dtos.CodeSearchResult;
 import huyphmnat.fdsa.search.interfaces.CodeSearchService;
-import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
 import huyphmnat.fdsa.search.internal.services.OpenSearchIndexingService;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -76,7 +75,7 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
             }
 
             documents.add(CodeFileDocument.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID())
                 .repositoryId(testRepositoryId)
                 .repositoryIdentifier(testRepositoryIdentifier)
                 .filePath(filePath)
@@ -105,7 +104,7 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
             }
 
             documents.add(CodeFileDocument.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID())
                 .repositoryId(otherRepositoryId)
                 .repositoryIdentifier(otherRepositoryIdentifier)
                 .filePath("src/" + functionName + ".py")
@@ -123,7 +122,7 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
 
         // Add a few specific documents for targeted tests
         documents.add(CodeFileDocument.builder()
-            .id(UUID.randomUUID().toString())
+            .id(UUID.randomUUID())
             .repositoryId(testRepositoryId)
             .repositoryIdentifier(testRepositoryIdentifier)
             .filePath("src/main/java/SpecificUser.java")
@@ -312,7 +311,7 @@ class CodeSearchServiceImplTest extends OpenSearchIntegrationTest {
         // Given
         CodeSearchRequest request = CodeSearchRequest.builder()
             .query("Hello World")
-            .highlightFields(Arrays.asList("content"))
+            .highlightFields(List.of("content"))
             .page(0)
             .size(10)
             .build();

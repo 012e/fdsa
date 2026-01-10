@@ -22,7 +22,7 @@ public class CodeSearchResult {
     /**
      * Document ID
      */
-    private String id;
+    private UUID id;
 
     /**
      * Repository ID this file belongs to

@@ -5,8 +5,8 @@ import huyphmnat.fdsa.repository.dtos.Entry;
 import huyphmnat.fdsa.repository.dtos.FileContent;
 import huyphmnat.fdsa.repository.dtos.FileEntry;
 import huyphmnat.fdsa.repository.interfaces.RepositoryFileService;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import huyphmnat.fdsa.search.interfaces.RepositoryIngestionService;
-import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -122,7 +122,7 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
             String language = languageDetectionService.detectLanguage(fileEntry.getName());
 
             CodeFileDocument.CodeFileDocumentBuilder builder = CodeFileDocument.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID())
                 .repositoryId(repositoryId)
                 .repositoryIdentifier(repositoryIdentifier)
                 .filePath(fileEntry.getPath())
@@ -154,7 +154,7 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
                     currentLine += linesInChunk;
                 }
 
-                builder.chunks(chunks);
+                builder.codeChunks(chunks);
             }
 
             return builder.build();

@@ -7,7 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Represents a code file document structure in OpenSearch.
@@ -22,13 +24,13 @@ public class CodeFileDocument {
     /**
      * Document ID
      */
-    private String id;
+    private UUID id;
 
     /**
      * Repository ID this file belongs to
      */
     @JsonProperty(FieldNames.REPOSITORY_ID)
-    private String repositoryId;
+    private UUID repositoryId;
 
     /**
      * Repository identifier (owner/name)
@@ -73,18 +75,19 @@ public class CodeFileDocument {
      * Timestamp when document was created (ISO-8601 string)
      */
     @JsonProperty(FieldNames.CREATED_AT)
-    private String createdAt;
+    private Instant createdAt;
 
     /**
      * Timestamp when document was last updated (ISO-8601 string)
      */
     @JsonProperty(FieldNames.UPDATED_AT)
-    private String updatedAt;
+    private Instant updatedAt;
 
+    @JsonProperty(FieldNames.CHUNKS)
     /**
      * Code chunks with metadata
      */
-    private List<Chunk> chunks;
+    private List<CodeChunk> codeChunks;
 
     /**
      * Represents a code chunk within the document
@@ -93,7 +96,7 @@ public class CodeFileDocument {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Chunk {
+    public static class CodeChunk {
         /**
          * Chunk index
          */

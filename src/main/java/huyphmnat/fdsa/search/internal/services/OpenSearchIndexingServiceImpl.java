@@ -1,7 +1,7 @@
 package huyphmnat.fdsa.search.internal.services;
 
 import huyphmnat.fdsa.search.Indexes;
-import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -36,7 +36,7 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
         try {
             IndexRequest<Map<String, Object>> request = IndexRequest.of(i -> i
                     .index(Indexes.CODE_FILE_INDEX)
-                    .id(document.getId())
+                    .id(document.getId().toString())
                     .document(docMap)
             );
 
@@ -67,7 +67,7 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
             operations.add(BulkOperation.of(b -> b
                     .index(IndexOperation.of(i -> i
                             .index(Indexes.CODE_FILE_INDEX)
-                            .id(document.getId())
+                            .id(document.getId().toString())
                             .document(docMap)
                     ))
             ));

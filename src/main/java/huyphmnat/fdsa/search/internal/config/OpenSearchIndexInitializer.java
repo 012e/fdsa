@@ -71,7 +71,7 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                   "type": "text"
                 },
                 "size": { "type": "long" },
-                "chunks": {
+                "codeChunks": {
                   "type": "nested",
                   "properties": {
                     "index": { "type": "integer" },

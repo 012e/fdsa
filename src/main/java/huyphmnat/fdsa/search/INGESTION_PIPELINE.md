@@ -56,7 +56,7 @@ search/
   "language": "Java",
   "content": "public class Main {...}",
   "size": 1024,
-  "chunks": [
+  "codeChunks": [
     {
       "index": 0,
       "content": "chunk content",
@@ -136,7 +136,7 @@ Detects programming language from file extensions.
 
 **Location**: `search.internal.services`
 
-Splits large code files into searchable chunks.
+Splits large code files into searchable codeChunks.
 
 **Configuration**:
 - `CHUNK_SIZE = 512`: Tokens per chunk (approximate)
@@ -272,7 +272,7 @@ PUT /code_files
         "analyzer": "code_analyzer"
       },
       "size": { "type": "long" },
-      "chunks": {
+      "codeChunks": {
         "type": "nested",
         "properties": {
           "index": { "type": "integer" },

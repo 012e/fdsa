@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
-import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
 import org.opensearch.client.opensearch._types.query_dsl.MultiMatchQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
@@ -42,27 +41,27 @@ public class CodeSearchServiceImpl implements CodeSearchService {
     @Override
     public CodeSearchResponse searchCode(CodeSearchRequest request) {
         log.info("Searching code with query: {}, page: {}, size: {}",
-            request.getQuery(), request.getPage(), request.getSize());
+                request.getQuery(), request.getPage(), request.getSize());
 
         try {
             SearchRequest searchRequest = buildSearchRequest(request);
             SearchResponse<CodeFileDocument> response = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
             List<CodeSearchResult> results = response.hits().hits().stream()
-                .map(this::mapHitToResult)
-                .collect(Collectors.toList());
+                    .map(this::mapHitToResult)
+                    .collect(Collectors.toList());
 
             long totalHits = response.hits().total().value();
             int totalPages = (int) Math.ceil((double) totalHits / request.getSize());
 
             return CodeSearchResponse.builder()
-                .results(results)
-                .totalHits(totalHits)
-                .page(request.getPage())
-                .size(request.getSize())
-                .totalPages(totalPages)
-                .tookMs(response.took())
-                .build();
+                    .results(results)
+                    .totalHits(totalHits)
+                    .page(request.getPage())
+                    .size(request.getSize())
+                    .totalPages(totalPages)
+                    .tookMs(response.took())
+                    .build();
 
         } catch (Exception e) {
             log.error("Error searching code", e);
@@ -76,8 +75,8 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         // Add full-text search query
         if (request.getQuery() != null && !request.getQuery().isEmpty()) {
             Query multiMatchQuery = MultiMatchQuery.of(m -> m
-                .query(request.getQuery())
-                .fields(FieldNames.CONTENT + "^3", FieldNames.FILE_NAME + "^2", FieldNames.FILE_PATH)  // Boost content and filename
+                    .query(request.getQuery())
+                    .fields(FieldNames.CONTENT + "^3", FieldNames.FILE_NAME + "^2", FieldNames.FILE_PATH)  // Boost content and filename
             ).toQuery();
             boolQuery.must(multiMatchQuery);
         }
@@ -87,36 +86,36 @@ public class CodeSearchServiceImpl implements CodeSearchService {
 
         if (request.getRepositoryId() != null) {
             filters.add(TermQuery.of(t -> t
-                .field(FieldNames.REPOSITORY_ID)
-                .value(FieldValue.of(request.getRepositoryId().toString()))
+                    .field(FieldNames.REPOSITORY_ID)
+                    .value(FieldValue.of(request.getRepositoryId().toString()))
             ).toQuery());
         }
 
         if (request.getRepositoryIdentifier() != null && !request.getRepositoryIdentifier().isEmpty()) {
             filters.add(TermQuery.of(t -> t
-                .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
-                .value(FieldValue.of(request.getRepositoryIdentifier()))
+                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                    .value(FieldValue.of(request.getRepositoryIdentifier()))
             ).toQuery());
         }
 
         if (request.getLanguage() != null && !request.getLanguage().isEmpty()) {
             filters.add(TermQuery.of(t -> t
-                .field(FieldNames.LANGUAGE_KEYWORD)
-                .value(FieldValue.of(request.getLanguage()))
+                    .field(FieldNames.LANGUAGE_KEYWORD)
+                    .value(FieldValue.of(request.getLanguage()))
             ).toQuery());
         }
 
         if (request.getFileExtension() != null && !request.getFileExtension().isEmpty()) {
             filters.add(TermQuery.of(t -> t
-                .field(FieldNames.FILE_EXTENSION_KEYWORD)
-                .value(FieldValue.of(request.getFileExtension()))
+                    .field(FieldNames.FILE_EXTENSION_KEYWORD)
+                    .value(FieldValue.of(request.getFileExtension()))
             ).toQuery());
         }
 
         if (request.getFilePathPattern() != null && !request.getFilePathPattern().isEmpty()) {
             filters.add(WildcardQuery.of(w -> w
-                .field(FieldNames.FILE_PATH)
-                .value(request.getFilePathPattern())
+                    .field(FieldNames.FILE_PATH)
+                    .value(request.getFilePathPattern())
             ).toQuery());
         }
 
@@ -126,25 +125,25 @@ public class CodeSearchServiceImpl implements CodeSearchService {
 
         // Build search request
         SearchRequest.Builder searchBuilder = new SearchRequest.Builder()
-            .index(FILES_INDEX_NAME)
-            .query(boolQuery.build().toQuery())
-            .from(request.getPage() * request.getSize())
-            .size(request.getSize());
+                .index(FILES_INDEX_NAME)
+                .query(boolQuery.build().toQuery())
+                .from(request.getPage() * request.getSize())
+                .size(request.getSize());
 
         // Add highlighting if requested
         if (request.getHighlightFields() != null && !request.getHighlightFields().isEmpty()) {
             Map<String, HighlightField> highlightFields = new HashMap<>();
             for (String field : request.getHighlightFields()) {
                 highlightFields.put(field, HighlightField.of(h -> h
-                    .numberOfFragments(3)
-                    .fragmentSize(150)
+                        .numberOfFragments(3)
+                        .fragmentSize(150)
                 ));
             }
 
             searchBuilder.highlight(Highlight.of(h -> h
-                .fields(highlightFields)
-                .preTags("<mark>")
-                .postTags("</mark>")
+                    .fields(highlightFields)
+                    .preTags("<mark>")
+                    .postTags("</mark>")
             ));
         }
 
@@ -155,23 +154,23 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         CodeFileDocument doc = hit.source();
 
         CodeSearchResult.CodeSearchResultBuilder builder = CodeSearchResult.builder()
-            .id(doc.getId())
-            .repositoryId(UUID.fromString(doc.getRepositoryId()))
-            .repositoryIdentifier(doc.getRepositoryIdentifier())
-            .filePath(doc.getFilePath())
-            .fileName(doc.getFileName())
-            .fileExtension(doc.getFileExtension())
-            .language(doc.getLanguage())
-            .content(doc.getContent())
-            .score(hit.score())
-            .size(doc.getSize());
+                .id(doc.getId())
+                .repositoryId(doc.getRepositoryId())
+                .repositoryIdentifier(doc.getRepositoryIdentifier())
+                .filePath(doc.getFilePath())
+                .fileName(doc.getFileName())
+                .fileExtension(doc.getFileExtension())
+                .language(doc.getLanguage())
+                .content(doc.getContent())
+                .score(hit.score())
+                .size(doc.getSize());
 
         // Parse timestamps
         if (doc.getCreatedAt() != null) {
-            builder.createdAt(Instant.parse(doc.getCreatedAt()));
+            builder.createdAt(doc.getCreatedAt());
         }
         if (doc.getUpdatedAt() != null) {
-            builder.updatedAt(Instant.parse(doc.getUpdatedAt()));
+            builder.updatedAt(doc.getUpdatedAt());
         }
 
         // Parse highlights
@@ -184,15 +183,15 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         }
 
         // Parse matched chunks if available
-        if (doc.getChunks() != null) {
-            List<CodeSearchResult.ChunkMatch> matchedChunks = doc.getChunks().stream()
-                .map(chunk -> CodeSearchResult.ChunkMatch.builder()
-                    .index(chunk.getIndex())
-                    .content(chunk.getContent())
-                    .startLine(chunk.getStartLine() != null ? chunk.getStartLine() : 0)
-                    .endLine(chunk.getEndLine() != null ? chunk.getEndLine() : 0)
-                    .build())
-                .collect(Collectors.toList());
+        if (doc.getCodeChunks() != null) {
+            List<CodeSearchResult.ChunkMatch> matchedChunks = doc.getCodeChunks().stream()
+                    .map(chunk -> CodeSearchResult.ChunkMatch.builder()
+                            .index(chunk.getIndex())
+                            .content(chunk.getContent())
+                            .startLine(chunk.getStartLine() != null ? chunk.getStartLine() : 0)
+                            .endLine(chunk.getEndLine() != null ? chunk.getEndLine() : 0)
+                            .build())
+                    .collect(Collectors.toList());
             builder.matchedChunks(matchedChunks);
         }
 

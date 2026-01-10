@@ -117,7 +117,7 @@ User Creates Snippet → Java API → PostgreSQL
   "code": "original code",
   "overall_summary": "AI-generated summary",
   "overall_embedding": [1024 floats],
-  "chunks": [
+  "codeChunks": [
     {
       "chunk_index": 0,
       "code": "chunk text",

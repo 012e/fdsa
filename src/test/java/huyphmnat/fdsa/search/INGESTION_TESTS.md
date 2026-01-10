@@ -41,7 +41,7 @@ Java, Python, TypeScript, JavaScript, CSS, YAML, Markdown, Go, Rust, Ruby, Kotli
 **Key Insights**:
 - Chunk size threshold: 512 tokens * 4 chars = 2048 characters
 - Chunking is line-based, so single lines are never split (documented limitation)
-- Newlines are preserved in chunks
+- Newlines are preserved in codeChunks
 
 ### 3. OpenSearchIndexingServiceTest
 **Location**: `src/test/java/huyphmnat/fdsa/search/OpenSearchIndexingServiceTest.java`
@@ -50,7 +50,7 @@ Java, Python, TypeScript, JavaScript, CSS, YAML, Markdown, Go, Rust, Ruby, Kotli
 
 **Test Cases**:
 - `testIndexCodeFile_ShouldIndexSuccessfully` - Basic single file indexing
-- `testIndexCodeFile_WithChunks_ShouldIndexWithChunks` - File with code chunks
+- `testIndexCodeFile_WithChunks_ShouldIndexWithChunks` - File with code codeChunks
 - `testBulkIndexCodeFiles_ShouldIndexMultipleDocuments` - Bulk indexing (5 files)
 - `testBulkIndexCodeFiles_EmptyList_ShouldNotThrowException` - Empty list handling
 - `testBulkIndexCodeFiles_LargeBatch_ShouldHandleSuccessfully` - Large batch (150 files)
@@ -207,7 +207,7 @@ Kafka Consumer (RepositoryCloned) → RepositoryIngestionService
 
 1. **Line-based Chunking**: Single lines longer than chunk size are not split
    - Test: `testChunkCode_SingleLongLine_ShouldReturnSingleChunk`
-   - Impact: Very long single lines will create oversized chunks
+   - Impact: Very long single lines will create oversized codeChunks
    - Solution: Use semantic chunking in production (as noted in code comments)
 
 2. **Async Wait Times**: Kafka and OpenSearch tests use sleep for synchronization

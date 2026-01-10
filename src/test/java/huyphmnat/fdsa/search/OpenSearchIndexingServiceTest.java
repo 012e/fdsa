@@ -1,7 +1,7 @@
 package huyphmnat.fdsa.search;
 
 import huyphmnat.fdsa.base.OpenSearchIntegrationTest;
-import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import huyphmnat.fdsa.search.internal.services.OpenSearchIndexingService;
 import net.datafaker.Faker;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -139,7 +138,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             String filePath = "src/" + (i % 10 == 0 ? "test/" : "main/") + fileName;
 
             documents.add(CodeFileDocument.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID())
                 .repositoryId(repositoryId)
                 .repositoryIdentifier(repositoryIdentifier)
                 .filePath(filePath)
@@ -159,8 +158,8 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
     @Test
     void testIndexCodeFile_ShouldIndexSuccessfully() throws Exception {
         // Given
-        UUID repositoryId = UUID.randomUUID();
-        String documentId = UUID.randomUUID().toString();
+        var repositoryId = UUID.randomUUID();
+        var documentId = UUID.randomUUID();
 
         CodeFileDocument document = CodeFileDocument.builder()
             .id(documentId)
@@ -182,39 +181,39 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         // Then
         GetRequest getRequest = GetRequest.of(g -> g
             .index(FILES_INDEX_NAME)
-            .id(documentId)
+            .id(documentId.toString())
         );
 
-        GetResponse<Map> response = openSearchClient.get(getRequest, Map.class);
+        GetResponse<CodeFileDocument> response = openSearchClient.get(getRequest, CodeFileDocument.class);
 
         assertThat(response.found()).isTrue();
-        Map<String, Object> source = response.source();
+        CodeFileDocument source = response.source();
         assertThat(source).isNotNull();
-        assertThat(source.get("id")).isEqualTo(documentId);
-        assertThat(source.get("repository_id")).isEqualTo(repositoryId.toString());
-        assertThat(source.get("repository_identifier")).isEqualTo("test-owner/test-repo");
-        assertThat(source.get("file_path")).isEqualTo("src/main/java/Main.java");
-        assertThat(source.get("file_name")).isEqualTo("Main.java");
-        assertThat(source.get("file_extension")).isEqualTo("java");
-        assertThat(source.get("language")).isEqualTo("Java");
-        assertThat(source.get("content")).isEqualTo("public class Main { }");
-        assertThat(((Number) source.get("size")).intValue()).isEqualTo(24);
+        assertThat(source.getId()).isEqualTo(documentId);
+        assertThat(source.getRepositoryId()).isEqualTo(repositoryId.toString());
+        assertThat(source.getRepositoryIdentifier()).isEqualTo("test-owner/test-repo");
+        assertThat(source.getFilePath()).isEqualTo("src/main/java/Main.java");
+        assertThat(source.getFileName()).isEqualTo("Main.java");
+        assertThat(source.getFileExtension()).isEqualTo("java");
+        assertThat(source.getLanguage()).isEqualTo("Java");
+        assertThat(source.getContent()).isEqualTo("public class Main { }");
+        assertThat(source.getSize().intValue()).isEqualTo(24);
     }
 
     @Test
     void testIndexCodeFile_WithChunks_ShouldIndexWithChunks() throws Exception {
         // Given
-        UUID repositoryId = UUID.randomUUID();
-        String documentId = UUID.randomUUID().toString();
+        var repositoryId = UUID.randomUUID();
+        var documentId = UUID.randomUUID();
 
-        List<CodeFileDocument.CodeChunk> chunks = new ArrayList<>();
-        chunks.add(CodeFileDocument.CodeChunk.builder()
+        List<CodeFileDocument.CodeChunk> codeChunks = new ArrayList<>();
+        codeChunks.add(CodeFileDocument.CodeChunk.builder()
             .index(0)
             .content("chunk 1 content")
             .startLine(1)
             .endLine(10)
             .build());
-        chunks.add(CodeFileDocument.CodeChunk.builder()
+        codeChunks.add(CodeFileDocument.CodeChunk.builder()
             .index(1)
             .content("chunk 2 content")
             .startLine(11)
@@ -231,7 +230,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .language("Java")
             .content("large file content")
             .size(1000L)
-            .chunks(chunks)
+            .codeChunks(codeChunks)
             .createdAt(Instant.now())
             .updatedAt(Instant.now())
             .build();
@@ -245,27 +244,26 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         // Then
         GetRequest getRequest = GetRequest.of(g -> g
             .index(FILES_INDEX_NAME)
-            .id(documentId)
+            .id(documentId.toString())
         );
 
-        GetResponse<Map> response = openSearchClient.get(getRequest, Map.class);
+        GetResponse<CodeFileDocument> response = openSearchClient.get(getRequest, CodeFileDocument.class);
 
         assertThat(response.found()).isTrue();
-        Map<String, Object> source = response.source();
+        CodeFileDocument source = response.source();
         assertThat(source).isNotNull();
 
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> indexedChunks = (List<Map<String, Object>>) source.get("chunks");
-        assertThat(indexedChunks).isNotNull();
-        assertThat(indexedChunks).hasSize(2);
+        List<CodeFileDocument.CodeChunk> indexedCodeChunks = source.getCodeChunks();
+        assertThat(indexedCodeChunks).isNotNull();
+        assertThat(indexedCodeChunks).hasSize(2);
 
-        assertThat(indexedChunks.get(0).get("index")).isEqualTo(0);
-        assertThat(indexedChunks.get(0).get("content")).isEqualTo("chunk 1 content");
-        assertThat(indexedChunks.get(0).get("start_line")).isEqualTo(1);
-        assertThat(indexedChunks.get(0).get("end_line")).isEqualTo(10);
+        assertThat(indexedCodeChunks.get(0).getIndex()).isEqualTo(0);
+        assertThat(indexedCodeChunks.get(0).getContent()).isEqualTo("chunk 1 content");
+        assertThat(indexedCodeChunks.get(0).getStartLine()).isEqualTo(1);
+        assertThat(indexedCodeChunks.get(0).getEndLine()).isEqualTo(10);
 
-        assertThat(indexedChunks.get(1).get("index")).isEqualTo(1);
-        assertThat(indexedChunks.get(1).get("content")).isEqualTo("chunk 2 content");
+        assertThat(indexedCodeChunks.get(1).getIndex()).isEqualTo(1);
+        assertThat(indexedCodeChunks.get(1).getContent()).isEqualTo("chunk 2 content");
     }
 
     @Test
@@ -283,14 +281,17 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_identifier")
+                    .field(FieldNames.REPOSITORY_IDENTIFIER)
                     .value(FieldValue.of(repoIdentifier))
                 )
             )
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(100);
     }
 
@@ -318,15 +319,18 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_identifier")
+                    .field(FieldNames.REPOSITORY_IDENTIFIER)
                     .value(FieldValue.of(repoIdentifier))
                 )
             )
             .size(1100)
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(1000);
     }
 
@@ -345,14 +349,17 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_identifier")
+                    .field(FieldNames.REPOSITORY_IDENTIFIER)
                     .value(FieldValue.of(repoIdentifier))
                 )
             )
             .size(600)
         );
 
-        SearchResponse<Map> allDocsResponse = openSearchClient.search(allDocsRequest, Map.class);
+        SearchResponse<CodeFileDocument> allDocsResponse = openSearchClient.search(allDocsRequest, CodeFileDocument.class);
+        assertThat(allDocsResponse).isNotNull();
+        assertThat(allDocsResponse.hits()).isNotNull();
+        assertThat(allDocsResponse.hits().total()).isNotNull();
         assertThat(allDocsResponse.hits().total().value()).isEqualTo(500);
 
         // Verify we have documents in different languages
@@ -360,13 +367,16 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .bool(b -> b
-                    .must(m -> m.term(t -> t.field("repository_identifier").value(FieldValue.of(repoIdentifier))))
-                    .must(m -> m.term(t -> t.field("language").value(FieldValue.of("Java"))))
+                    .must(m -> m.term(t -> t.field(FieldNames.REPOSITORY_IDENTIFIER).value(FieldValue.of(repoIdentifier))))
+                    .must(m -> m.term(t -> t.field(FieldNames.LANGUAGE).value(FieldValue.of("Java"))))
                 )
             )
         );
 
-        SearchResponse<Map> javaResponse = openSearchClient.search(javaRequest, Map.class);
+        SearchResponse<CodeFileDocument> javaResponse = openSearchClient.search(javaRequest, CodeFileDocument.class);
+        assertThat(javaResponse).isNotNull();
+        assertThat(javaResponse.hits()).isNotNull();
+        assertThat(javaResponse.hits().total()).isNotNull();
         assertThat(javaResponse.hits().total().value()).isGreaterThan(0);
     }
 
@@ -385,15 +395,18 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_identifier")
+                    .field(FieldNames.REPOSITORY_IDENTIFIER)
                     .value(FieldValue.of(repoIdentifier))
                 )
             )
             .size(2100)
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(2000);
     }
 
@@ -408,7 +421,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         for (int i = 0; i < 100; i++) {
             String content = "// Small file\nclass Small" + i + " {}";
             documents.add(CodeFileDocument.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID())
                 .repositoryId(repositoryId)
                 .repositoryIdentifier(repoIdentifier)
                 .filePath("src/small/Small" + i + ".java")
@@ -433,15 +446,18 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
             .index(FILES_INDEX_NAME)
             .query(q -> q
                 .term(t -> t
-                    .field("repository_identifier")
+                    .field(FieldNames.REPOSITORY_IDENTIFIER)
                     .value(FieldValue.of(repoIdentifier))
                 )
             )
             .size(250)
         );
 
-        SearchResponse<Map> searchResponse = openSearchClient.search(searchRequest, Map.class);
+        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.hits()).isNotNull();
+        assertThat(searchResponse.hits().total()).isNotNull();
         assertThat(searchResponse.hits().total().value()).isEqualTo(200);
     }
 }

@@ -1,7 +1,7 @@
 package huyphmnat.fdsa.search.internal.services;
 
 import huyphmnat.fdsa.search.FieldNames;
-import huyphmnat.fdsa.search.internal.models.CodeFileDocument;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,9 +27,9 @@ public interface OpenSearchIndexingService {
         docMap.put(FieldNames.CREATED_AT, document.getCreatedAt().toString());
         docMap.put(FieldNames.UPDATED_AT, document.getUpdatedAt().toString());
 
-        if (document.getChunks() != null && !document.getChunks().isEmpty()) {
+        if (document.getCodeChunks() != null && !document.getCodeChunks().isEmpty()) {
             List<Map<String, Object>> chunksData = new ArrayList<>();
-            for (CodeFileDocument.CodeChunk chunk : document.getChunks()) {
+            for (CodeFileDocument.CodeChunk chunk : document.getCodeChunks()) {
                 Map<String, Object> chunkMap = new HashMap<>();
                 chunkMap.put(FieldNames.CHUNK_INDEX, chunk.getIndex());
                 chunkMap.put(FieldNames.CHUNK_CONTENT, chunk.getContent());
