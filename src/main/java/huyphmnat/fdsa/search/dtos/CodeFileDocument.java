@@ -1,6 +1,7 @@
 package huyphmnat.fdsa.search.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import huyphmnat.fdsa.search.FieldNames;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,31 +27,31 @@ public class CodeFileDocument {
     /**
      * Repository ID this file belongs to
      */
-    @JsonProperty("repository_id")
+    @JsonProperty(FieldNames.REPOSITORY_ID)
     private String repositoryId;
 
     /**
      * Repository identifier (owner/name)
      */
-    @JsonProperty("repository_identifier")
+    @JsonProperty(FieldNames.REPOSITORY_IDENTIFIER)
     private String repositoryIdentifier;
 
     /**
      * File path within the repository
      */
-    @JsonProperty("file_path")
+    @JsonProperty(FieldNames.FILE_PATH)
     private String filePath;
 
     /**
      * File name
      */
-    @JsonProperty("file_name")
+    @JsonProperty(FieldNames.FILE_NAME)
     private String fileName;
 
     /**
      * File extension
      */
-    @JsonProperty("file_extension")
+    @JsonProperty(FieldNames.FILE_EXTENSION)
     private String fileExtension;
 
     /**
@@ -71,13 +72,13 @@ public class CodeFileDocument {
     /**
      * Timestamp when document was created (ISO-8601 string)
      */
-    @JsonProperty("created_at")
+    @JsonProperty(FieldNames.CREATED_AT)
     private String createdAt;
 
     /**
      * Timestamp when document was last updated (ISO-8601 string)
      */
-    @JsonProperty("updated_at")
+    @JsonProperty(FieldNames.UPDATED_AT)
     private String updatedAt;
 
     /**
@@ -96,23 +97,25 @@ public class CodeFileDocument {
         /**
          * Chunk index
          */
+        @JsonProperty(FieldNames.CHUNK_INDEX)
         private Integer index;
 
         /**
          * Chunk content
          */
+        @JsonProperty(FieldNames.CHUNK_CONTENT)
         private String content;
 
         /**
          * Starting line number
          */
-        @JsonProperty("start_line")
+        @JsonProperty(FieldNames.CHUNK_START_LINE)
         private Integer startLine;
 
         /**
          * Ending line number
          */
-        @JsonProperty("end_line")
+        @JsonProperty(FieldNames.CHUNK_END_LINE)
         private Integer endLine;
     }
 }
