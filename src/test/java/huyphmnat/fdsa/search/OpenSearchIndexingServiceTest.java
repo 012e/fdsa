@@ -54,9 +54,6 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         // When
         indexingService.indexCodeFile(document);
 
-        // Wait for indexing
-        Thread.sleep(1000);
-
         // Then
         GetRequest getRequest = GetRequest.of(g -> g
             .index(FILES_INDEX_NAME)
@@ -118,7 +115,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         indexingService.indexCodeFile(document);
 
         // Wait for indexing
-        Thread.sleep(1000);
+        
 
         // Then
         GetRequest getRequest = GetRequest.of(g -> g
@@ -172,7 +169,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         indexingService.bulkIndexCodeFiles(documents);
 
         // Wait for indexing
-        Thread.sleep(1000);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
@@ -225,7 +222,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         indexingService.bulkIndexCodeFiles(documents);
 
         // Wait for indexing
-        Thread.sleep(2000);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s

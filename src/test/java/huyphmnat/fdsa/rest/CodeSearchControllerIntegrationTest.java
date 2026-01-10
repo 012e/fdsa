@@ -50,7 +50,7 @@ class CodeSearchControllerIntegrationTest extends OpenSearchIntegrationTest {
         indexTestDocuments();
 
         // Wait for indexing
-        Thread.sleep(1500);
+        
     }
 
     private void indexTestDocuments() {

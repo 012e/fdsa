@@ -83,7 +83,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
 
         // Wait for indexing
-        Thread.sleep(1500);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
@@ -181,7 +181,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
 
         // Wait for indexing
-        Thread.sleep(1500);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
@@ -247,7 +247,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
 
         // Wait for indexing
-        Thread.sleep(1500);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
@@ -308,7 +308,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
 
         // Wait for indexing
-        Thread.sleep(1500);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
@@ -371,7 +371,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
 
         // Wait for indexing
-        Thread.sleep(1500);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
@@ -454,7 +454,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
 
         // Wait for indexing
-        Thread.sleep(1500);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
@@ -514,7 +514,7 @@ class RepositoryIndexingServiceImplTest extends OpenSearchIntegrationTest {
         ingestionService.ingestRepository(repositoryId, repositoryIdentifier);
 
         // Wait for indexing
-        Thread.sleep(2000);
+        
 
         // Then
         SearchRequest searchRequest = SearchRequest.of(s -> s
