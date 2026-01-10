@@ -14,4 +14,5 @@ export const oidcConfig: AuthProviderProps = {
   post_logout_redirect_uri: appUrl,
   response_type: "code",
   scope: "openid profile email",
+  automaticSilentRenew: true,
 };

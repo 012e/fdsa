@@ -10,9 +10,14 @@ export function AuthSync({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (auth?.user?.access_token) {
       setAccessToken(auth?.user.access_token);
-      console.log("token", auth.user.access_token);
     }
   }, [auth.user?.access_token, setAccessToken]);
+
+  useEffect(() => {
+    return auth.events.addAccessTokenExpiring(() => {
+      auth.revokeTokens();
+    });
+  }, [auth.events]);
 
   return <>{children}</>;
 }
