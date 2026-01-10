@@ -17,4 +17,3 @@ export function AuthSync({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
-

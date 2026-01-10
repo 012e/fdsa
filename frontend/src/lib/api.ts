@@ -8,7 +8,6 @@ const axiosClient = axios.create({
   baseURL: basePath,
 });
 
-// Add request interceptor to attach access token from Jotai store
 axiosClient.interceptors.request.use(
   (config) => {
     const store = getDefaultStore();
@@ -22,7 +21,7 @@ axiosClient.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 const repositoryApi = new RepositoryControllerApi(
@@ -31,10 +30,6 @@ const repositoryApi = new RepositoryControllerApi(
   axiosClient,
 );
 
-const codeSearchApi = new CodeSearchApi(
-  undefined,
-  basePath,
-  axiosClient,
-);
+const codeSearchApi = new CodeSearchApi(undefined, basePath, axiosClient);
 
 export { repositoryApi, codeSearchApi };
