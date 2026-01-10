@@ -2,6 +2,7 @@ package huyphmnat.fdsa.search.internal.services;
 
 import huyphmnat.fdsa.search.FieldNames;
 import huyphmnat.fdsa.search.Indexes;
+import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.dtos.CodeSearchResult;
@@ -45,7 +46,7 @@ public class CodeSearchServiceImpl implements CodeSearchService {
 
         try {
             SearchRequest searchRequest = buildSearchRequest(request);
-            SearchResponse<Map> response = openSearchClient.search(searchRequest, Map.class);
+            SearchResponse<CodeFileDocument> response = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
             List<CodeSearchResult> results = response.hits().hits().stream()
                 .map(this::mapHitToResult)
@@ -150,27 +151,27 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         return searchBuilder.build();
     }
 
-    private CodeSearchResult mapHitToResult(Hit<Map> hit) {
-        Map<String, Object> source = hit.source();
+    private CodeSearchResult mapHitToResult(Hit<CodeFileDocument> hit) {
+        CodeFileDocument doc = hit.source();
 
         CodeSearchResult.CodeSearchResultBuilder builder = CodeSearchResult.builder()
-            .id((String) source.get(FieldNames.ID))
-            .repositoryId(UUID.fromString((String) source.get(FieldNames.REPOSITORY_ID)))
-            .repositoryIdentifier((String) source.get(FieldNames.REPOSITORY_IDENTIFIER))
-            .filePath((String) source.get(FieldNames.FILE_PATH))
-            .fileName((String) source.get(FieldNames.FILE_NAME))
-            .fileExtension((String) source.get(FieldNames.FILE_EXTENSION))
-            .language((String) source.get(FieldNames.LANGUAGE))
-            .content((String) source.get(FieldNames.CONTENT))
+            .id(doc.getId())
+            .repositoryId(UUID.fromString(doc.getRepositoryId()))
+            .repositoryIdentifier(doc.getRepositoryIdentifier())
+            .filePath(doc.getFilePath())
+            .fileName(doc.getFileName())
+            .fileExtension(doc.getFileExtension())
+            .language(doc.getLanguage())
+            .content(doc.getContent())
             .score(hit.score())
-            .size(source.get(FieldNames.SIZE) != null ? ((Number) source.get(FieldNames.SIZE)).longValue() : null);
+            .size(doc.getSize());
 
         // Parse timestamps
-        if (source.get(FieldNames.CREATED_AT) != null) {
-            builder.createdAt(Instant.parse((String) source.get(FieldNames.CREATED_AT)));
+        if (doc.getCreatedAt() != null) {
+            builder.createdAt(Instant.parse(doc.getCreatedAt()));
         }
-        if (source.get(FieldNames.UPDATED_AT) != null) {
-            builder.updatedAt(Instant.parse((String) source.get(FieldNames.UPDATED_AT)));
+        if (doc.getUpdatedAt() != null) {
+            builder.updatedAt(Instant.parse(doc.getUpdatedAt()));
         }
 
         // Parse highlights
@@ -183,14 +184,13 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         }
 
         // Parse matched chunks if available
-        if (source.get(FieldNames.CHUNKS) != null) {
-            List<Map<String, Object>> chunks = (List<Map<String, Object>>) source.get(FieldNames.CHUNKS);
-            List<CodeSearchResult.ChunkMatch> matchedChunks = chunks.stream()
+        if (doc.getChunks() != null) {
+            List<CodeSearchResult.ChunkMatch> matchedChunks = doc.getChunks().stream()
                 .map(chunk -> CodeSearchResult.ChunkMatch.builder()
-                    .index(((Number) chunk.get(FieldNames.CHUNK_INDEX)).intValue())
-                    .content((String) chunk.get(FieldNames.CHUNK_CONTENT))
-                    .startLine(chunk.get(FieldNames.CHUNK_START_LINE) != null ? ((Number) chunk.get(FieldNames.CHUNK_START_LINE)).intValue() : 0)
-                    .endLine(chunk.get(FieldNames.CHUNK_END_LINE) != null ? ((Number) chunk.get(FieldNames.CHUNK_END_LINE)).intValue() : 0)
+                    .index(chunk.getIndex())
+                    .content(chunk.getContent())
+                    .startLine(chunk.getStartLine() != null ? chunk.getStartLine() : 0)
+                    .endLine(chunk.getEndLine() != null ? chunk.getEndLine() : 0)
                     .build())
                 .collect(Collectors.toList());
             builder.matchedChunks(matchedChunks);
