@@ -13,7 +13,8 @@ import org.testcontainers.utility.DockerImageName;
 @ActiveProfiles({"integration-testing", "opensearch-integration-testing"})
 public class OpenSearchIntegrationTest extends BaseIntegrationTest {
     @Container
-    static GenericContainer<?> openSearchContainer = new OpenSearchContainer<>(DockerImageName.parse("opensearchproject/opensearch:3.4.0"));
+    static GenericContainer<?> openSearchContainer = new OpenSearchContainer<>(DockerImageName.parse("opensearchproject/opensearch:3.4.0"))
+            .withReuse(true);
 
     private static void setupOpenSearch(DynamicPropertyRegistry registry) {
         registry.add("spring.opensearch.host", openSearchContainer::getHost);

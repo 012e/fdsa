@@ -30,11 +30,11 @@ public class BaseIntegrationTest {
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
             "postgres:18.1-alpine"
-    );
+    ).withReuse(true);
     @Container
     static KafkaContainer kafka = new KafkaContainer(
             "apache/kafka-native:4.1.1"
-    );
+    ).withReuse(true);
 
     private static Path tempRepoBaseDir;
 

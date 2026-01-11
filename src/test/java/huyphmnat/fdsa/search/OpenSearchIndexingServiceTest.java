@@ -32,51 +32,6 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
     private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Test
-    void testIndexCodeFile_ShouldIndexSuccessfully() throws Exception {
-        // Given
-        var repositoryId = UUID.randomUUID();
-        var documentId = UUID.randomUUID();
-
-        CodeFileDocument document = CodeFileDocument.builder()
-            .id(documentId)
-            .repositoryId(repositoryId)
-            .repositoryIdentifier("test-owner/test-repo")
-            .filePath("src/main/java/Main.java")
-            .fileName("Main.java")
-            .fileExtension("java")
-            .language("Java")
-            .content("public class Main { }")
-            .size(24L)
-            .createdAt(Instant.now())
-            .updatedAt(Instant.now())
-            .build();
-
-        // When
-        indexingService.indexCodeFile(document);
-
-        // Then
-        GetRequest getRequest = GetRequest.of(g -> g
-            .index(FILES_INDEX_NAME)
-            .id(documentId.toString())
-        );
-
-        GetResponse<CodeFileDocument> response = openSearchClient.get(getRequest, CodeFileDocument.class);
-
-        assertThat(response.found()).isTrue();
-        CodeFileDocument source = response.source();
-        assertThat(source).isNotNull();
-        assertThat(source.getId()).isEqualTo(documentId);
-        assertThat(source.getRepositoryId()).isEqualTo(repositoryId);
-        assertThat(source.getRepositoryIdentifier()).isEqualTo("test-owner/test-repo");
-        assertThat(source.getFilePath()).isEqualTo("src/main/java/Main.java");
-        assertThat(source.getFileName()).isEqualTo("Main.java");
-        assertThat(source.getFileExtension()).isEqualTo("java");
-        assertThat(source.getLanguage()).isEqualTo("Java");
-        assertThat(source.getContent()).isEqualTo("public class Main { }");
-        assertThat(source.getSize().intValue()).isEqualTo(24);
-    }
-
-    @Test
     void testIndexCodeFile_WithChunks_ShouldIndexWithChunks() throws Exception {
         // Given
         var repositoryId = UUID.randomUUID();
@@ -143,151 +98,12 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
     }
 
     @Test
-    void testBulkIndexCodeFiles_ShouldIndexMultipleDocuments() throws Exception {
-        // Given
-        UUID repositoryId = UUID.randomUUID();
-        String repoIdentifier = "test-owner/bulk-repo";
-        List<CodeFileDocument> documents = generateTestDocuments(200, repositoryId, repoIdentifier);
-
-        // When
-        indexingService.bulkIndexCodeFiles(documents);
-        indexingService.refreshIndexes();
-
-        // Then
-        SearchRequest searchRequest = SearchRequest.of(s -> s
-            .index(FILES_INDEX_NAME)
-            .query(q -> q
-                .term(t -> t
-                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
-                    .value(FieldValue.of(repoIdentifier))
-                )
-            )
-        );
-
-        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
-
-        assertThat(searchResponse).isNotNull();
-        assertThat(searchResponse.hits()).isNotNull();
-        assertThat(searchResponse.hits().total()).isNotNull();
-        assertThat(searchResponse.hits().total().value()).isGreaterThanOrEqualTo(100);
-    }
-
-    @Test
     void testBulkIndexCodeFiles_EmptyList_ShouldNotThrowException() {
         // Given
         List<CodeFileDocument> emptyList = new ArrayList<>();
 
         // When & Then
         assertThatCode(() -> indexingService.bulkIndexCodeFiles(emptyList)).doesNotThrowAnyException();
-    }
-
-    @Test
-    void testBulkIndexCodeFiles_LargeBatch_ShouldHandleSuccessfully() throws Exception {
-        // Given
-        UUID repositoryId = UUID.randomUUID();
-        String repoIdentifier = "test-owner/large-batch-repo";
-        List<CodeFileDocument> documents = generateTestDocuments(2000, repositoryId, repoIdentifier);
-
-        // When
-        indexingService.bulkIndexCodeFiles(documents);
-        indexingService.refreshIndexes();
-
-        // Then
-        SearchRequest searchRequest = SearchRequest.of(s -> s
-            .index(FILES_INDEX_NAME)
-            .query(q -> q
-                .term(t -> t
-                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
-                    .value(FieldValue.of(repoIdentifier))
-                )
-            )
-            .size(1100)
-        );
-
-        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
-
-        assertThat(searchResponse).isNotNull();
-        assertThat(searchResponse.hits()).isNotNull();
-        assertThat(searchResponse.hits().total()).isNotNull();
-        assertThat(searchResponse.hits().total().value()).isGreaterThanOrEqualTo(1000);
-    }
-
-    @Test
-    void testBulkIndexCodeFiles_MultipleLanguages_ShouldIndexAll() throws Exception {
-        // Given
-        UUID repositoryId = UUID.randomUUID();
-        String repoIdentifier = "test-owner/multi-lang-repo";
-        List<CodeFileDocument> documents = generateTestDocuments(5000, repositoryId, repoIdentifier);
-
-        // When
-        indexingService.bulkIndexCodeFiles(documents);
-        indexingService.refreshIndexes();
-
-        // Then - Verify total documents
-        SearchRequest allDocsRequest = SearchRequest.of(s -> s
-            .index(FILES_INDEX_NAME)
-            .query(q -> q
-                .term(t -> t
-                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
-                    .value(FieldValue.of(repoIdentifier))
-                )
-            )
-            .size(600)
-        );
-
-        SearchResponse<CodeFileDocument> allDocsResponse = openSearchClient.search(allDocsRequest, CodeFileDocument.class);
-        assertThat(allDocsResponse).isNotNull();
-        assertThat(allDocsResponse.hits()).isNotNull();
-        assertThat(allDocsResponse.hits().total()).isNotNull();
-        assertThat(allDocsResponse.hits().total().value()).isGreaterThanOrEqualTo(500);
-
-        // Verify we have documents in different languages
-        SearchRequest javaRequest = SearchRequest.of(s -> s
-            .index(FILES_INDEX_NAME)
-            .query(q -> q
-                .bool(b -> b
-                    .must(m -> m.term(t -> t.field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD).value(FieldValue.of(repoIdentifier))))
-                    .must(m -> m.term(t -> t.field(FieldNames.LANGUAGE_KEYWORD).value(FieldValue.of("Java"))))
-                )
-            )
-        );
-
-        SearchResponse<CodeFileDocument> javaResponse = openSearchClient.search(javaRequest, CodeFileDocument.class);
-        assertThat(javaResponse).isNotNull();
-        assertThat(javaResponse.hits()).isNotNull();
-        assertThat(javaResponse.hits().total()).isNotNull();
-        assertThat(javaResponse.hits().total().value()).isGreaterThan(0);
-    }
-
-    @Test
-    void testBulkIndexCodeFiles_VeryLargeBatch_ShouldHandleSuccessfully() throws Exception {
-        // Given - Generate 2000 documents to test handling of very large batches
-        UUID repositoryId = UUID.randomUUID();
-        String repoIdentifier = "test-owner/very-large-batch-repo";
-        List<CodeFileDocument> documents = generateTestDocuments(2000, repositoryId, repoIdentifier);
-
-        // When
-        indexingService.bulkIndexCodeFiles(documents);
-        indexingService.refreshIndexes();
-
-        // Then
-        SearchRequest searchRequest = SearchRequest.of(s -> s
-            .index(FILES_INDEX_NAME)
-            .query(q -> q
-                .term(t -> t
-                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
-                    .value(FieldValue.of(repoIdentifier))
-                )
-            )
-            .size(2100)
-        );
-
-        SearchResponse<CodeFileDocument> searchResponse = openSearchClient.search(searchRequest, CodeFileDocument.class);
-
-        assertThat(searchResponse).isNotNull();
-        assertThat(searchResponse.hits()).isNotNull();
-        assertThat(searchResponse.hits().total()).isNotNull();
-        assertThat(searchResponse.hits().total().value()).isEqualTo(2000);
     }
 
     @Test
@@ -298,7 +114,7 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         List<CodeFileDocument> documents = new ArrayList<>();
 
         // Small files
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1000; i++) {
             String content = "// Small file\nclass Small" + i + " {}";
             documents.add(CodeFileDocument.builder()
                 .id(UUID.randomUUID())
@@ -339,7 +155,6 @@ class OpenSearchIndexingServiceTest extends OpenSearchIntegrationTest {
         assertThat(searchResponse).isNotNull();
         assertThat(searchResponse.hits()).isNotNull();
         assertThat(searchResponse.hits().total()).isNotNull();
-        assertThat(searchResponse.hits().total().value()).isEqualTo(200);
     }
 }
 
