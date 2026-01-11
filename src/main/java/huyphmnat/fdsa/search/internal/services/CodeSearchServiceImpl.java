@@ -11,24 +11,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
-import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
-import org.opensearch.client.opensearch._types.query_dsl.MultiMatchQuery;
-import org.opensearch.client.opensearch._types.query_dsl.Query;
-import org.opensearch.client.opensearch._types.query_dsl.TermQuery;
-import org.opensearch.client.opensearch._types.query_dsl.WildcardQuery;
+import org.opensearch.client.opensearch._types.query_dsl.*;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Highlight;
 import org.opensearch.client.opensearch.core.search.HighlightField;
 import org.opensearch.client.opensearch.core.search.Hit;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CodeSearchServiceImpl implements CodeSearchService {
     private final OpenSearchClient openSearchClient;
+    private final EmbeddingModel embeddingService;
     private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Override
@@ -70,6 +63,52 @@ public class CodeSearchServiceImpl implements CodeSearchService {
     }
 
     private SearchRequest buildSearchRequest(CodeSearchRequest request) {
+        return buildHybridSearchRequest(request);
+    }
+
+    /**
+     * Builds a hybrid search request using RRF (Reciprocal Rank Fusion)
+     * Combines full-text search with vector search
+     */
+    private SearchRequest buildHybridSearchRequest(CodeSearchRequest request) {
+        log.info("Building hybrid search request with RRF");
+
+        // Get or generate query embedding
+        float[] queryEmbedding = request.getQueryEmbedding();
+        if (queryEmbedding == null && request.getQuery() != null && !request.getQuery().isEmpty()) {
+            queryEmbedding = embeddingService.embed(request.getQuery());
+        }
+
+        if (queryEmbedding == null) {
+            log.warn("No query embedding available, falling back to keyword search");
+            return buildKeywordSearchRequest(request);
+        }
+
+        try {
+            // Build hybrid query with RRF
+            Query hybridQuery = buildHybridQuery(request, queryEmbedding);
+
+            SearchRequest.Builder searchBuilder = new SearchRequest.Builder()
+                    .index(FILES_INDEX_NAME)
+                    .query(hybridQuery)
+                    .from(request.getPage() * request.getSize())
+                    .size(request.getSize());
+
+            // Add highlighting if requested
+            addHighlighting(searchBuilder, request);
+
+            return searchBuilder.build();
+
+        } catch (Exception e) {
+            log.error("Failed to build hybrid search request, falling back to keyword search", e);
+            return buildKeywordSearchRequest(request);
+        }
+    }
+
+    /**
+     * Builds a traditional keyword-based search request
+     */
+    private SearchRequest buildKeywordSearchRequest(CodeSearchRequest request) {
         BoolQuery.Builder boolQuery = new BoolQuery.Builder();
 
         // Add full-text search query
@@ -82,6 +121,25 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         }
 
         // Add filters
+        addFilters(boolQuery, request);
+
+        // Build search request
+        SearchRequest.Builder searchBuilder = new SearchRequest.Builder()
+                .index(FILES_INDEX_NAME)
+                .query(boolQuery.build().toQuery())
+                .from(request.getPage() * request.getSize())
+                .size(request.getSize());
+
+        // Add highlighting if requested
+        addHighlighting(searchBuilder, request);
+
+        return searchBuilder.build();
+    }
+
+    /**
+     * Adds filter queries to the bool query builder
+     */
+    private void addFilters(BoolQuery.Builder boolQuery, CodeSearchRequest request) {
         List<Query> filters = new ArrayList<>();
 
         if (request.getRepositoryIdentifier() != null && !request.getRepositoryIdentifier().isEmpty()) {
@@ -108,15 +166,12 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         if (!filters.isEmpty()) {
             boolQuery.filter(filters);
         }
+    }
 
-        // Build search request
-        SearchRequest.Builder searchBuilder = new SearchRequest.Builder()
-                .index(FILES_INDEX_NAME)
-                .query(boolQuery.build().toQuery())
-                .from(request.getPage() * request.getSize())
-                .size(request.getSize());
-
-        // Add highlighting if requested
+    /**
+     * Adds highlighting configuration to the search request builder
+     */
+    private void addHighlighting(SearchRequest.Builder searchBuilder, CodeSearchRequest request) {
         if (request.getHighlightFields() != null && !request.getHighlightFields().isEmpty()) {
             Map<String, HighlightField> highlightFields = new HashMap<>();
             for (String field : request.getHighlightFields()) {
@@ -132,9 +187,60 @@ public class CodeSearchServiceImpl implements CodeSearchService {
                     .postTags("</mark>")
             ));
         }
-
-        return searchBuilder.build();
     }
+
+    private static List<Float> mapArrayToList(float[] array) {
+        List<Float> list = new ArrayList<>(array.length);
+        for (float v : array) {
+            list.add(v);
+        }
+        return list;
+    }
+
+    /**
+     * Builds a hybrid query that combines keyword and vector search with RRF
+     * This uses OpenSearch's native HybridQuery API
+     */
+    private Query buildHybridQuery(CodeSearchRequest request, float[] queryEmbedding) {
+        List<Query> queries = new ArrayList<>();
+
+        // 1. Keyword search query (multi_match)
+        Query keywordQuery = MultiMatchQuery.of(m -> m
+                .query(request.getQuery())
+                .fields(FieldNames.CONTENT + "^3", FieldNames.FILE_NAME + "^2", FieldNames.FILE_PATH)
+        ).toQuery();
+        queries.add(keywordQuery);
+
+        // 2. Vector search query (kNN)
+        Query vectorQuery = KnnQuery.of(k -> k
+                .field(FieldNames.CONTENT_EMBEDDING)
+                .vector(mapArrayToList((queryEmbedding)))
+                .k(request.getSize() * 2)
+        ).toQuery();
+        queries.add(vectorQuery);
+
+        // Build hybrid query with both queries
+        Query hybridQuery = HybridQuery.of(h -> h
+                .queries(queries)
+        ).toQuery();
+
+        // Wrap with filters if present
+        if (hasFilters(request)) {
+            BoolQuery.Builder boolQuery = new BoolQuery.Builder()
+                    .must(hybridQuery);
+            addFilters(boolQuery, request);
+            return boolQuery.build().toQuery();
+        }
+
+        return hybridQuery;
+    }
+
+    private boolean hasFilters(CodeSearchRequest request) {
+        return (request.getRepositoryIdentifier() != null && !request.getRepositoryIdentifier().isEmpty()) ||
+                (request.getLanguage() != null && !request.getLanguage().isEmpty()) ||
+                (request.getFilePathPattern() != null && !request.getFilePathPattern().isEmpty());
+    }
+
 
     private CodeSearchResult mapHitToResult(Hit<CodeFileDocument> hit) {
         CodeFileDocument doc = hit.source();

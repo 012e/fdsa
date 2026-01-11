@@ -51,9 +51,6 @@ public class CodeSearchController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String highlight) {
-
-        log.info("Searching code with query: '{}', page: {}, size: {}", query, page, size);
-
         // Parse highlight fields
         List<String> highlightFields = null;
         if (highlight != null && !highlight.isEmpty()) {
