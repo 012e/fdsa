@@ -155,51 +155,27 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
     }
 
     private CreateConnectorResponse setupOpenAIConnector() throws Exception {
-
-        log.info("Registering FAKE OpenAI Connector...");
+        log.info("Registering OpenAI Connector...");
 
         CreateConnectorRequest request = CreateConnectorRequest.of(c -> c
-                .name("openai-connector-fake")
-                .description("Fake Connector for Testing")
+                .name("openai-connector")
+                .description("Connector for OpenAI Embeddings")
                 .protocol("http")
                 .parameters(Map.of("model", JsonData.of("text-embedding-3-small")))
-                .credential(t -> t.metadata(Map.of("api_key", JsonData.of("fake-key"))))
+                .credential(t -> t.metadata(Map.of("api_key", JsonData.of(openAiApiKey))))
                 .version(1)
                 .actions(a -> a
                         .actionType("predict")
                         .method("POST")
-                        // 1. Point to a URL that always succeeds (even a local non-existent one if using dry-runs)
-                        // Or use an echo service: https://postman-echo.com/post
-                        .url("https://postman-echo.com/post")
+                        .url("https://api.openai.com/v1/embeddings")
                         .headers(t -> t.metadata(Map.of("Authorization", JsonData.of("Bearer ${credential.api_key}"))))
-                        .requestBody("{ \"input\": ${parameters.input} }")
-                        // 2. Override the standard OpenAI post-processor with a custom Painless script
-                        .postProcessFunction(getScript())
+                        .requestBody("{ \"input\": ${parameters.input}, \"model\": \"${parameters.model}\" }")
+                        .preProcessFunction("connector.pre_process.openai.embedding")
+                        .postProcessFunction("connector.post_process.openai.embedding")
                 )
         );
 
         return openSearchClient.ml().createConnector(request);
-//        log.info("Registering OpenAI Connector...");
-//
-//        CreateConnectorRequest request = CreateConnectorRequest.of(c -> c
-//                .name("openai-connector")
-//                .description("Connector for OpenAI Embeddings")
-//                .protocol("http")
-//                .parameters(Map.of("model", JsonData.of("text-embedding-3-small")))
-//                .credential(t -> t.metadata(Map.of("api_key", JsonData.of(openAiApiKey))))
-//                .version(1)
-//                .actions(a -> a
-//                        .actionType("predict")
-//                        .method("POST")
-//                        .url("https://api.openai.com/v1/embeddings")
-//                        .headers(t -> t.metadata(Map.of("Authorization", JsonData.of("Bearer ${credential.api_key}"))))
-//                        .requestBody("{ \"input\": ${parameters.input}, \"model\": \"${parameters.model}\" }")
-//                        .preProcessFunction("connector.pre_process.openai.embedding")
-//                        .postProcessFunction("connector.post_process.openai.embedding")
-//                )
-//        );
-//
-//        return openSearchClient.ml().createConnector(request);
     }
 
     private void setupIngestPipeline(String modelId) throws Exception {
