@@ -2,11 +2,15 @@ package huyphmnat.fdsa.repository.internal.services;
 
 import huyphmnat.fdsa.repository.dtos.*;
 import huyphmnat.fdsa.repository.interfaces.RepositoryFileService;
+import huyphmnat.fdsa.repository.topics.RepositoryTopics;
+import huyphmnat.fdsa.shared.events.EventService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Comparator;
 import java.util.List;
@@ -16,11 +20,14 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RepositoryFileServiceImpl implements RepositoryFileService {
 
     private final RepositoryPathResolver repositoryPathResolver;
     private final GitRepositoryService gitRepositoryService;
     private final RepositoryAuthorizationService authorizationService;
+    private final EventService eventService;
+    private final huyphmnat.fdsa.repository.internal.repositories.RepositoryRepository repositoryRepository;
 
     @Override
     @Transactional
@@ -46,6 +53,9 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
         gitRepositoryService.stageAll(repoRoot);
         gitRepositoryService.commit(repoRoot, commitMessage);
+
+        // Publish repository.updated event
+        publishRepositoryUpdatedEvent(repositoryId, path, content, RepositoryUpdatedEvent.ChangeType.ADDED);
     }
 
     @Override
@@ -66,6 +76,9 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
         gitRepositoryService.stageAll(repoRoot);
         gitRepositoryService.commit(repoRoot, commitMessage);
+
+        // Publish repository.updated event
+        publishRepositoryUpdatedEvent(repositoryId, path, content, RepositoryUpdatedEvent.ChangeType.MODIFIED);
     }
 
     @Override
@@ -86,6 +99,9 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
         gitRepositoryService.stageAll(repoRoot);
         gitRepositoryService.commit(repoRoot, commitMessage);
+
+        // Publish repository.updated event with empty content for deletion
+        publishRepositoryUpdatedEvent(repositoryId, path, new byte[0], RepositoryUpdatedEvent.ChangeType.DELETED);
     }
 
     @Override
@@ -228,6 +244,40 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
                 .build();
         } catch (IOException e) {
             throw new RuntimeException("Failed to read file: " + path, e);
+        }
+    }
+
+    private void publishRepositoryUpdatedEvent(UUID repositoryId, String filePath, byte[] content, RepositoryUpdatedEvent.ChangeType changeType) {
+        try {
+            // Get repository identifier
+            var repository = repositoryRepository.findById(repositoryId)
+                .orElseThrow(() -> new RuntimeException("Repository not found: " + repositoryId));
+
+            // Convert content to string (UTF-8)
+            String contentString = new String(content, StandardCharsets.UTF_8);
+
+            // Create changed file
+            RepositoryUpdatedEvent.ChangedFile changedFile = RepositoryUpdatedEvent.ChangedFile.builder()
+                .path(filePath)
+                .content(contentString)
+                .changeType(changeType)
+                .build();
+
+            // Create event
+            RepositoryUpdatedEvent event = RepositoryUpdatedEvent.builder()
+                .repositoryId(repositoryId)
+                .identifier(repository.getIdentifier())
+                .changedFiles(List.of(changedFile))
+                .build();
+
+            // Publish event
+            eventService.publish(RepositoryTopics.REPOSITORY_UPDATED, event);
+            log.info("Published repository.updated event for repository: {} ({}), file: {}, changeType: {}",
+                repository.getIdentifier(), repositoryId, filePath, changeType);
+        } catch (Exception e) {
+            log.error("Failed to publish repository.updated event for repository: {}, file: {}",
+                repositoryId, filePath, e);
+            // Don't throw - event publishing failure shouldn't break file operations
         }
     }
 

@@ -95,6 +95,127 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
         }
     }
 
+    @Override
+    public void ingestChangedFiles(UUID repositoryId, String repositoryIdentifier, List<huyphmnat.fdsa.repository.dtos.RepositoryUpdatedEvent.ChangedFile> changedFiles) {
+        log.info("Starting ingestion of {} changed files for repository: {} ({})",
+            changedFiles.size(), repositoryIdentifier, repositoryId);
+
+        try {
+            List<CodeFileDocument> documentsToIndex = new ArrayList<>();
+            List<String> filesToDelete = new ArrayList<>();
+
+            for (var changedFile : changedFiles) {
+                String filePath = changedFile.getPath();
+                log.debug("Processing changed file: {} ({})", filePath, changedFile.getChangeType());
+
+                switch (changedFile.getChangeType()) {
+                    case ADDED, MODIFIED -> {
+                        // For added/modified files, create/update the document
+                        if (shouldProcessFilePath(filePath)) {
+                            CodeFileDocument document = processChangedFile(
+                                repositoryId,
+                                repositoryIdentifier,
+                                changedFile
+                            );
+                            if (document != null) {
+                                documentsToIndex.add(document);
+                            }
+                        } else {
+                            log.debug("Skipping non-code file: {}", filePath);
+                        }
+                    }
+                    case DELETED -> {
+                        // For deleted files, remove from index
+                        filesToDelete.add(filePath);
+                    }
+                }
+            }
+
+            // Bulk index added/modified files
+            if (!documentsToIndex.isEmpty()) {
+                indexingService.bulkIndexCodeFiles(documentsToIndex);
+                log.info("Indexed {} files for repository: {}", documentsToIndex.size(), repositoryIdentifier);
+            }
+
+            // Delete removed files from index
+            if (!filesToDelete.isEmpty()) {
+                indexingService.deleteFilesByPaths(repositoryId, filesToDelete);
+                log.info("Deleted {} files from index for repository: {}", filesToDelete.size(), repositoryIdentifier);
+            }
+
+            log.info("Completed ingestion of changed files for repository: {}", repositoryIdentifier);
+
+        } catch (Exception e) {
+            log.error("Failed to ingest changed files for repository: {}", repositoryIdentifier, e);
+            throw new RuntimeException("Changed files ingestion failed", e);
+        }
+    }
+
+    private boolean shouldProcessFilePath(String filePath) {
+        // Extract filename from path
+        String fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
+        return languageDetectionService.isCodeFile(fileName);
+    }
+
+    private CodeFileDocument processChangedFile(
+        UUID repositoryId,
+        String repositoryIdentifier,
+        huyphmnat.fdsa.repository.dtos.RepositoryUpdatedEvent.ChangedFile changedFile
+    ) {
+        try {
+            log.debug("Processing changed file: {}", changedFile.getPath());
+
+            String content = changedFile.getContent();
+            String filePath = changedFile.getPath();
+            String fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
+
+            String fileExtension = extractFileExtension(fileName);
+            String language = languageDetectionService.detectLanguage(fileName);
+
+            CodeFileDocument.CodeFileDocumentBuilder builder = CodeFileDocument.builder()
+                .id(UUID.randomUUID())
+                .repositoryId(repositoryId)
+                .repositoryIdentifier(repositoryIdentifier)
+                .filePath(filePath)
+                .fileName(fileName)
+                .fileExtension(fileExtension)
+                .language(language)
+                .content(content)
+                .size((long) content.length())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now());
+
+            // Chunk large files
+            if (content.length() > CHUNK_THRESHOLD) {
+                List<String> codeChunks = chunkingService.chunkCode(content);
+                List<CodeFileDocument.CodeChunk> chunks = new ArrayList<>();
+
+                int currentLine = 1;
+                for (int i = 0; i < codeChunks.size(); i++) {
+                    String chunkContent = codeChunks.get(i);
+                    int linesInChunk = chunkContent.split("\n").length;
+
+                    chunks.add(CodeFileDocument.CodeChunk.builder()
+                        .index(i)
+                        .content(chunkContent)
+                        .startLine(currentLine)
+                        .endLine(currentLine + linesInChunk - 1)
+                        .build());
+
+                    currentLine += linesInChunk;
+                }
+
+                builder.codeChunks(chunks);
+            }
+
+            return builder.build();
+
+        } catch (Exception e) {
+            log.error("Failed to process changed file: {}", changedFile.getPath(), e);
+            return null; // Skip this file but continue with others
+        }
+    }
+
     private boolean shouldProcessFile(FileEntry fileEntry) {
         // Skip very large files
         if (fileEntry.getSize() != null && fileEntry.getSize() > MAX_FILE_SIZE) {
