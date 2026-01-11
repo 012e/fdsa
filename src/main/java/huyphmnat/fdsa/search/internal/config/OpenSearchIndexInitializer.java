@@ -14,6 +14,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.Map;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@Profile("opensearch-integration-testing")
 public class OpenSearchIndexInitializer implements ApplicationRunner {
 
     private final OpenSearchClient openSearchClient;
