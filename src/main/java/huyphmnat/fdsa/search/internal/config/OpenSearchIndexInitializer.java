@@ -67,7 +67,7 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                 def name = "sentence_embedding";
                 def dataType = "FLOAT32";
                 def data = %s;
-                def shape = [data.size()];
+                def shape = [1536];
                 
                 return "{"
                     + "\\"name\\":\\"" + name + "\\","
