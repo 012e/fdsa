@@ -12,7 +12,6 @@ import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch.cluster.PutClusterSettingsRequest;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
-import org.opensearch.client.opensearch.ingest.Processor;
 import org.opensearch.client.opensearch.ml.*;
 import org.opensearch.client.opensearch.search_pipeline.ScoreCombinationTechnique;
 import org.opensearch.client.opensearch.search_pipeline.ScoreNormalizationTechnique;
@@ -36,47 +35,8 @@ import java.util.stream.IntStream;
 public class OpenSearchIndexInitializer implements ApplicationRunner {
 
     private final OpenSearchClient openSearchClient;
-    private ConfigurableApplicationContext context;
 
-    @Value("${spring.ai.openai.api-key}")
-    private String openAiApiKey;
-
-    private static final String INGEST_PIPELINE_ID = "code-files-ingest-pipeline";
     private static final String SEARCH_PIPELINE_ID = "code-files-search-pipeline";
-    private static final String FAKE_EMBEDDING_SCRIPT_ID = "fake_embedding_post_process";
-
-    private void registerFakeEmbeddingPostProcessScript() throws IOException {
-
-        openSearchClient.putScript(r -> r
-                .id(FAKE_EMBEDDING_SCRIPT_ID)
-                .script(s -> s
-                        .lang(a -> a.builtin(BuiltinScriptLanguage.Painless))
-                        .source(getScript())
-                )
-        );
-
-        log.info("Stored script '{}' registered with hard-coded 1536-dim vector.", FAKE_EMBEDDING_SCRIPT_ID);
-    }
-
-    private static @NonNull String getScript() {
-        // Generate the hard-coded array string: [0.0, 0.0, ..., 0.0]
-        String hardCodedData = IntStream.range(0, 1536)
-                .mapToObj(i -> "0.0")
-                .collect(Collectors.joining(",", "[", "]"));
-        return String.format("""
-                def name = "sentence_embedding";
-                def dataType = "FLOAT32";
-                def data = %s;
-                def shape = [1536];
-                
-                return "{"
-                    + "\\"name\\":\\"" + name + "\\","
-                    + "\\"data_type\\":\\"" + dataType + "\\","
-                    + "\\"shape\\":" + shape + ","
-                    + "\\"data\\":" + data
-                    + "}";
-                """, hardCodedData);
-    }
 
     public static String MODEL_ID = null;
 
@@ -84,15 +44,6 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         log.info("Starting OpenSearch Semantic Search Configuration...");
         configurateCluster();
-        registerFakeEmbeddingPostProcessScript();
-
-        var connector = setupOpenAIConnector();
-        var group = registerModelGroup();
-        var model = registerModel(connector, group);
-        deployModel(model);
-        MODEL_ID = model.modelId();
-
-        setupIngestPipeline(model.modelId());
 
         createSearchPipeline();
 
@@ -128,71 +79,6 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
         log.info("Search pipeline created.");
     }
 
-    private DeployModelResponse deployModel(RegisterModelResponse model) throws IOException {
-        var deployModelRequest = DeployModelRequest.builder()
-                .modelId(model.modelId())
-                .build();
-        return openSearchClient.ml().deployModel(deployModelRequest);
-    }
-
-    private RegisterModelResponse registerModel(CreateConnectorResponse connector, RegisterModelGroupResponse modelGroup) throws IOException {
-        var registerModelRequest = RegisterModelRequest.builder()
-                .name("OpenAI embedding model")
-                .functionName("remote")
-                .connectorId(connector.connectorId())
-                .modelGroupId(modelGroup.modelGroupId())
-                .description("test embedding model")
-                .build();
-        return openSearchClient.ml().registerModel(registerModelRequest);
-    }
-
-    private RegisterModelGroupResponse registerModelGroup() throws IOException {
-        var registerModelGroupRequest = RegisterModelGroupRequest.builder()
-                .name("OpenAI_embedding_model")
-                .description("Test model group for OpenAI embedding model")
-                .build();
-        return openSearchClient.ml().registerModelGroup(registerModelGroupRequest);
-    }
-
-    private CreateConnectorResponse setupOpenAIConnector() throws Exception {
-        log.info("Registering OpenAI Connector...");
-
-        CreateConnectorRequest request = CreateConnectorRequest.of(c -> c
-                .name("openai-connector")
-                .description("Connector for OpenAI Embeddings")
-                .protocol("http")
-                .parameters(Map.of("model", JsonData.of("text-embedding-3-small")))
-                .credential(t -> t.metadata(Map.of("api_key", JsonData.of(openAiApiKey))))
-                .version(1)
-                .actions(a -> a
-                        .actionType("predict")
-                        .method("POST")
-                        .url("https://api.openai.com/v1/embeddings")
-                        .headers(t -> t.metadata(Map.of("Authorization", JsonData.of("Bearer ${credential.api_key}"))))
-                        .requestBody("{ \"input\": ${parameters.input}, \"model\": \"${parameters.model}\" }")
-                        .preProcessFunction("connector.pre_process.openai.embedding")
-                        .postProcessFunction("connector.post_process.openai.embedding")
-                )
-        );
-
-        return openSearchClient.ml().createConnector(request);
-    }
-
-    private void setupIngestPipeline(String modelId) throws Exception {
-        var textEmbeddingProcessor = new Processor.Builder()
-                .textEmbedding(t -> t
-                        .modelId(modelId)
-                        .fieldMap(Map.of(FieldNames.CONTENT, FieldNames.CONTENT_EMBEDDING)))
-                .build();
-
-        openSearchClient.ingest().putPipeline(p -> p
-                .id(INGEST_PIPELINE_ID)
-                .description("Pipeline for generating embeddings from code files")
-                .processors(textEmbeddingProcessor)
-        );
-        log.info("Ingest pipeline '{}' configured.", INGEST_PIPELINE_ID);
-    }
-
     private void createCodeFilesIndexIfNotExists() throws Exception {
         if (indexExists(Indexes.CODE_FILE_INDEX)) {
             log.info("Index {} already exists.", Indexes.CODE_FILE_INDEX);
@@ -205,7 +91,6 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
                         .numberOfShards(1)
                         .numberOfReplicas(0)
                         .knn(true)
-                        .defaultPipeline(INGEST_PIPELINE_ID)
                         .search(search -> search.defaultPipeline(SEARCH_PIPELINE_ID))
                 ))
                 .mappings(m -> m

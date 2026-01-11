@@ -19,6 +19,9 @@ import org.opensearch.client.opensearch.core.search.Highlight;
 import org.opensearch.client.opensearch.core.search.HighlightField;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.embedding.EmbeddingRequest;
+import org.springframework.ai.embedding.EmbeddingResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -29,6 +32,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CodeSearchServiceImpl implements CodeSearchService {
     private final OpenSearchClient openSearchClient;
+    private final EmbeddingModel embeddingModel;
+
+    @Value("${search.embeddings.enabled:false}")
+    private boolean embeddingsEnabled;
+
     private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Override
@@ -190,14 +198,36 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         ).toQuery();
         queries.add(keywordQuery);
 
-        // 2. Vector search query (kNN)
-        Query vectorQuery = NeuralQuery.of(k -> k
-                .queryText(request.getQuery())
-                .field(FieldNames.CONTENT_EMBEDDING)
-                .modelId(OpenSearchIndexInitializer.MODEL_ID)
-                .k(request.getSize() * 2)
-        ).toQuery();
-        queries.add(vectorQuery);
+        // 2. Vector search query (kNN) - only if embeddings are enabled
+        if (embeddingsEnabled) {
+            try {
+                List<Float> queryEmbedding = generateQueryEmbedding(request.getQuery());
+                if (!queryEmbedding.isEmpty()) {
+                    Query vectorQuery = KnnQuery.of(k -> k
+                            .field(FieldNames.CONTENT_EMBEDDING)
+                            .vector(queryEmbedding.stream().map(Float::floatValue).toList())
+                            .k(request.getSize() * 2)
+                    ).toQuery();
+                    queries.add(vectorQuery);
+                    log.debug("Added vector search to hybrid query");
+                }
+            } catch (Exception e) {
+                log.warn("Failed to generate query embedding, using keyword search only", e);
+            }
+        } else {
+            log.debug("Embeddings disabled, using keyword search only");
+        }
+
+        // If we only have one query (keyword), just use it directly with filters
+        if (queries.size() == 1) {
+            if (hasFilters(request)) {
+                BoolQuery.Builder boolQuery = new BoolQuery.Builder()
+                        .must(queries.get(0));
+                addFilters(boolQuery, request);
+                return boolQuery.build().toQuery();
+            }
+            return queries.get(0);
+        }
 
         // Build hybrid query with both queries
         Query hybridQuery = HybridQuery.of(h -> h
@@ -213,6 +243,37 @@ public class CodeSearchServiceImpl implements CodeSearchService {
         }
 
         return hybridQuery;
+    }
+
+    /**
+     * Generate embedding vector for the search query
+     */
+    private List<Float> generateQueryEmbedding(String query) {
+        try {
+            log.debug("Generating embedding for query: {}", query);
+
+            EmbeddingRequest request = new EmbeddingRequest(List.of(query), null);
+            EmbeddingResponse response = embeddingModel.call(request);
+
+            if (response.getResults().isEmpty()) {
+                log.warn("No embedding results returned for query");
+                return new ArrayList<>();
+            }
+
+            // Convert float[] to List<Float>
+            float[] embedding = response.getResult().getOutput();
+            List<Float> floatEmbedding = new ArrayList<>(embedding.length);
+            for (float value : embedding) {
+                floatEmbedding.add(value);
+            }
+
+            log.debug("Successfully generated query embedding with dimension: {}", floatEmbedding.size());
+            return floatEmbedding;
+
+        } catch (Exception e) {
+            log.error("Failed to generate query embedding", e);
+            return new ArrayList<>();
+        }
     }
 
     private boolean hasFilters(CodeSearchRequest request) {
