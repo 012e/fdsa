@@ -13,7 +13,6 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
-import tools.jackson.databind.annotation.JsonSerialize;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +41,9 @@ public class KafkaConfiguration {
 
     @Bean
     public KafkaTemplate<String, ?> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+        var config = new KafkaTemplate<>(producerFactory());
+        config.setObservationEnabled(true);
+        return config;
     }
 
     @Bean
@@ -59,6 +60,7 @@ public class KafkaConfiguration {
 
         ConcurrentKafkaListenerContainerFactory<String, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
+        factory.getContainerProperties().setObservationEnabled(true);
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }
