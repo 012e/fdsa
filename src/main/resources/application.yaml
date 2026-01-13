@@ -3,7 +3,7 @@ spring:
     openai:
       api-key: ${OPENAI_API_KEY}
   application:
-    name: demo
+    name: fdsa-backend
   datasource:
     username: ${DB_USERNAME:username}
     password: ${DB_PASSWORD:password}
@@ -47,3 +47,15 @@ springdoc:
   OAuthFlow:
     authorizationUrl: ${OAUTH2_AUTHORIZATION_URL:http://localhost:6969/realms/fdsa/protocol/openid-connect/auth}
     tokenUrl: ${OAUTH2_TOKEN_URL:http://localhost:6969/realms/fdsa/protocol/openid-connect/token}
+
+management:
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+
+logging:
+  level:
+    io.opentelemetry: TRACE
