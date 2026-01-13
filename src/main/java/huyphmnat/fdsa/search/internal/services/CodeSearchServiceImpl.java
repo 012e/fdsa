@@ -7,7 +7,6 @@ import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.dtos.CodeSearchResult;
 import huyphmnat.fdsa.search.interfaces.CodeSearchService;
-import huyphmnat.fdsa.search.internal.config.OpenSearchIndexInitializer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -34,9 +33,6 @@ public class CodeSearchServiceImpl implements CodeSearchService {
     private final OpenSearchClient openSearchClient;
     private final EmbeddingModel embeddingModel;
 
-    @Value("${search.embeddings.enabled:false}")
-    private boolean embeddingsEnabled;
-
     private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Override
@@ -45,7 +41,7 @@ public class CodeSearchServiceImpl implements CodeSearchService {
                 request.getQuery(), request.getPage(), request.getSize());
 
         try {
-            SearchRequest searchRequest = buildSearchRequest(request);
+            SearchRequest searchRequest = buildHybridSearchRequest(request);
             SearchResponse<CodeFileDocument> response = openSearchClient.search(searchRequest, CodeFileDocument.class);
 
             List<CodeSearchResult> results = response.hits().hits().stream()
@@ -68,10 +64,6 @@ public class CodeSearchServiceImpl implements CodeSearchService {
             log.error("Error searching code", e);
             throw new RuntimeException("Failed to search code", e);
         }
-    }
-
-    private SearchRequest buildSearchRequest(CodeSearchRequest request) {
-        return buildHybridSearchRequest(request);
     }
 
     /**
@@ -191,31 +183,21 @@ public class CodeSearchServiceImpl implements CodeSearchService {
     private Query buildHybridQuery(CodeSearchRequest request) {
         List<Query> queries = new ArrayList<>();
 
-        // 1. Keyword search query (multi_match)
         Query keywordQuery = MultiMatchQuery.of(m -> m
                 .query(request.getQuery())
                 .fields(FieldNames.CONTENT + "^3", FieldNames.FILE_NAME + "^2", FieldNames.FILE_PATH)
         ).toQuery();
         queries.add(keywordQuery);
 
-        // 2. Vector search query (kNN) - only if embeddings are enabled
-        if (embeddingsEnabled) {
-            try {
-                List<Float> queryEmbedding = generateQueryEmbedding(request.getQuery());
-                if (!queryEmbedding.isEmpty()) {
-                    Query vectorQuery = KnnQuery.of(k -> k
-                            .field(FieldNames.CONTENT_EMBEDDING)
-                            .vector(queryEmbedding.stream().map(Float::floatValue).toList())
-                            .k(request.getSize() * 2)
-                    ).toQuery();
-                    queries.add(vectorQuery);
-                    log.debug("Added vector search to hybrid query");
-                }
-            } catch (Exception e) {
-                log.warn("Failed to generate query embedding, using keyword search only", e);
-            }
-        } else {
-            log.debug("Embeddings disabled, using keyword search only");
+        List<Float> queryEmbedding = generateQueryEmbedding(request.getQuery());
+        if (!queryEmbedding.isEmpty()) {
+            Query vectorQuery = KnnQuery.of(k -> k
+                    .field(FieldNames.CONTENT_EMBEDDING)
+                    .vector(queryEmbedding.stream().map(Float::floatValue).toList())
+                    .k(request.getSize() * 2)
+            ).toQuery();
+            queries.add(vectorQuery);
+            log.debug("Added vector search to hybrid query");
         }
 
         // If we only have one query (keyword), just use it directly with filters
