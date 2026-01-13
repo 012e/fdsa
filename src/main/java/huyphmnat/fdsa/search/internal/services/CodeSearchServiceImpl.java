@@ -7,6 +7,7 @@ import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.dtos.CodeSearchResult;
 import huyphmnat.fdsa.search.interfaces.CodeSearchService;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -20,7 +21,6 @@ import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -36,6 +36,7 @@ public class CodeSearchServiceImpl implements CodeSearchService {
     private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Override
+    @Observed
     public CodeSearchResponse searchCode(CodeSearchRequest request) {
         log.info("Searching code with query: {}, page: {}, size: {}",
                 request.getQuery(), request.getPage(), request.getSize());
