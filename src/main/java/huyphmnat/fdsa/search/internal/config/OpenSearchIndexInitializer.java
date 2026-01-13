@@ -4,36 +4,25 @@ import huyphmnat.fdsa.search.FieldNames;
 import huyphmnat.fdsa.search.Indexes;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.opensearch.client.json.JsonData;
 import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.opensearch._types.BuiltinScriptLanguage;
 import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch.cluster.PutClusterSettingsRequest;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.IndexSettings;
-import org.opensearch.client.opensearch.ml.*;
-import org.opensearch.client.opensearch.search_pipeline.ScoreCombinationTechnique;
-import org.opensearch.client.opensearch.search_pipeline.ScoreNormalizationTechnique;
-import org.springframework.beans.factory.annotation.Value;
+import org.opensearch.client.opensearch.search_pipeline.ScoreRankerCombinationTechnique;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@Profile("opensearch-integration-testing")
+// @Profile("opensearch-integration-testing")
 public class OpenSearchIndexInitializer implements ApplicationRunner {
 
     private final OpenSearchClient openSearchClient;
@@ -71,12 +60,8 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
         openSearchClient.searchPipeline()
                 .put(e -> e
                         .id(SEARCH_PIPELINE_ID)
-                        .phaseResultsProcessors(t -> t
-                                .normalizationProcessor(f -> f
-                                        .description("Post processor for hybrid search")
-                                        .normalization(g -> g.technique(ScoreNormalizationTechnique.MinMax))
-                                        .combination(g -> g.technique(ScoreCombinationTechnique.ArithmeticMean)
-                                                .parameters(z -> z.weights(0.3f, 0.7f))))
+                        .phaseResultsProcessors(t -> t .scoreRankerProcessor(f -> f
+                                        .combination(g -> g.technique(ScoreRankerCombinationTechnique.Rrf)))
                         ));
         log.info("Search pipeline created.");
     }
