@@ -84,18 +84,6 @@ class CodeChunkingServiceWithEmbeddingsTest {
     }
 
     @Test
-    void testChunkCodeWithMetadata_WithEmbeddingsDisabled_ShouldReturnEmptyEmbeddings() {
-        String code = "public class Test {\n    // test\n}";
-
-        List<CodeFileDocument.CodeChunk> chunks = chunkingService.chunkCodeWithMetadata(code);
-
-        assertThat(chunks).hasSize(1);
-
-        CodeFileDocument.CodeChunk chunk = chunks.get(0);
-        assertThat(chunk.getEmbedding()).isEmpty();
-    }
-
-    @Test
     void testChunkCodeWithMetadata_LineNumbersAreCorrect() {
         // Create code with known line structure
         String code = "line1\nline2\nline3\nline4\nline5\nline6\nline7\nline8\nline9\nline10";

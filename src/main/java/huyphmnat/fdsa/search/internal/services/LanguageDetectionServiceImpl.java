@@ -139,6 +139,9 @@ public class LanguageDetectionServiceImpl implements LanguageDetectionService {
      */
     @Override
     public boolean isCodeFile(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return false;
+        }
         if (isIgnoredFile(fileName)) {
             return false;
         }
