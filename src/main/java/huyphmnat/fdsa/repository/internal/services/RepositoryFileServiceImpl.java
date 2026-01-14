@@ -275,8 +275,9 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
         }
 
         try {
-            byte[] content = Files.readAllBytes(filePath);
+            byte[] contentBytes = Files.readAllBytes(filePath);
             long size = Files.size(filePath);
+            String content = new String(contentBytes, java.nio.charset.StandardCharsets.UTF_8);
 
             return FileContent.builder()
                 .path(path)

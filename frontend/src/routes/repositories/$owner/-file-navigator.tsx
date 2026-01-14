@@ -1,14 +1,31 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { repositoryApi } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { File, Folder, ChevronRight, Home } from 'lucide-react'
+import { File, Folder, ChevronRight, Home, Trash2 } from 'lucide-react'
 import { DirectoryContentEntriesInner, EntryTypeEnum } from '@/lib/generated'
 import { useState } from 'react'
 import { EditFileDialog } from './-edit-file-dialog'
 import { AddFileDialog } from './-add-file-dialog'
 import { AddFolderDialog } from './-add-folder-dialog'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
 
 interface FileNavigatorProps {
   owner: string
@@ -19,9 +36,13 @@ interface FileNavigatorProps {
 
 export function FileNavigator({ owner, repo, currentPath, onPathChange }: FileNavigatorProps) {
   const identifier = `${owner}/${repo}`
+  const queryClient = useQueryClient()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editFilePath, setEditFilePath] = useState('')
   const [editFileContent, setEditFileContent] = useState('')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ path: string; type: EntryTypeEnum } | null>(null)
+  const [deleteCommitMessage, setDeleteCommitMessage] = useState('')
 
   // Query directory contents
   const { data: directoryContent, isLoading: isLoadingDir } = useQuery({
@@ -45,6 +66,35 @@ export function FileNavigator({ owner, repo, currentPath, onPathChange }: FileNa
       return response.data
     },
     enabled: false,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (data: { path: string; type: EntryTypeEnum; commitMessage: string }) => {
+      if (data.type === EntryTypeEnum.File) {
+        return await repositoryApi.deleteRepositoryFile(owner, repo, {
+          path: data.path,
+          commitMessage: data.commitMessage,
+        })
+      } else {
+        return await repositoryApi.deleteRepositoryFolder(owner, repo, {
+          path: data.path,
+          commitMessage: data.commitMessage,
+        })
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['repository', identifier] })
+      queryClient.invalidateQueries({ queryKey: ['directory'] })
+      toast.success('Deleted successfully')
+      setDeleteDialogOpen(false)
+      setDeleteTarget(null)
+      setDeleteCommitMessage('')
+    },
+    onError: (error: any) => {
+      toast.error('Failed to delete', {
+        description: error?.response?.data?.message || error?.message || 'An error occurred',
+      })
+    },
   })
 
   const handleEntryClick = async (entry: DirectoryContentEntriesInner) => {
@@ -73,6 +123,22 @@ export function FileNavigator({ owner, repo, currentPath, onPathChange }: FileNa
     }
     const parts = currentPath.split('/').filter(Boolean)
     onPathChange(parts.slice(0, index + 1).join('/'))
+  }
+
+  const handleDeleteClick = (entry: DirectoryContentEntriesInner, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setDeleteTarget({ path: entry.path || '', type: entry.type || EntryTypeEnum.File })
+    setDeleteCommitMessage(`Delete ${entry.name}`)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget || !deleteCommitMessage.trim()) return
+    deleteMutation.mutate({
+      path: deleteTarget.path,
+      type: deleteTarget.type,
+      commitMessage: deleteCommitMessage,
+    })
   }
 
   const pathParts = currentPath ? currentPath.split('/').filter(Boolean) : []
@@ -135,24 +201,36 @@ export function FileNavigator({ owner, repo, currentPath, onPathChange }: FileNa
                 </Button>
               )}
               {directoryContent?.entries?.map((entry) => (
-                <Button
-                  key={entry.path}
-                  variant="ghost"
-                  className="w-full justify-start gap-3 h-auto py-2 hover:bg-accent"
-                  onClick={() => handleEntryClick(entry)}
-                >
-                  {entry.type === EntryTypeEnum.Directory ? (
-                    <Folder className="w-4 h-4 text-blue-500" />
-                  ) : (
-                    <File className="w-4 h-4 text-muted-foreground" />
-                  )}
-                  <span className="font-medium">{entry.name}</span>
-                  {entry.type === EntryTypeEnum.File && 'size' in entry && (
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {formatBytes(entry.size || 0)}
-                    </span>
-                  )}
-                </Button>
+                <ContextMenu key={entry.path}>
+                  <ContextMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3 h-auto py-2 hover:bg-accent"
+                      onClick={() => handleEntryClick(entry)}
+                    >
+                      {entry.type === EntryTypeEnum.Directory ? (
+                        <Folder className="w-4 h-4 text-blue-500" />
+                      ) : (
+                        <File className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span className="font-medium">{entry.name}</span>
+                      {entry.type === EntryTypeEnum.File && 'size' in entry && (
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {formatBytes(entry.size || 0)}
+                        </span>
+                      )}
+                    </Button>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuItem
+                      variant="destructive"
+                      onClick={(e) => handleDeleteClick(entry, e)}
+                    >
+                      <Trash2 />
+                      Delete {entry.type === EntryTypeEnum.Directory ? 'folder' : 'file'}
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
               ))}
               {(!directoryContent?.entries || directoryContent.entries.length === 0) && !currentPath && (
                 <div className="text-sm text-muted-foreground py-4 text-center">
@@ -163,6 +241,56 @@ export function FileNavigator({ owner, repo, currentPath, onPathChange }: FileNa
           )}
         </CardContent>
       </Card>
+
+      <EditFileDialog
+        owner={owner}
+        repo={repo}
+        identifier={identifier}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        filePath={editFilePath}
+        fileContent={editFileContent}
+      />
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{' '}
+              <span className="font-semibold">{deleteTarget?.path}</span>?
+              {deleteTarget?.type === EntryTypeEnum.Directory && (
+                <span className="block mt-2 text-yellow-600">
+                  Warning: This will delete the entire folder and all its contents.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="commit-message">Commit Message</Label>
+              <Input
+                id="commit-message"
+                value={deleteCommitMessage}
+                onChange={(e) => setDeleteCommitMessage(e.target.value)}
+                placeholder="Enter commit message..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={!deleteCommitMessage.trim() || deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <EditFileDialog
         owner={owner}

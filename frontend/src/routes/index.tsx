@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
   // 1. Handle the redirect before the route loads
-  beforeLoad: () => {
+  loader: () => {
     throw redirect({
       to: '/repositories',
       replace: true, // Replaces the history entry so the back button works correctly

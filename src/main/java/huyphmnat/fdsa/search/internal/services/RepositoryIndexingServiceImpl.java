@@ -119,7 +119,7 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
         log.debug("Processing file: {}", fileEntry.getPath());
 
         FileContent fileContent = repositoryFileService.readFile(repositoryId, fileEntry.getPath());
-        String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
+        String content = fileContent.getContent();
 
         String fileExtension = extractFileExtension(fileEntry.getName());
         String language = languageDetectionService.detectLanguage(fileEntry.getName());

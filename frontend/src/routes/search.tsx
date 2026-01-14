@@ -11,17 +11,16 @@ import { CodeViewer } from '@/components/ui/code-viewer'
 import { Search, FileCode, Hash, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { CodeSearchResponse, CodeSearchResult } from '@/lib/generated'
 import z from 'zod'
-import { zodValidator, fallback } from '@tanstack/zod-adapter'
+import { zodValidator,} from '@tanstack/zod-adapter'
 
 const searchSchema = z.object({
-  q: fallback(z.string(), ''),
+  q: z.string().catch('').default(''),
   repositoryIdentifier: z.string().optional(),
   language: z.string().optional(),
   fileExtension: z.string().optional(),
   filePathPattern: z.string().optional(),
-  page: fallback(z.number().min(0), 0),
+  page: z.number().min(0).catch(0).default(0),
 })
-
 
 export const Route = createFileRoute('/search')({
   component: SearchPage,

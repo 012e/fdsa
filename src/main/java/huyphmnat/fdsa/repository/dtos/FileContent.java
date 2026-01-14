@@ -13,6 +13,6 @@ public class FileContent {
     private String path;
     private String name;
     private Long size;
-    private byte[] content;
+    private String content;
 }
 

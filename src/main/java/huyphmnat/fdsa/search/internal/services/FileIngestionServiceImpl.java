@@ -16,7 +16,6 @@ import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +56,7 @@ public class FileIngestionServiceImpl implements FileIngestionService {
                 return;
             }
 
-            String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
+            String content = fileContent.getContent();
             String fileExtension = extractFileExtension(fileName);
             String language = languageDetectionService.detectLanguage(fileName);
 
