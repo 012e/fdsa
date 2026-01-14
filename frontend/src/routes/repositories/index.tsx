@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "react-oidc-context";
 import { repositoryApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,19 +38,20 @@ export const Route = createFileRoute("/repositories/")({
 });
 
 function RepositoriesPage() {
+  const auth = useAuth();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
 
-  // Form states - updated to use owner/repo format
-  const [newRepoOwner, setNewRepoOwner] = useState("");
+  // Form states - owner is implicitly current user
   const [newRepoName, setNewRepoName] = useState("");
   const [newRepoDescription, setNewRepoDescription] = useState("");
-  const [cloneRepoOwner, setCloneRepoOwner] = useState("");
   const [cloneRepoName, setCloneRepoName] = useState("");
   const [cloneRepoSourceUrl, setCloneRepoSourceUrl] = useState("");
   const [cloneRepoDescription, setCloneRepoDescription] = useState("");
+
+  const currentUsername = auth.user?.profile.preferred_username as string | undefined;
 
   // Query repositories using TanStack Query with repositoryApi
   const {
@@ -73,7 +75,6 @@ function RepositoriesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["repositories"] });
       setCreateDialogOpen(false);
-      setNewRepoOwner("");
       setNewRepoName("");
       setNewRepoDescription("");
     },
@@ -92,7 +93,6 @@ function RepositoriesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["repositories"] });
       setCloneDialogOpen(false);
-      setCloneRepoOwner("");
       setCloneRepoName("");
       setCloneRepoSourceUrl("");
       setCloneRepoDescription("");
@@ -100,22 +100,22 @@ function RepositoriesPage() {
   });
 
   const handleCreateRepository = () => {
-    if (!newRepoOwner.trim() || !newRepoName.trim()) return;
+    if (!currentUsername || !newRepoName.trim()) return;
     createMutation.mutate({
-      identifier: `${newRepoOwner}/${newRepoName}`,
+      identifier: `${currentUsername}/${newRepoName}`,
       description: newRepoDescription || undefined,
     });
   };
 
   const handleCloneRepository = () => {
     if (
-      !cloneRepoOwner.trim() ||
+      !currentUsername ||
       !cloneRepoName.trim() ||
       !cloneRepoSourceUrl.trim()
     )
       return;
     cloneMutation.mutate({
-      identifier: `${cloneRepoOwner}/${cloneRepoName}`,
+      identifier: `${currentUsername}/${cloneRepoName}`,
       sourceUrl: cloneRepoSourceUrl,
       description: cloneRepoDescription || undefined,
     });
@@ -154,15 +154,6 @@ function RepositoriesPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="clone-owner">Repository Owner</Label>
-                    <Input
-                      id="clone-owner"
-                      placeholder="username"
-                      value={cloneRepoOwner}
-                      onChange={(e) => setCloneRepoOwner(e.target.value)}
-                    />
-                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="clone-name">Repository Name</Label>
                     <Input
@@ -204,7 +195,7 @@ function RepositoriesPage() {
                   <Button
                     onClick={handleCloneRepository}
                     disabled={
-                      !cloneRepoOwner.trim() ||
+                      !currentUsername ||
                       !cloneRepoName.trim() ||
                       !cloneRepoSourceUrl.trim() ||
                       cloneMutation.isPending
@@ -233,15 +224,6 @@ function RepositoriesPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="owner">Repository Owner</Label>
-                    <Input
-                      id="owner"
-                      placeholder="username"
-                      value={newRepoOwner}
-                      onChange={(e) => setNewRepoOwner(e.target.value)}
-                    />
-                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="name">Repository Name</Label>
                     <Input
@@ -272,7 +254,7 @@ function RepositoriesPage() {
                   <Button
                     onClick={handleCreateRepository}
                     disabled={
-                      !newRepoOwner.trim() ||
+                      !currentUsername ||
                       !newRepoName.trim() ||
                       createMutation.isPending
                     }

@@ -5,7 +5,7 @@ import { repositoryApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { CodeEditor, detectLanguageFromPath } from '@/components/ui/code-editor'
 import {
   Dialog,
   DialogContent,
@@ -80,14 +80,14 @@ export function EditFileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-125">
+      <DialogContent className="sm:max-w-[90vw] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Edit File</DialogTitle>
           <DialogDescription>
-            Update the file content
+            Update the file content with syntax highlighting
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 flex-1 overflow-auto">
           <div className="grid gap-2">
             <Label htmlFor="edit-file-path">File Path</Label>
             <Input
@@ -96,14 +96,13 @@ export function EditFileDialog({
               onChange={(e) => setFilePath(e.target.value)}
             />
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-2 flex-1">
             <Label htmlFor="edit-file-content">Content</Label>
-            <Textarea
-              id="edit-file-content"
+            <CodeEditor
               value={fileContent}
-              onChange={(e) => setFileContent(e.target.value)}
-              rows={8}
-              className="font-mono text-sm"
+              onChange={setFileContent}
+              language={detectLanguageFromPath(filePath)}
+              height="500px"
             />
           </div>
           <div className="grid gap-2">

@@ -5,7 +5,7 @@ import { repositoryApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { CodeEditor, detectLanguageFromPath } from '@/components/ui/code-editor'
 import {
   Dialog,
   DialogContent,
@@ -73,14 +73,14 @@ export function AddFileDialog({ owner, repo, identifier, currentPath }: AddFileD
           New File
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-125">
+      <DialogContent className="sm:max-w-[90vw] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Add New File</DialogTitle>
           <DialogDescription>
-            Create a new file in the repository
+            Create a new file in the repository with syntax highlighting
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 flex-1 overflow-auto">
           <div className="grid gap-2">
             <Label htmlFor="file-path">File Name</Label>
             <Input
@@ -95,15 +95,13 @@ export function AddFileDialog({ owner, repo, identifier, currentPath }: AddFileD
               </p>
             )}
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-2 flex-1">
             <Label htmlFor="file-content">Content</Label>
-            <Textarea
-              id="file-content"
-              placeholder="File content..."
+            <CodeEditor
               value={fileContent}
-              onChange={(e) => setFileContent(e.target.value)}
-              rows={8}
-              className="font-mono text-sm"
+              onChange={setFileContent}
+              language={detectLanguageFromPath(fileName)}
+              height="500px"
             />
           </div>
           <div className="grid gap-2">

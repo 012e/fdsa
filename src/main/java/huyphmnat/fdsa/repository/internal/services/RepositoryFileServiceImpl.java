@@ -2,6 +2,9 @@ package huyphmnat.fdsa.repository.internal.services;
 
 import huyphmnat.fdsa.repository.dtos.*;
 import huyphmnat.fdsa.repository.interfaces.RepositoryFileService;
+import huyphmnat.fdsa.repository.internal.repositories.RepositoryRepository;
+import huyphmnat.fdsa.repository.topics.RepositoryTopics;
+import huyphmnat.fdsa.shared.events.EventService;
 import io.micrometer.observation.annotation.Observed;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,8 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
     private final RepositoryPathResolver repositoryPathResolver;
     private final GitRepositoryService gitRepositoryService;
     private final RepositoryAuthorizationService authorizationService;
+    private final EventService eventService;
+    private final RepositoryRepository repositoryRepository;
 
     @Override
     @Transactional
@@ -48,6 +53,15 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
         gitRepositoryService.stageAll(repoRoot);
         gitRepositoryService.commit(repoRoot, commitMessage);
+
+        // Publish file created event
+        String repositoryIdentifier = getRepositoryIdentifier(repositoryId);
+        FileCreatedEvent event = FileCreatedEvent.builder()
+            .repositoryId(repositoryId)
+            .repositoryIdentifier(repositoryIdentifier)
+            .filePath(path)
+            .build();
+        eventService.publish(RepositoryTopics.FILE_CREATED, event);
     }
 
     @Override
@@ -69,6 +83,15 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
         gitRepositoryService.stageAll(repoRoot);
         gitRepositoryService.commit(repoRoot, commitMessage);
+
+        // Publish file updated event
+        String repositoryIdentifier = getRepositoryIdentifier(repositoryId);
+        FileUpdatedEvent event = FileUpdatedEvent.builder()
+            .repositoryId(repositoryId)
+            .repositoryIdentifier(repositoryIdentifier)
+            .filePath(path)
+            .build();
+        eventService.publish(RepositoryTopics.FILE_UPDATED, event);
     }
 
     @Override
@@ -90,6 +113,15 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
         gitRepositoryService.stageAll(repoRoot);
         gitRepositoryService.commit(repoRoot, commitMessage);
+
+        // Publish file deleted event
+        String repositoryIdentifier = getRepositoryIdentifier(repositoryId);
+        FileDeletedEvent event = FileDeletedEvent.builder()
+            .repositoryId(repositoryId)
+            .repositoryIdentifier(repositoryIdentifier)
+            .filePath(path)
+            .build();
+        eventService.publish(RepositoryTopics.FILE_DELETED, event);
     }
 
     @Override
@@ -114,6 +146,15 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
         gitRepositoryService.stageAll(repoRoot);
         gitRepositoryService.commit(repoRoot, commitMessage);
+
+        // Publish folder created event
+        String repositoryIdentifier = getRepositoryIdentifier(repositoryId);
+        FolderCreatedEvent event = FolderCreatedEvent.builder()
+            .repositoryId(repositoryId)
+            .repositoryIdentifier(repositoryIdentifier)
+            .folderPath(path)
+            .build();
+        eventService.publish(RepositoryTopics.FOLDER_CREATED, event);
     }
 
     @Override
@@ -149,6 +190,15 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
         gitRepositoryService.stageAll(repoRoot);
         gitRepositoryService.commit(repoRoot, commitMessage);
+
+        // Publish folder deleted event
+        String repositoryIdentifier = getRepositoryIdentifier(repositoryId);
+        FolderDeletedEvent event = FolderDeletedEvent.builder()
+            .repositoryId(repositoryId)
+            .repositoryIdentifier(repositoryIdentifier)
+            .folderPath(path)
+            .build();
+        eventService.publish(RepositoryTopics.FOLDER_DELETED, event);
     }
 
     @Override
@@ -245,6 +295,12 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
             throw new RuntimeException("Invalid path (outside repository): " + relativePath);
         }
         return normalized;
+    }
+
+    private String getRepositoryIdentifier(UUID repositoryId) {
+        return repositoryRepository.findById(repositoryId)
+            .orElseThrow(() -> new RuntimeException("Repository not found: " + repositoryId))
+            .getIdentifier();
     }
 }
 

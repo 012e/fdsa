@@ -9,6 +9,7 @@ import {
   LogIn,
   LogOut,
   User,
+  Code2,
 } from "lucide-react";
 import { useAuth } from "react-oidc-context";
 
@@ -123,6 +124,19 @@ export default function Header() {
           >
             <Search size={20} />
             <span className="font-medium">Code Search</span>
+          </Link>
+
+          <Link
+            to="/editor-demo"
+            onClick={() => setIsOpen(false)}
+            className="flex gap-3 items-center p-3 mb-2 rounded-lg transition-colors hover:bg-gray-800"
+            activeProps={{
+              className:
+                "flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
+            }}
+          >
+            <Code2 size={20} />
+            <span className="font-medium">Editor Demo</span>
           </Link>
         </nav>
       </aside>

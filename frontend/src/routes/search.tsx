@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { CodeViewer } from '@/components/ui/code-viewer'
 import { Search, FileCode, Clock, Hash, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { CodeSearchResponse, CodeSearchResult } from '@/lib/generated'
 
@@ -354,19 +355,27 @@ function SearchResultCard({ result }: SearchResultCardProps) {
             <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase">
               Matched Code Chunks ({result.matchedChunks.length}):
             </p>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {result.matchedChunks.slice(0, expanded ? undefined : 2).map((chunk, idx) => (
-                <div key={idx} className="border rounded p-3">
+                <div key={idx} className="border rounded overflow-hidden">
                   {chunk.startLine !== undefined && (
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Lines {chunk.startLine}-{chunk.endLine}
-                    </p>
+                    <div className="bg-muted px-3 py-1.5 border-b">
+                      <p className="text-xs text-muted-foreground">
+                        Lines {chunk.startLine}-{chunk.endLine}
+                      </p>
+                    </div>
                   )}
-                  <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-                    <code>{chunk.content}</code>
-                  </pre>
+                  <div className="overflow-hidden">
+                    <CodeViewer
+                      code={chunk.content || ''}
+                      fileName={result.fileName}
+                      language={result.language}
+                      height="200px"
+                      showLineNumbers={true}
+                    />
+                  </div>
                   {chunk.highlights && chunk.highlights.length > 0 && (
-                    <div className="mt-2 space-y-1">
+                    <div className="bg-muted/50 px-3 py-2 border-t space-y-1">
                       {chunk.highlights.map((highlight, hIdx) => (
                         <p
                           key={hIdx}
