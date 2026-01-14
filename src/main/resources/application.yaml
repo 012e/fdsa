@@ -3,7 +3,7 @@ spring:
     openai:
       api-key: ${OPENAI_API_KEY}
   application:
-    name: demo
+    name: fdsa-backend
   datasource:
     username: ${DB_USERNAME:username}
     password: ${DB_PASSWORD:password}
@@ -30,6 +30,15 @@ spring:
           jwk-set-uri: ${OAUTH2_ISSUER_URI:http://localhost:6969/realms/fdsa/protocol/openid-connect/certs}
   config:
     import: optional:./application-secret.yaml
+
+# Search Configuration
+search:
+  embeddings:
+    enabled: ${SEARCH_EMBEDDINGS_ENABLED:false}
+    api-key: ${OPENAI_API_KEY:}
+    model: ${SEARCH_EMBEDDINGS_MODEL:text-embedding-3-small}
+    dimension: ${SEARCH_EMBEDDINGS_DIMENSION:1536}
+
 springdoc:
   swagger-ui:
     oauth:
@@ -38,3 +47,10 @@ springdoc:
   OAuthFlow:
     authorizationUrl: ${OAUTH2_AUTHORIZATION_URL:http://localhost:6969/realms/fdsa/protocol/openid-connect/auth}
     tokenUrl: ${OAUTH2_TOKEN_URL:http://localhost:6969/realms/fdsa/protocol/openid-connect/token}
+
+management:
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}

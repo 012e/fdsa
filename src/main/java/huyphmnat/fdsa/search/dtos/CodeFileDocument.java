@@ -72,6 +72,12 @@ public class CodeFileDocument {
     private Long size;
 
     /**
+     * Content embedding vector for semantic search
+     */
+    @JsonProperty(FieldNames.CONTENT_EMBEDDING)
+    private List<Float> contentEmbedding;
+
+    /**
      * Timestamp when document was created (ISO-8601 string)
      */
     @JsonProperty(FieldNames.CREATED_AT)
@@ -83,10 +89,10 @@ public class CodeFileDocument {
     @JsonProperty(FieldNames.UPDATED_AT)
     private Instant updatedAt;
 
-    @JsonProperty(FieldNames.CHUNKS)
     /**
      * Code chunks with metadata
      */
+    @JsonProperty(FieldNames.CHUNKS)
     private List<CodeChunk> codeChunks;
 
     /**
@@ -120,6 +126,12 @@ public class CodeFileDocument {
          */
         @JsonProperty(FieldNames.CHUNK_END_LINE)
         private Integer endLine;
+
+        /**
+         * Embedding vector for this chunk
+         */
+        @JsonProperty(FieldNames.CHUNK_EMBEDDING)
+        private List<Float> embedding;
     }
 }
 

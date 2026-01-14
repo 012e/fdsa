@@ -3,101 +3,122 @@ package huyphmnat.fdsa.search.internal.services;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
- * Service for detecting programming language from file extensions.
+ * Service for detecting programming language from file extensions
+ * and filtering out build/lock files.
  */
 @Service
 public class LanguageDetectionServiceImpl implements LanguageDetectionService {
 
-    private static final Map<String, String> EXTENSION_TO_LANGUAGE = Map.ofEntries(
-        // Java ecosystem
-        Map.entry("java", "Java"),
-        Map.entry("kt", "Kotlin"),
-        Map.entry("kts", "Kotlin"),
-        Map.entry("scala", "Scala"),
-        Map.entry("groovy", "Groovy"),
+    private static final Map<String, String> EXTENSION_TO_LANGUAGE = Map.<String, String>ofEntries(
+            // Java ecosystem
+            Map.entry("java", "Java"),
+            Map.entry("kt", "Kotlin"),
+            Map.entry("kts", "Kotlin"),
+            Map.entry("scala", "Scala"),
+            Map.entry("groovy", "Groovy"),
 
-        // JavaScript/TypeScript ecosystem
-        Map.entry("js", "JavaScript"),
-        Map.entry("jsx", "JavaScript"),
-        Map.entry("mjs", "JavaScript"),
-        Map.entry("cjs", "JavaScript"),
-        Map.entry("ts", "TypeScript"),
-        Map.entry("tsx", "TypeScript"),
+            // JavaScript/TypeScript ecosystem
+            Map.entry("js", "JavaScript"),
+            Map.entry("jsx", "JavaScript"),
+            Map.entry("mjs", "JavaScript"),
+            Map.entry("cjs", "JavaScript"),
+            Map.entry("ts", "TypeScript"),
+            Map.entry("tsx", "TypeScript"),
 
-        // Python
-        Map.entry("py", "Python"),
-        Map.entry("pyw", "Python"),
-        Map.entry("pyx", "Python"),
+            // Python
+            Map.entry("py", "Python"),
+            Map.entry("pyw", "Python"),
+            Map.entry("pyx", "Python"),
 
-        // C/C++
-        Map.entry("c", "C"),
-        Map.entry("h", "C"),
-        Map.entry("cpp", "C++"),
-        Map.entry("cc", "C++"),
-        Map.entry("cxx", "C++"),
-        Map.entry("hpp", "C++"),
-        Map.entry("hh", "C++"),
-        Map.entry("hxx", "C++"),
+            // C/C++
+            Map.entry("c", "C"),
+            Map.entry("h", "C"),
+            Map.entry("cpp", "C++"),
+            Map.entry("cc", "C++"),
+            Map.entry("cxx", "C++"),
+            Map.entry("hpp", "C++"),
+            Map.entry("hh", "C++"),
+            Map.entry("hxx", "C++"),
 
-        // C#
-        Map.entry("cs", "C#"),
+            // C#
+            Map.entry("cs", "C#"),
 
-        // Go
-        Map.entry("go", "Go"),
+            // Go
+            Map.entry("go", "Go"),
 
-        // Rust
-        Map.entry("rs", "Rust"),
+            // Rust
+            Map.entry("rs", "Rust"),
 
-        // Ruby
-        Map.entry("rb", "Ruby"),
+            // Ruby
+            Map.entry("rb", "Ruby"),
 
-        // PHP
-        Map.entry("php", "PHP"),
+            // PHP
+            Map.entry("php", "PHP"),
 
-        // Swift
-        Map.entry("swift", "Swift"),
+            // Swift
+            Map.entry("swift", "Swift"),
 
-        // Web
-        Map.entry("html", "HTML"),
-        Map.entry("htm", "HTML"),
-        Map.entry("css", "CSS"),
-        Map.entry("scss", "SCSS"),
-        Map.entry("sass", "Sass"),
-        Map.entry("less", "Less"),
+            // Web
+            Map.entry("html", "HTML"),
+            Map.entry("htm", "HTML"),
+            Map.entry("css", "CSS"),
+            Map.entry("scss", "SCSS"),
+            Map.entry("sass", "Sass"),
+            Map.entry("less", "Less"),
 
-        // Shell
-        Map.entry("sh", "Shell"),
-        Map.entry("bash", "Bash"),
-        Map.entry("zsh", "Zsh"),
-        Map.entry("fish", "Fish"),
+            // Shell & Scripts
+            Map.entry("sh", "Shell"),
+            Map.entry("bash", "Bash"),
+            Map.entry("zsh", "Zsh"),
+            Map.entry("fish", "Fish"),
+            Map.entry("nu", "Nushell"),
+            Map.entry("ps1", "PowerShell"),
+            Map.entry("psm1", "PowerShell"),
+            Map.entry("psd1", "PowerShell"),
 
-        // Other
-        Map.entry("sql", "SQL"),
-        Map.entry("yaml", "YAML"),
-        Map.entry("yml", "YAML"),
-        Map.entry("json", "JSON"),
-        Map.entry("xml", "XML"),
-        Map.entry("md", "Markdown"),
-        Map.entry("rst", "reStructuredText"),
-        Map.entry("vim", "VimScript"),
-        Map.entry("lua", "Lua"),
-        Map.entry("r", "R"),
-        Map.entry("dart", "Dart"),
-        Map.entry("ex", "Elixir"),
-        Map.entry("exs", "Elixir")
+            // Other
+            Map.entry("sql", "SQL"),
+            Map.entry("yaml", "YAML"),
+            Map.entry("yml", "YAML"),
+            Map.entry("json", "JSON"),
+            Map.entry("xml", "XML"),
+            Map.entry("md", "Markdown"),
+            Map.entry("rst", "reStructuredText"),
+            Map.entry("vim", "VimScript"),
+            Map.entry("lua", "Lua"),
+            Map.entry("r", "R"),
+            Map.entry("dart", "Dart"),
+            Map.entry("ex", "Elixir"),
+            Map.entry("exs", "Elixir")
+    );
+
+    /**
+     * Files that should be ignored even if they match a known extension (like .json or .yaml)
+     */
+    private static final Set<String> IGNORED_FILES = Set.of(
+            "package-lock.json",
+            "pnpm-lock.yaml",
+            "yarn.lock",
+            "composer.lock",
+            "go.mod",
+            "go.sum",
+            "cargo.lock",
+            "poetry.lock",
+            "mix.lock"
     );
 
     /**
      * Detect programming language from file extension.
      *
      * @param fileName the file name
-     * @return the detected language, or "Unknown" if not detected
+     * @return the detected language, or "Unknown" if not detected or ignored
      */
     @Override
     public String detectLanguage(String fileName) {
-        if (fileName == null || fileName.isEmpty()) {
+        if (fileName == null || fileName.isEmpty() || isIgnoredFile(fileName)) {
             return "Unknown";
         }
 
@@ -111,14 +132,23 @@ public class LanguageDetectionServiceImpl implements LanguageDetectionService {
     }
 
     /**
-     * Check if a file is a code file based on extension.
+     * Check if a file is a code file based on extension and ignore list.
      *
      * @param fileName the file name
-     * @return true if the file is likely a code file
+     * @return true if the file is likely a code file and not a lock file
      */
     @Override
     public boolean isCodeFile(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            return false;
+        }
+        if (isIgnoredFile(fileName)) {
+            return false;
+        }
         return !detectLanguage(fileName).equals("Unknown");
     }
-}
 
+    private boolean isIgnoredFile(String fileName) {
+        return IGNORED_FILES.contains(fileName.toLowerCase());
+    }
+}

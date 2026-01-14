@@ -47,6 +47,13 @@
 				<version>2.0.0-M1</version> <type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			        <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-instrumentation-bom</artifactId>
+            <version>2.23.0</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
@@ -114,7 +121,7 @@
 		<dependency>
 			<groupId>org.opensearch.client</groupId>
 			<artifactId>opensearch-java</artifactId>
-			<version>3.0.0</version>
+			<version>3.4.0</version>
 		</dependency>
         <dependency>
 			<groupId>org.projectlombok</groupId>
@@ -182,12 +189,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>mockwebserver</artifactId>
-			<version>4.12.0</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.ai</groupId>
 			<artifactId>spring-ai-starter-model-openai</artifactId>
 <!--			<version>1.0.0-M6</version>-->
@@ -200,12 +201,6 @@
 			<groupId>org.awaitility</groupId>
 			<artifactId>awaitility</artifactId>
 			<version>4.2.2</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<version>3.27.3</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -243,6 +238,14 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-opentelemetry</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aspectj</artifactId>
 		</dependency>
 	</dependencies>
 

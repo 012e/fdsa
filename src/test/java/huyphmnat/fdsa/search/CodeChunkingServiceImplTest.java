@@ -1,8 +1,11 @@
 package huyphmnat.fdsa.search;
 
+import huyphmnat.fdsa.base.MockEmbeddingModel;
 import huyphmnat.fdsa.search.internal.services.CodeChunkingServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -14,7 +17,9 @@ class CodeChunkingServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        chunkingService = new CodeChunkingServiceImpl();
+        EmbeddingModel mockEmbeddingModel = new MockEmbeddingModel();
+        chunkingService = new CodeChunkingServiceImpl(mockEmbeddingModel);
+        // Disable embeddings for basic chunking tests
     }
 
     @Test

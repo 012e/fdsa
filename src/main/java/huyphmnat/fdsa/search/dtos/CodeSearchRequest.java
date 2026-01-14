@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Request object for searching code files in OpenSearch.
@@ -21,6 +20,12 @@ public class CodeSearchRequest {
      * Search query text (full-text search across file content, name, and path)
      */
     private String query;
+
+    /**
+     * Optional pre-computed embedding vector for semantic search
+     * If not provided but hybridSearch is enabled, will be generated from query
+     */
+    private float[] queryEmbedding;
 
     /**
      * Filter by repository identifier (owner/name) (optional)

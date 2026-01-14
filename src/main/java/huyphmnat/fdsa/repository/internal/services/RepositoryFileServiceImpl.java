@@ -2,6 +2,7 @@ package huyphmnat.fdsa.repository.internal.services;
 
 import huyphmnat.fdsa.repository.dtos.*;
 import huyphmnat.fdsa.repository.interfaces.RepositoryFileService;
+import io.micrometer.observation.annotation.Observed;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
     @Override
     @Transactional
+    @Observed
     public void addFile(UUID repositoryId, String path, byte[] content, String commitMessage) {
         // Check ownership before allowing file addition
         authorizationService.requireOwnership(repositoryId);
@@ -50,6 +52,7 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
     @Override
     @Transactional
+    @Observed
     public void updateFile(UUID repositoryId, String path, byte[] content, String commitMessage) {
         Path repoRoot = repositoryPathResolver.getRepositoryRoot(repositoryId);
         Path targetPath = resolvePath(repoRoot, path);
@@ -70,6 +73,7 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
     @Override
     @Transactional
+    @Observed
     public void deleteFile(UUID repositoryId, String path, String commitMessage) {
         Path repoRoot = repositoryPathResolver.getRepositoryRoot(repositoryId);
         Path targetPath = resolvePath(repoRoot, path);
@@ -90,6 +94,7 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
     @Override
     @Transactional
+    @Observed
     public void createFolder(UUID repositoryId, String path, String commitMessage) {
         // Check ownership before allowing folder creation
         authorizationService.requireOwnership(repositoryId);
@@ -113,6 +118,7 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
 
     @Override
     @Transactional
+    @Observed
     public void deleteFolder(UUID repositoryId, String path, String commitMessage) {
         // Check ownership before allowing folder deletion
         authorizationService.requireOwnership(repositoryId);
@@ -146,6 +152,7 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
     }
 
     @Override
+    @Observed
     public DirectoryContent listDirectory(UUID repositoryId, String path) {
         Path repoRoot = repositoryPathResolver.getRepositoryRoot(repositoryId);
         Path directoryPath = path == null || path.isEmpty() || path.equals("/")
@@ -204,6 +211,7 @@ public class RepositoryFileServiceImpl implements RepositoryFileService {
     }
 
     @Override
+    @Observed
     public FileContent readFile(UUID repositoryId, String path) {
         Path repoRoot = repositoryPathResolver.getRepositoryRoot(repositoryId);
         Path filePath = resolvePath(repoRoot, path);

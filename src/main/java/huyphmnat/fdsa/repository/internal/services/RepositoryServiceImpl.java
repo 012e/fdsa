@@ -8,6 +8,7 @@ import huyphmnat.fdsa.repository.interfaces.RepositoryService;
 import huyphmnat.fdsa.repository.internal.entites.RepositoryEntity;
 import huyphmnat.fdsa.repository.internal.repositories.RepositoryRepository;
 import huyphmnat.fdsa.shared.events.EventService;
+import io.micrometer.observation.annotation.Observed;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     @Transactional
+    @Observed
     public Repository createRepository(CreateRepositoryRequest request) {
         String identifier = request.getIdentifier();
         if (identifier == null || identifier.isBlank()) {
@@ -88,6 +90,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     @Transactional
+    @Observed
     public Repository cloneRepository(CloneRepositoryRequest request) {
         String sourceUrl = request.getSourceUrl();
         String identifier = request.getIdentifier();
@@ -157,6 +160,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     @Transactional
+    @Observed
     public Repository getRepository(String identifier) {
         identifier = trimSlashes(identifier);
         var entity = repositoryRepository.findByIdentifier(identifier)
@@ -166,6 +170,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     @Transactional
+    @Observed
     public List<Repository> listRepositories() {
         return repositoryRepository.findAll()
                 .stream()
@@ -175,6 +180,7 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     @Transactional
+    @Observed
     public List<Repository> listRepositoriesByOwner(String owner) {
         // Filter repositories by identifier prefix "owner/"
         return repositoryRepository.findByIdentifierStartingWith(owner + "/")
