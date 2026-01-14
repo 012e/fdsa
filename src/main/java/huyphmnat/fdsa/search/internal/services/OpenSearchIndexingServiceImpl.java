@@ -1,12 +1,15 @@
 package huyphmnat.fdsa.search.internal.services;
-
+import huyphmnat.fdsa.search.FieldNames;
 import huyphmnat.fdsa.search.Indexes;
 import huyphmnat.fdsa.search.dtos.CodeFileDocument;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
+import org.opensearch.client.opensearch.core.DeleteByQueryRequest;
+import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
 import org.opensearch.client.opensearch.core.IndexRequest;
 import org.opensearch.client.opensearch.core.IndexResponse;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
@@ -34,8 +37,7 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
             IndexRequest<CodeFileDocument> request = IndexRequest.of(i -> i
                     .index(Indexes.CODE_FILE_INDEX)
                     .id(document.getId().toString())
-                    .document(document)
-            );
+                    .document(document));
 
             IndexResponse response = openSearchClient.index(request);
             log.info("Indexed code file {} with result: {}", document.getFilePath(), response.result());
@@ -63,15 +65,12 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
                     .index(IndexOperation.of(i -> i
                             .index(Indexes.CODE_FILE_INDEX)
                             .id(document.getId().toString())
-                            .document(document)
-                    ))
-            ));
+                            .document(document)))));
         }
 
         try {
             BulkRequest bulkRequest = BulkRequest.of(b -> b
-                    .operations(operations)
-            );
+                    .operations(operations));
 
             BulkResponse response = openSearchClient.bulk(bulkRequest);
 
@@ -99,5 +98,27 @@ public class OpenSearchIndexingServiceImpl implements OpenSearchIndexingService 
             throw new RuntimeException("Failed to refresh index", e);
         }
     }
-}
 
+    /**
+     * Delete all documents for a specific repository from OpenSearch
+     */
+    @Override
+    public void deleteRepositoryDocuments(String repositoryIdentifier) {
+        log.info("Deleting all documents for repository: {}", repositoryIdentifier);
+
+        try {
+            DeleteByQueryRequest request = DeleteByQueryRequest.of(d -> d
+                    .index(Indexes.CODE_FILE_INDEX)
+                    .query(q -> q
+                            .term(t -> t
+                                    .field(FieldNames.REPOSITORY_IDENTIFIER_KEYWORD)
+                                    .value(FieldValue.of(repositoryIdentifier)))));
+
+            DeleteByQueryResponse response = openSearchClient.deleteByQuery(request);
+            log.info("Deleted {} documents for repository: {}", response.deleted(), repositoryIdentifier);
+        } catch (Exception e) {
+            log.error("Failed to delete documents for repository: {}", repositoryIdentifier, e);
+            throw new RuntimeException("Failed to delete repository documents from OpenSearch", e);
+        }
+    }
+}

@@ -4,6 +4,7 @@ import huyphmnat.fdsa.repository.dtos.CloneRepositoryRequest;
 import huyphmnat.fdsa.repository.dtos.CreateRepositoryRequest;
 import huyphmnat.fdsa.repository.dtos.Repository;
 import huyphmnat.fdsa.repository.dtos.RepositoryClonedEvent;
+import huyphmnat.fdsa.repository.dtos.RepositoryDeletedEvent;
 import huyphmnat.fdsa.repository.interfaces.RepositoryService;
 import huyphmnat.fdsa.repository.internal.entites.RepositoryEntity;
 import huyphmnat.fdsa.repository.internal.repositories.RepositoryRepository;
@@ -200,6 +201,14 @@ public class RepositoryServiceImpl implements RepositoryService {
         
         var entity = repositoryRepository.findByIdentifier(identifier)
                 .orElseThrow(() -> new RuntimeException("Repository not found: " + identifier));
+        
+        // Publish repository.deleted event before deletion
+        RepositoryDeletedEvent event = RepositoryDeletedEvent.builder()
+                .id(entity.getId())
+                .identifier(entity.getIdentifier())
+                .build();
+        eventService.publish("repository.deleted", event);
+        log.info("Published repository.deleted event for {}", identifier);
         
         // Delete from database
         repositoryRepository.delete(entity);

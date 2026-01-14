@@ -9,4 +9,6 @@ public interface OpenSearchIndexingService {
 
     void bulkIndexCodeFiles(List<CodeFileDocument> documents);
     void refreshIndexes();
+    
+    void deleteRepositoryDocuments(String repositoryIdentifier);
 }
