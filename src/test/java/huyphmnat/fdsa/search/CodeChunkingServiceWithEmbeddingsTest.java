@@ -25,7 +25,6 @@ class CodeChunkingServiceWithEmbeddingsTest {
         embeddingModel = new MockEmbeddingModel();
         chunkingService = new CodeChunkingServiceImpl(embeddingModel);
         // Enable embeddings for these tests
-        ReflectionTestUtils.setField(chunkingService, "embeddingsEnabled", true);
     }
 
     @Test
@@ -86,9 +85,6 @@ class CodeChunkingServiceWithEmbeddingsTest {
 
     @Test
     void testChunkCodeWithMetadata_WithEmbeddingsDisabled_ShouldReturnEmptyEmbeddings() {
-        // Disable embeddings
-        ReflectionTestUtils.setField(chunkingService, "embeddingsEnabled", false);
-
         String code = "public class Test {\n    // test\n}";
 
         List<CodeFileDocument.CodeChunk> chunks = chunkingService.chunkCodeWithMetadata(code);

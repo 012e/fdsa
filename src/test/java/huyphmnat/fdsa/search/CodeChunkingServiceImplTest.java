@@ -20,7 +20,6 @@ class CodeChunkingServiceImplTest {
         EmbeddingModel mockEmbeddingModel = new MockEmbeddingModel();
         chunkingService = new CodeChunkingServiceImpl(mockEmbeddingModel);
         // Disable embeddings for basic chunking tests
-        ReflectionTestUtils.setField(chunkingService, "embeddingsEnabled", false);
     }
 
     @Test
