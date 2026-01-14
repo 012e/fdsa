@@ -7,6 +7,7 @@ interface CodeViewerProps {
   height?: string
   showLineNumbers?: boolean
   highlightLines?: number[]
+  theme?: 'vs-dark' | 'light' | 'vs' | 'hc-black' | 'auto'
 }
 
 export function CodeViewer({
@@ -16,6 +17,7 @@ export function CodeViewer({
   height = '300px',
   showLineNumbers = true,
   highlightLines = [],
+  theme = 'auto',
 }: CodeViewerProps) {
   const detectedLanguage = language || (fileName ? detectLanguageFromPath(fileName) : 'plaintext')
 
@@ -25,6 +27,7 @@ export function CodeViewer({
       onChange={() => {}} // No-op for read-only
       language={detectedLanguage}
       height={height}
+      theme={theme}
       readOnly={true}
       options={{
         readOnly: true,
@@ -34,9 +37,13 @@ export function CodeViewer({
         renderLineHighlight: 'none',
         contextmenu: false,
         glyphMargin: false,
-        folding: false,
+        folding: true,
         lineDecorationsWidth: 0,
         lineNumbersMinChars: 3,
+        scrollbar: {
+          vertical: 'auto',
+          horizontal: 'auto',
+        },
       }}
     />
   )

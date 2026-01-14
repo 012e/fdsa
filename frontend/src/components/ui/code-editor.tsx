@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import Editor, { OnMount } from '@monaco-editor/react'
 import { editor } from 'monaco-editor'
 
@@ -7,7 +7,7 @@ interface CodeEditorProps {
   onChange: (value: string) => void
   language?: string
   height?: string
-  theme?: 'vs-dark' | 'light'
+  theme?: 'vs-dark' | 'light' | 'vs' | 'hc-black' | 'auto'
   readOnly?: boolean
   options?: editor.IStandaloneEditorConstructionOptions
 }
@@ -17,24 +17,56 @@ export function CodeEditor({
   onChange,
   language = 'plaintext',
   height = '400px',
-  theme = 'light',
+  theme = 'auto',
   readOnly = false,
   options = {},
 }: CodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const [isEditorReady, setIsEditorReady] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState<'vs-dark' | 'light' | 'vs' | 'hc-black'>('vs-dark')
+
+  // Auto-detect system theme preference
+  useEffect(() => {
+    if (theme === 'auto') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const updateTheme = () => {
+        setCurrentTheme(mediaQuery.matches ? 'vs-dark' : 'light')
+      }
+      
+      updateTheme()
+      mediaQuery.addEventListener('change', updateTheme)
+      
+      return () => mediaQuery.removeEventListener('change', updateTheme)
+    } else {
+      setCurrentTheme(theme as 'vs-dark' | 'light' | 'vs' | 'hc-black')
+    }
+  }, [theme])
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor
     setIsEditorReady(true)
 
-    // Configure editor
+    // Configure editor with enhanced syntax highlighting
     editor.updateOptions({
       minimap: { enabled: true },
-      fontSize: 14,
+      fontSize:14,
       lineNumbers: 'on',
       scrollBeyondLastLine: false,
       automaticLayout: true,
+      bracketPairColorization: {
+        enabled: true,
+      },
+      guides: {
+        bracketPairs: true,
+        indentation: true,
+      },
+      suggest: {
+        showKeywords: true,
+        showSnippets: true,
+      },
+      semanticHighlighting: {
+        enabled: true,
+      },
       ...options,
     })
   }

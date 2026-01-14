@@ -3,18 +3,18 @@ import { repositoryApi } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { File, Folder, ChevronRight, Home, Trash2 } from 'lucide-react'
+import { File, Folder, ChevronRight, Home, Trash2, MoreVertical } from 'lucide-react'
 import { DirectoryContentEntriesInner, EntryTypeEnum } from '@/lib/generated'
 import { useState } from 'react'
 import { EditFileDialog } from './-edit-file-dialog'
 import { AddFileDialog } from './-add-file-dialog'
 import { AddFolderDialog } from './-add-folder-dialog'
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from '@/components/ui/context-menu'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
@@ -201,36 +201,46 @@ export function FileNavigator({ owner, repo, currentPath, onPathChange }: FileNa
                 </Button>
               )}
               {directoryContent?.entries?.map((entry) => (
-                <ContextMenu key={entry.path}>
-                  <ContextMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start gap-3 h-auto py-2 hover:bg-accent"
-                      onClick={() => handleEntryClick(entry)}
-                    >
-                      {entry.type === EntryTypeEnum.Directory ? (
-                        <Folder className="w-4 h-4 text-blue-500" />
-                      ) : (
-                        <File className="w-4 h-4 text-muted-foreground" />
-                      )}
-                      <span className="font-medium">{entry.name}</span>
-                      {entry.type === EntryTypeEnum.File && 'size' in entry && (
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          {formatBytes(entry.size || 0)}
-                        </span>
-                      )}
-                    </Button>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem
-                      variant="destructive"
-                      onClick={(e) => handleDeleteClick(entry, e)}
-                    >
-                      <Trash2 />
-                      Delete {entry.type === EntryTypeEnum.Directory ? 'folder' : 'file'}
-                    </ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
+                <div key={entry.path} className="flex items-center gap-1 w-full">
+                  <Button
+                    variant="ghost"
+                    className="flex-1 justify-start gap-3 h-auto py-2 hover:bg-accent"
+                    onClick={() => handleEntryClick(entry)}
+                  >
+                    {entry.type === EntryTypeEnum.Directory ? (
+                      <Folder className="w-4 h-4 text-blue-500" />
+                    ) : (
+                      <File className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span className="font-medium">{entry.name}</span>
+                    {entry.type === EntryTypeEnum.File && 'size' in entry && (
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {formatBytes(entry.size || 0)}
+                      </span>
+                    )}
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={(e) => handleDeleteClick(entry, e)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete {entry.type === EntryTypeEnum.Directory ? 'folder' : 'file'}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ))}
               {(!directoryContent?.entries || directoryContent.entries.length === 0) && !currentPath && (
                 <div className="text-sm text-muted-foreground py-4 text-center">
