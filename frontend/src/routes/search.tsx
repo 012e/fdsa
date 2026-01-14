@@ -51,14 +51,11 @@ function SearchPage() {
       if (!search.q) return null
       const response = await codeSearchApi.searchCode(
         search.q,
-        undefined, 
         search.repositoryIdentifier,
         search.language,
-        search.fileExtension,
         search.filePathPattern,
         search.page,
         size,
-        'content,fileName,filePath'
       )
       return response.data as CodeSearchResponse
     },
