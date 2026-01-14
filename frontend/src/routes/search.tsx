@@ -44,6 +44,20 @@ function SearchPage() {
     setLocalInput(search.q)
   }, [search.q])
 
+  // Debounced auto-search when user types
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (localInput !== search.q) {
+        navigate({
+          search: (prev) => ({ ...prev, q: localInput, page: 0 }),
+          replace: true
+        })
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(delayDebounceFn)
+  }, [localInput, navigate, search.q])
+
   const { data: searchResults, isLoading, error, isFetching } = useQuery({
     // 4. QueryKey depends on the entire search object from the URL
     queryKey: ['codeSearch', search],

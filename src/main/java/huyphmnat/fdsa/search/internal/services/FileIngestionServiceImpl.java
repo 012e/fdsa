@@ -35,6 +35,7 @@ public class FileIngestionServiceImpl implements FileIngestionService {
     private final CodeSummarizationService summarizationService;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
+    private static final int MAX_EMBEDDING_CHARS = 8000; // ~2000 tokens, leaving margin for model
 
     @Override
     public void indexFile(UUID repositoryId, String repositoryIdentifier, String filePath) {
@@ -188,9 +189,15 @@ public class FileIngestionServiceImpl implements FileIngestionService {
 
     private List<Float> generateEmbedding(String text) {
         try {
-            log.debug("Generating embedding for text of length: {}", text.length());
+            // Truncate text to prevent token limit errors
+            String truncatedText = text.length() > MAX_EMBEDDING_CHARS 
+                ? text.substring(0, MAX_EMBEDDING_CHARS) 
+                : text;
+            
+            log.debug("Generating embedding for text of length: {} (original: {})", 
+                truncatedText.length(), text.length());
 
-            EmbeddingRequest request = new EmbeddingRequest(List.of(text), null);
+            EmbeddingRequest request = new EmbeddingRequest(List.of(truncatedText), null);
             EmbeddingResponse response = embeddingModel.call(request);
 
             if (response.getResults().isEmpty()) {
