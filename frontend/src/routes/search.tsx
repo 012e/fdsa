@@ -215,9 +215,26 @@ interface SearchResultCardProps {
 
 function SearchResultCard({ result }: SearchResultCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const navigate = useNavigate()
+
+  const handleCardClick = () => {
+    if (!result.repositoryIdentifier || !result.filePath) return
+    
+    // Parse owner/repo from repositoryIdentifier
+    const [owner, repo] = result.repositoryIdentifier.split('/')
+    
+    navigate({
+      to: '/repositories/$owner/$repo',
+      params: { owner, repo },
+      search: { file: result.filePath },
+    })
+  }
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card 
+      className="hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -267,7 +284,10 @@ function SearchResultCard({ result }: SearchResultCardProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setExpanded(true)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setExpanded(true)
+                    }}
                     className="mt-2"
                   >
                     Show {highlights.length - 3} more highlights...
@@ -321,7 +341,10 @@ function SearchResultCard({ result }: SearchResultCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setExpanded(true)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setExpanded(true)
+                }}
                 className="mt-2"
               >
                 Show {result.matchedChunks.length - 2} more chunks...
@@ -334,7 +357,10 @@ function SearchResultCard({ result }: SearchResultCardProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setExpanded(false)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setExpanded(false)
+            }}
             className="mt-2"
           >
             Show less

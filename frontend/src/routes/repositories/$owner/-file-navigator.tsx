@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { File, Folder, ChevronRight, Home, Trash2, MoreVertical } from 'lucide-react'
 import { DirectoryContentEntriesInner, EntryTypeEnum } from '@/lib/generated'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { EditFileDialog } from './-edit-file-dialog'
 import { AddFileDialog } from './-add-file-dialog'
 import { AddFolderDialog } from './-add-folder-dialog'
@@ -32,9 +32,10 @@ interface FileNavigatorProps {
   repo: string
   currentPath: string
   onPathChange: (path: string) => void
+  fileToOpen?: string
 }
 
-export function FileNavigator({ owner, repo, currentPath, onPathChange }: FileNavigatorProps) {
+export function FileNavigator({ owner, repo, currentPath, onPathChange, fileToOpen }: FileNavigatorProps) {
   const identifier = `${owner}/${repo}`
   const queryClient = useQueryClient()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -67,6 +68,25 @@ export function FileNavigator({ owner, repo, currentPath, onPathChange }: FileNa
     },
     enabled: false,
   })
+
+  // Handle opening file from search results
+  useEffect(() => {
+    if (fileToOpen) {
+      const openFile = async () => {
+        setEditFilePath(fileToOpen)
+        const response = await repositoryApi.readRepositoryFile(owner, repo, fileToOpen)
+        if (response.data) {
+          setEditFileContent(response.data.content || '')
+          setEditDialogOpen(true)
+        }
+      }
+      openFile().catch(error => {
+        toast.error('Failed to open file', {
+          description: error?.response?.data?.message || error?.message || 'An error occurred',
+        })
+      })
+    }
+  }, [fileToOpen, owner, repo])
 
   const deleteMutation = useMutation({
     mutationFn: async (data: { path: string; type: EntryTypeEnum; commitMessage: string }) => {

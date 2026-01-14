@@ -11,13 +11,14 @@ export const Route = createFileRoute("/repositories/$owner/$repo")({
   component: RepositoryDetailPage,
   validateSearch: z.object({
     path: z.string().optional().nullable(),
+    file: z.string().optional().nullable(),
   }),
 });
 
 function RepositoryDetailPage() {
   const { owner, repo } = Route.useParams();
   const navigate = useNavigate();
-  const { path: currentPath } = Route.useSearch();
+  const { path: currentPath, file: fileToOpen } = Route.useSearch();
 
   // Query repository using TanStack Query with repositoryApi
   const identifier = `${owner}/${repo}`;
@@ -94,6 +95,7 @@ function RepositoryDetailPage() {
           repo={repo}
           currentPath={currentPath ?? ""}
           onPathChange={handlePathChange}
+          fileToOpen={fileToOpen ?? undefined}
         />
       </div>
     </div>
