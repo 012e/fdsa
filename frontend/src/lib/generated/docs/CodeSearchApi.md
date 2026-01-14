@@ -23,22 +23,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CodeSearchApi(configuration);
 
-let q: string; //Search query text (default to undefined)
-let repositoryId: string; //Filter by repository ID (optional) (default to undefined)
-let repositoryIdentifier: string; //Filter by repository identifier (owner/name) (optional) (default to undefined)
-let language: string; //Filter by programming language (optional) (default to undefined)
-let fileExtension: string; //Filter by file extension (optional) (default to undefined)
-let filePathPattern: string; //Filter by file path pattern (supports wildcards) (optional) (default to undefined)
-let page: number; //Page number (0-based) (optional) (default to 0)
-let size: number; //Number of results per page (optional) (default to 10)
-let highlight: string; //Fields to highlight (comma-separated) (optional) (default to undefined)
+let q: string; // (default to undefined)
+let repositoryIdentifier: string; // (optional) (default to undefined)
+let language: string; // (optional) (default to undefined)
+let filePathPattern: string; // (optional) (default to undefined)
+let page: number; // (optional) (default to 0)
+let size: number; // (optional) (default to 10)
+let highlight: string; // (optional) (default to undefined)
 
 const { status, data } = await apiInstance.searchCode(
     q,
-    repositoryId,
     repositoryIdentifier,
     language,
-    fileExtension,
     filePathPattern,
     page,
     size,
@@ -50,15 +46,13 @@ const { status, data } = await apiInstance.searchCode(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **q** | [**string**] | Search query text | defaults to undefined|
-| **repositoryId** | [**string**] | Filter by repository ID | (optional) defaults to undefined|
-| **repositoryIdentifier** | [**string**] | Filter by repository identifier (owner/name) | (optional) defaults to undefined|
-| **language** | [**string**] | Filter by programming language | (optional) defaults to undefined|
-| **fileExtension** | [**string**] | Filter by file extension | (optional) defaults to undefined|
-| **filePathPattern** | [**string**] | Filter by file path pattern (supports wildcards) | (optional) defaults to undefined|
-| **page** | [**number**] | Page number (0-based) | (optional) defaults to 0|
-| **size** | [**number**] | Number of results per page | (optional) defaults to 10|
-| **highlight** | [**string**] | Fields to highlight (comma-separated) | (optional) defaults to undefined|
+| **q** | [**string**] |  | defaults to undefined|
+| **repositoryIdentifier** | [**string**] |  | (optional) defaults to undefined|
+| **language** | [**string**] |  | (optional) defaults to undefined|
+| **filePathPattern** | [**string**] |  | (optional) defaults to undefined|
+| **page** | [**number**] |  | (optional) defaults to 0|
+| **size** | [**number**] |  | (optional) defaults to 10|
+| **highlight** | [**string**] |  | (optional) defaults to undefined|
 
 
 ### Return type

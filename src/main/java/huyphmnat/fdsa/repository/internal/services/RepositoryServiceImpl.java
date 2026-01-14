@@ -188,4 +188,49 @@ public class RepositoryServiceImpl implements RepositoryService {
                 .map(entity -> mapper.map(entity, Repository.class))
                 .toList();
     }
+
+    @Override
+    @Transactional
+    @Observed
+    public void deleteRepository(String iden) {
+        var identifier = trimSlashes(iden);
+        
+        // Validate that the current user is the owner
+        authorizationService.validateOwnerMatchesCurrentUser(identifier);
+        
+        var entity = repositoryRepository.findByIdentifier(identifier)
+                .orElseThrow(() -> new RuntimeException("Repository not found: " + identifier));
+        
+        // Delete from database
+        repositoryRepository.delete(entity);
+        
+        // Delete filesystem directory
+        Path repoPath = Paths.get(entity.getFilesystemPath());
+        try {
+            if (java.nio.file.Files.exists(repoPath)) {
+                deleteDirectoryRecursively(repoPath);
+                log.info("Deleted repository directory: {}", repoPath);
+            }
+        } catch (Exception e) {
+            log.error("Failed to delete repository directory: {}", repoPath, e);
+            // Don't throw - database deletion already succeeded
+        }
+        
+        log.info("Successfully deleted repository: {}", identifier);
+    }
+    
+    private void deleteDirectoryRecursively(Path path) throws java.io.IOException {
+        if (java.nio.file.Files.isDirectory(path)) {
+            try (var stream = java.nio.file.Files.list(path)) {
+                stream.forEach(child -> {
+                    try {
+                        deleteDirectoryRecursively(child);
+                    } catch (java.io.IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+        }
+        java.nio.file.Files.delete(path);
+    }
 }

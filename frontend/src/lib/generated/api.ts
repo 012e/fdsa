@@ -37,10 +37,9 @@ export interface CloneRepositoryInput {
 }
 export interface CodeSearchRequest {
     'query'?: string;
-    'repositoryId'?: string;
+    'queryEmbedding'?: Array<number>;
     'repositoryIdentifier'?: string;
     'language'?: string;
-    'fileExtension'?: string;
     'filePathPattern'?: string;
     'page'?: number;
     'size'?: number;
@@ -143,19 +142,17 @@ export const CodeSearchApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Performs full-text search across indexed code files with optional filters
          * @summary Search for code files
-         * @param {string} q Search query text
-         * @param {string} [repositoryId] Filter by repository ID
-         * @param {string} [repositoryIdentifier] Filter by repository identifier (owner/name)
-         * @param {string} [language] Filter by programming language
-         * @param {string} [fileExtension] Filter by file extension
-         * @param {string} [filePathPattern] Filter by file path pattern (supports wildcards)
-         * @param {number} [page] Page number (0-based)
-         * @param {number} [size] Number of results per page
-         * @param {string} [highlight] Fields to highlight (comma-separated)
+         * @param {string} q 
+         * @param {string} [repositoryIdentifier] 
+         * @param {string} [language] 
+         * @param {string} [filePathPattern] 
+         * @param {number} [page] 
+         * @param {number} [size] 
+         * @param {string} [highlight] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        searchCode: async (q: string, repositoryId?: string, repositoryIdentifier?: string, language?: string, fileExtension?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        searchCode: async (q: string, repositoryIdentifier?: string, language?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'q' is not null or undefined
             assertParamExists('searchCode', 'q', q)
             const localVarPath = `/api/search/code`;
@@ -178,20 +175,12 @@ export const CodeSearchApiAxiosParamCreator = function (configuration?: Configur
                 localVarQueryParameter['q'] = q;
             }
 
-            if (repositoryId !== undefined) {
-                localVarQueryParameter['repositoryId'] = repositoryId;
-            }
-
             if (repositoryIdentifier !== undefined) {
                 localVarQueryParameter['repositoryIdentifier'] = repositoryIdentifier;
             }
 
             if (language !== undefined) {
                 localVarQueryParameter['language'] = language;
-            }
-
-            if (fileExtension !== undefined) {
-                localVarQueryParameter['fileExtension'] = fileExtension;
             }
 
             if (filePathPattern !== undefined) {
@@ -272,20 +261,18 @@ export const CodeSearchApiFp = function(configuration?: Configuration) {
         /**
          * Performs full-text search across indexed code files with optional filters
          * @summary Search for code files
-         * @param {string} q Search query text
-         * @param {string} [repositoryId] Filter by repository ID
-         * @param {string} [repositoryIdentifier] Filter by repository identifier (owner/name)
-         * @param {string} [language] Filter by programming language
-         * @param {string} [fileExtension] Filter by file extension
-         * @param {string} [filePathPattern] Filter by file path pattern (supports wildcards)
-         * @param {number} [page] Page number (0-based)
-         * @param {number} [size] Number of results per page
-         * @param {string} [highlight] Fields to highlight (comma-separated)
+         * @param {string} q 
+         * @param {string} [repositoryIdentifier] 
+         * @param {string} [language] 
+         * @param {string} [filePathPattern] 
+         * @param {number} [page] 
+         * @param {number} [size] 
+         * @param {string} [highlight] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async searchCode(q: string, repositoryId?: string, repositoryIdentifier?: string, language?: string, fileExtension?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CodeSearchResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.searchCode(q, repositoryId, repositoryIdentifier, language, fileExtension, filePathPattern, page, size, highlight, options);
+        async searchCode(q: string, repositoryIdentifier?: string, language?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CodeSearchResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.searchCode(q, repositoryIdentifier, language, filePathPattern, page, size, highlight, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CodeSearchApi.searchCode']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -315,20 +302,18 @@ export const CodeSearchApiFactory = function (configuration?: Configuration, bas
         /**
          * Performs full-text search across indexed code files with optional filters
          * @summary Search for code files
-         * @param {string} q Search query text
-         * @param {string} [repositoryId] Filter by repository ID
-         * @param {string} [repositoryIdentifier] Filter by repository identifier (owner/name)
-         * @param {string} [language] Filter by programming language
-         * @param {string} [fileExtension] Filter by file extension
-         * @param {string} [filePathPattern] Filter by file path pattern (supports wildcards)
-         * @param {number} [page] Page number (0-based)
-         * @param {number} [size] Number of results per page
-         * @param {string} [highlight] Fields to highlight (comma-separated)
+         * @param {string} q 
+         * @param {string} [repositoryIdentifier] 
+         * @param {string} [language] 
+         * @param {string} [filePathPattern] 
+         * @param {number} [page] 
+         * @param {number} [size] 
+         * @param {string} [highlight] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        searchCode(q: string, repositoryId?: string, repositoryIdentifier?: string, language?: string, fileExtension?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig): AxiosPromise<CodeSearchResponse> {
-            return localVarFp.searchCode(q, repositoryId, repositoryIdentifier, language, fileExtension, filePathPattern, page, size, highlight, options).then((request) => request(axios, basePath));
+        searchCode(q: string, repositoryIdentifier?: string, language?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig): AxiosPromise<CodeSearchResponse> {
+            return localVarFp.searchCode(q, repositoryIdentifier, language, filePathPattern, page, size, highlight, options).then((request) => request(axios, basePath));
         },
         /**
          * Performs full-text search across indexed code files with optional filters using POST request
@@ -350,20 +335,18 @@ export class CodeSearchApi extends BaseAPI {
     /**
      * Performs full-text search across indexed code files with optional filters
      * @summary Search for code files
-     * @param {string} q Search query text
-     * @param {string} [repositoryId] Filter by repository ID
-     * @param {string} [repositoryIdentifier] Filter by repository identifier (owner/name)
-     * @param {string} [language] Filter by programming language
-     * @param {string} [fileExtension] Filter by file extension
-     * @param {string} [filePathPattern] Filter by file path pattern (supports wildcards)
-     * @param {number} [page] Page number (0-based)
-     * @param {number} [size] Number of results per page
-     * @param {string} [highlight] Fields to highlight (comma-separated)
+     * @param {string} q 
+     * @param {string} [repositoryIdentifier] 
+     * @param {string} [language] 
+     * @param {string} [filePathPattern] 
+     * @param {number} [page] 
+     * @param {number} [size] 
+     * @param {string} [highlight] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public searchCode(q: string, repositoryId?: string, repositoryIdentifier?: string, language?: string, fileExtension?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig) {
-        return CodeSearchApiFp(this.configuration).searchCode(q, repositoryId, repositoryIdentifier, language, fileExtension, filePathPattern, page, size, highlight, options).then((request) => request(this.axios, this.basePath));
+    public searchCode(q: string, repositoryIdentifier?: string, language?: string, filePathPattern?: string, page?: number, size?: number, highlight?: string, options?: RawAxiosRequestConfig) {
+        return CodeSearchApiFp(this.configuration).searchCode(q, repositoryIdentifier, language, filePathPattern, page, size, highlight, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -551,6 +534,48 @@ export const RepositoryControllerApiAxiosParamCreator = function (configuration?
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(repositoryPathChangeInput, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Delete a repository
+         * @param {string} owner Repository owner
+         * @param {string} repository Repository name
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteRepository: async (owner: string, repository: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'owner' is not null or undefined
+            assertParamExists('deleteRepository', 'owner', owner)
+            // verify required parameter 'repository' is not null or undefined
+            assertParamExists('deleteRepository', 'repository', repository)
+            const localVarPath = `/api/repositories/{owner}/{repository}`
+                .replace(`{${"owner"}}`, String(owner))
+                .replace(`{${"repository"}}`, String(repository));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Oauth2 required
+            // oauth required
+            await setOAuthToObject(localVarHeaderParameter, "Oauth2", [], configuration)
+
+            localVarHeaderParameter['Accept'] = '*/*';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -975,6 +1000,20 @@ export const RepositoryControllerApiFp = function(configuration?: Configuration)
         },
         /**
          * 
+         * @summary Delete a repository
+         * @param {string} owner Repository owner
+         * @param {string} repository Repository name
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async deleteRepository(owner: string, repository: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<boolean>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.deleteRepository(owner, repository, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['RepositoryControllerApi.deleteRepository']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Delete a file from a repository
          * @param {string} owner Repository owner
          * @param {string} repository Repository name
@@ -1142,6 +1181,17 @@ export const RepositoryControllerApiFactory = function (configuration?: Configur
         },
         /**
          * 
+         * @summary Delete a repository
+         * @param {string} owner Repository owner
+         * @param {string} repository Repository name
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        deleteRepository(owner: string, repository: string, options?: RawAxiosRequestConfig): AxiosPromise<boolean> {
+            return localVarFp.deleteRepository(owner, repository, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Delete a file from a repository
          * @param {string} owner Repository owner
          * @param {string} repository Repository name
@@ -1283,6 +1333,18 @@ export class RepositoryControllerApi extends BaseAPI {
      */
     public createRepositoryFolder(owner: string, repository: string, repositoryPathChangeInput: RepositoryPathChangeInput, options?: RawAxiosRequestConfig) {
         return RepositoryControllerApiFp(this.configuration).createRepositoryFolder(owner, repository, repositoryPathChangeInput, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Delete a repository
+     * @param {string} owner Repository owner
+     * @param {string} repository Repository name
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     */
+    public deleteRepository(owner: string, repository: string, options?: RawAxiosRequestConfig) {
+        return RepositoryControllerApiFp(this.configuration).deleteRepository(owner, repository, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

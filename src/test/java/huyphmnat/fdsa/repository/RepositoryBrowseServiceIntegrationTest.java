@@ -226,7 +226,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         assertThat(fileContent.getSize()).isGreaterThan(0);
         assertThat(fileContent.getContent()).isNotNull();
 
-        String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
+        String content = fileContent.getContent();
         assertThat(content).contains("Test Repository");
         assertThat(content).contains("This is a test");
     }
@@ -241,7 +241,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         assertThat(fileContent.getSize()).isNotNull();
         assertThat(fileContent.getContent()).isNotNull();
 
-        String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
+        String content = fileContent.getContent();
         assertThat(content).contains("public class App");
         assertThat(content).contains("main");
         assertThat(content).contains("System.out.println");
@@ -254,7 +254,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         assertThat(fileContent).isNotNull();
         assertThat(fileContent.getName()).isEqualTo("config.properties");
 
-        String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
+        String content = fileContent.getContent();
         assertThat(content).contains("app.name=TestApp");
         assertThat(content).contains("app.version=1.0");
     }
@@ -266,7 +266,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         assertThat(fileContent).isNotNull();
         assertThat(fileContent.getName()).isEqualTo("guide.md");
 
-        String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
+        String content = fileContent.getContent();
         assertThat(content).contains("User Guide");
         assertThat(content).contains("Getting Started");
     }
@@ -372,7 +372,7 @@ public class RepositoryBrowseServiceIntegrationTest extends BaseIntegrationTest 
         // Read it back
         FileContent fileContent = repositoryFileService.readFile(repositoryId, "README.md");
 
-        String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
+        String content = fileContent.getContent();
         assertThat(content).isEqualTo(newContent);
     }
 

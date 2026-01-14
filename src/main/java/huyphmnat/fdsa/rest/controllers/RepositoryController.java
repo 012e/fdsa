@@ -97,6 +97,24 @@ public class RepositoryController {
         return ResponseEntity.ok(repositoryService.createRepository(request));
     }
 
+    @DeleteMapping("/{owner}/{repository}")
+    @Operation(operationId = "deleteRepository", summary = "Delete a repository",
+        parameters = {
+            @Parameter(in = ParameterIn.PATH, name = "owner", required = true, description = "Repository owner"),
+            @Parameter(in = ParameterIn.PATH, name = "repository", required = true, description = "Repository name")
+        },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Repository deleted")
+        })
+    public ResponseEntity<Boolean> deleteRepository(
+            @PathVariable String owner,
+            @PathVariable String repository) {
+        String identifier = owner + "/" + repository;
+        log.info("Deleting repository with identifier: {}", identifier);
+        repositoryService.deleteRepository(identifier);
+        return ResponseEntity.ok(true);
+    }
+
     @PostMapping("/clone")
     @Operation(operationId = "cloneRepository", summary = "Clone a repository from a source URL",
         responses = {

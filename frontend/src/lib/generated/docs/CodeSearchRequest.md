@@ -6,10 +6,9 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **query** | **string** |  | [optional] [default to undefined]
-**repositoryId** | **string** |  | [optional] [default to undefined]
+**queryEmbedding** | **Array&lt;number&gt;** |  | [optional] [default to undefined]
 **repositoryIdentifier** | **string** |  | [optional] [default to undefined]
 **language** | **string** |  | [optional] [default to undefined]
-**fileExtension** | **string** |  | [optional] [default to undefined]
 **filePathPattern** | **string** |  | [optional] [default to undefined]
 **page** | **number** |  | [optional] [default to undefined]
 **size** | **number** |  | [optional] [default to undefined]
@@ -22,10 +21,9 @@ import { CodeSearchRequest } from './api';
 
 const instance: CodeSearchRequest = {
     query,
-    repositoryId,
+    queryEmbedding,
     repositoryIdentifier,
     language,
-    fileExtension,
     filePathPattern,
     page,
     size,

@@ -8,6 +8,7 @@ All URIs are relative to *http://localhost:8080*
 |[**cloneRepository**](#clonerepository) | **POST** /api/repositories/clone | Clone a repository from a source URL|
 |[**createRepository**](#createrepository) | **POST** /api/repositories | Create a new repository|
 |[**createRepositoryFolder**](#createrepositoryfolder) | **POST** /api/repositories/{owner}/{repository}/folders | Create a folder in a repository|
+|[**deleteRepository**](#deleterepository) | **DELETE** /api/repositories/{owner}/{repository} | Delete a repository|
 |[**deleteRepositoryFile**](#deleterepositoryfile) | **DELETE** /api/repositories/{owner}/{repository}/files | Delete a file from a repository|
 |[**deleteRepositoryFolder**](#deleterepositoryfolder) | **DELETE** /api/repositories/{owner}/{repository}/folders | Delete a folder from a repository|
 |[**getAllRepositories**](#getallrepositories) | **GET** /api/repositories | List all repositories|
@@ -230,6 +231,59 @@ const { status, data } = await apiInstance.createRepositoryFolder(
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**200** | Folder created |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **deleteRepository**
+> boolean deleteRepository()
+
+
+### Example
+
+```typescript
+import {
+    RepositoryControllerApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new RepositoryControllerApi(configuration);
+
+let owner: string; //Repository owner (default to undefined)
+let repository: string; //Repository name (default to undefined)
+
+const { status, data } = await apiInstance.deleteRepository(
+    owner,
+    repository
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **owner** | [**string**] | Repository owner | defaults to undefined|
+| **repository** | [**string**] | Repository name | defaults to undefined|
+
+
+### Return type
+
+**boolean**
+
+### Authorization
+
+[Oauth2](../README.md#Oauth2)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: */*
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Repository deleted |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

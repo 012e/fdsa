@@ -17,5 +17,7 @@ public interface RepositoryService {
     List<Repository> listRepositories();
 
     List<Repository> listRepositoriesByOwner(String owner);
+
+    void deleteRepository(String identifier);
 }
 

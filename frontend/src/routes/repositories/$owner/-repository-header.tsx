@@ -23,8 +23,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { repositoryApi } from "@/lib/api";
 
 interface RepositoryHeaderProps {
   repository: Repository;
@@ -36,13 +36,9 @@ export function RepositoryHeader({ repository }: RepositoryHeaderProps) {
   const navigate = useNavigate();
 
   const handleDeleteRepository = async () => {
-    // TODO: Implement when backend API is available
-    toast.error("Delete repository API not yet implemented", {
-      description: "This feature requires a backend endpoint for deleting repositories",
-    });
     setDeleteDialogOpen(false);
     // When API is available:
-    // await repositoryApi.deleteRepository(owner, repo)
+    await repositoryApi.deleteRepository(owner, repo)
     navigate({ to: '/repositories' })
   };
 
