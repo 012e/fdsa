@@ -1,5 +1,4 @@
 import { Scripts, createRootRoute } from "@tanstack/react-router";
-import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { AuthProvider } from "react-oidc-context";
@@ -47,7 +46,6 @@ const client = new QueryClient();
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <NuqsAdapter>
         <AuthProvider {...oidcConfig}>
           <QueryClientProvider client={client}>
             <JotaiProvider store={store}>
@@ -72,7 +70,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         </AuthProvider>
         <Scripts />
         <Toaster richColors />
-      </NuqsAdapter>
     </>
   );
 }
