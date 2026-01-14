@@ -32,6 +32,7 @@ public class FileIngestionServiceImpl implements FileIngestionService {
     private final LanguageDetectionService languageDetectionService;
     private final CodeChunkingService chunkingService;
     private final EmbeddingModel embeddingModel;
+    private final CodeSummarizationService summarizationService;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
 
@@ -78,8 +79,13 @@ public class FileIngestionServiceImpl implements FileIngestionService {
             List<CodeFileDocument.CodeChunk> chunks = chunkingService.chunkCodeWithMetadata(content);
             builder.codeChunks(chunks);
 
-            // Generate embedding
-            List<Float> contentEmbedding = generateEmbedding(content);
+            // Generate summary using LLM
+            log.debug("Generating summary for file: {}", filePath);
+            String summary = summarizationService.summarizeCode(content, language, filePath);
+            builder.contentSummary(summary);
+
+            // Generate embedding from summary instead of full content
+            List<Float> contentEmbedding = generateEmbedding(summary);
             builder.contentEmbedding(contentEmbedding);
 
             CodeFileDocument document = builder.build();

@@ -43,7 +43,7 @@ export function RepositoryHeader({ repository }: RepositoryHeaderProps) {
     setDeleteDialogOpen(false);
     // When API is available:
     // await repositoryApi.deleteRepository(owner, repo)
-    // navigate({ to: '/repositories' })
+    navigate({ to: '/repositories' })
   };
 
   return (

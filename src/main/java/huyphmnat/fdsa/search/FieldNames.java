@@ -40,6 +40,9 @@ public final class FieldNames {
     // Embedding fields
     public static final String CONTENT_EMBEDDING = "content_embedding";
 
+    // Summary fields
+    public static final String CONTENT_SUMMARY = "content_summary";
+
     private FieldNames() {
         // Prevent instantiation
     }

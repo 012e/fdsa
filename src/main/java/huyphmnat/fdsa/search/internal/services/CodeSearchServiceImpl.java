@@ -7,6 +7,7 @@ import huyphmnat.fdsa.search.dtos.CodeSearchRequest;
 import huyphmnat.fdsa.search.dtos.CodeSearchResponse;
 import huyphmnat.fdsa.search.dtos.CodeSearchResult;
 import huyphmnat.fdsa.search.interfaces.CodeSearchService;
+import huyphmnat.fdsa.search.interfaces.QueryRewriter;
 import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,16 +33,23 @@ import java.util.stream.Collectors;
 public class CodeSearchServiceImpl implements CodeSearchService {
     private final OpenSearchClient openSearchClient;
     private final EmbeddingModel embeddingModel;
+    private final QueryRewriter queryRewriter;
 
     private static final String FILES_INDEX_NAME = Indexes.CODE_FILE_INDEX;
 
     @Override
     @Observed
     public CodeSearchResponse searchCode(CodeSearchRequest request) {
+        String originalQuery = request.getQuery();
         log.info("Searching code with query: {}, page: {}, size: {}",
-                request.getQuery(), request.getPage(), request.getSize());
+                originalQuery, request.getPage(), request.getSize());
 
         try {
+            // Rewrite the query for better search effectiveness
+            String rewrittenQuery = queryRewriter.rewriteQuery(originalQuery);
+            log.info("Query rewritten from '{}' to '{}'", originalQuery, rewrittenQuery);
+            request.setQuery(rewrittenQuery);
+            
             SearchRequest searchRequest = buildHybridSearchRequest(request);
             SearchResponse<CodeFileDocument> response = openSearchClient.search(searchRequest, CodeFileDocument.class);
 

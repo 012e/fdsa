@@ -14,7 +14,6 @@ import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -32,10 +31,10 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
     private final LanguageDetectionService languageDetectionService;
     private final CodeChunkingService chunkingService;
     private final EmbeddingModel embeddingModel;
+    private final CodeSummarizationService summarizationService;
 
     private static final int BATCH_SIZE = 100; // Bulk index batch size
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
-    private static final int CHUNK_THRESHOLD = 100_000; // Chunk files larger than 100KB
 
     @Override
     public void ingestRepository(UUID repositoryId, String repositoryIdentifier) {
@@ -141,7 +140,13 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
         List<CodeFileDocument.CodeChunk> chunks = chunkingService.chunkCodeWithMetadata(content);
         builder.codeChunks(chunks);
 
-        List<Float> contentEmbedding = generateEmbedding(content);
+        // Generate summary using LLM
+        log.debug("Generating summary for file: {}", fileEntry.getPath());
+        String summary = summarizationService.summarizeCode(content, language, fileEntry.getPath());
+        builder.contentSummary(summary);
+
+        // Generate embedding from summary instead of full content
+        List<Float> contentEmbedding = generateEmbedding(summary);
         builder.contentEmbedding(contentEmbedding);
         return builder.build();
     }

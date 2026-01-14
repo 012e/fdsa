@@ -72,7 +72,13 @@ public class CodeFileDocument {
     private Long size;
 
     /**
-     * Content embedding vector for semantic search
+     * LLM-generated summary of the code content
+     */
+    @JsonProperty(FieldNames.CONTENT_SUMMARY)
+    private String contentSummary;
+
+    /**
+     * Content embedding vector for semantic search (generated from contentSummary)
      */
     @JsonProperty(FieldNames.CONTENT_EMBEDDING)
     private List<Float> contentEmbedding;
