@@ -1,4 +1,5 @@
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { Scripts, createRootRoute } from "@tanstack/react-router";
+import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { AuthProvider } from "react-oidc-context";
@@ -46,30 +47,32 @@ const client = new QueryClient();
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <AuthProvider {...oidcConfig}>
-        <QueryClientProvider client={client}>
-          <JotaiProvider store={store}>
-            <AuthSync>
-              <Header />
-              {children}
-              <TanStackDevtools
-                config={{
-                  position: "bottom-right",
-                }}
-                plugins={[
-                  {
-                    name: "Tanstack Router",
-                    render: <TanStackRouterDevtoolsPanel />,
-                  },
-                  TanStackQueryDevtools,
-                ]}
-              />
-            </AuthSync>
-          </JotaiProvider>
-        </QueryClientProvider>
-      </AuthProvider>
-      <Scripts />
-      <Toaster richColors />
+      <NuqsAdapter>
+        <AuthProvider {...oidcConfig}>
+          <QueryClientProvider client={client}>
+            <JotaiProvider store={store}>
+              <AuthSync>
+                <Header />
+                {children}
+                <TanStackDevtools
+                  config={{
+                    position: "bottom-right",
+                  }}
+                  plugins={[
+                    {
+                      name: "Tanstack Router",
+                      render: <TanStackRouterDevtoolsPanel />,
+                    },
+                    TanStackQueryDevtools,
+                  ]}
+                />
+              </AuthSync>
+            </JotaiProvider>
+          </QueryClientProvider>
+        </AuthProvider>
+        <Scripts />
+        <Toaster richColors />
+      </NuqsAdapter>
     </>
   );
 }

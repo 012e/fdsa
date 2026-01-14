@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import Editor, { Monaco, OnMount } from '@monaco-editor/react'
+import Editor, { OnMount } from '@monaco-editor/react'
 import { editor } from 'monaco-editor'
 
 interface CodeEditorProps {
@@ -17,7 +17,7 @@ export function CodeEditor({
   onChange,
   language = 'plaintext',
   height = '400px',
-  theme = 'vs-dark',
+  theme = 'light',
   readOnly = false,
   options = {},
 }: CodeEditorProps) {

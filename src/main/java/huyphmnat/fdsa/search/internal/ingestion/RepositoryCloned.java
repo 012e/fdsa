@@ -4,6 +4,7 @@ import huyphmnat.fdsa.repository.dtos.RepositoryClonedEvent;
 import huyphmnat.fdsa.repository.topics.RepositoryTopics;
 import huyphmnat.fdsa.search.interfaces.RepositoryIngestionService;
 import huyphmnat.fdsa.shared.GroupIdConfiguration;
+import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,6 +18,7 @@ public class RepositoryCloned {
     private final RepositoryIngestionService repositoryIngestionService;
 
     @KafkaListener(topics = RepositoryTopics.REPOSITORY_CLONED, groupId = GroupIdConfiguration.GROUP_ID)
+    @Observed(name = "repository.cloned.event.handling", contextualName = "Handle RepositoryClonedEvent")
     public void handleRepositoryCloned(RepositoryClonedEvent event) {
         log.info("Received RepositoryClonedEvent for repository: {} ({})",
             event.getIdentifier(), event.getId());

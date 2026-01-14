@@ -10,8 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SearchRouteImport } from './routes/search'
-import { Route as EditorDemoRouteImport } from './routes/editor-demo'
-import { Route as CodeEditorDemoRouteImport } from './routes/code-editor-demo'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RepositoriesIndexRouteImport } from './routes/repositories/index'
 import { Route as RepositoriesOwnerRepoRouteImport } from './routes/repositories/$owner/$repo'
@@ -19,16 +17,6 @@ import { Route as RepositoriesOwnerRepoRouteImport } from './routes/repositories
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EditorDemoRoute = EditorDemoRouteImport.update({
-  id: '/editor-demo',
-  path: '/editor-demo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CodeEditorDemoRoute = CodeEditorDemoRouteImport.update({
-  id: '/code-editor-demo',
-  path: '/code-editor-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,16 +37,12 @@ const RepositoriesOwnerRepoRoute = RepositoriesOwnerRepoRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/code-editor-demo': typeof CodeEditorDemoRoute
-  '/editor-demo': typeof EditorDemoRoute
   '/search': typeof SearchRoute
   '/repositories': typeof RepositoriesIndexRoute
   '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/code-editor-demo': typeof CodeEditorDemoRoute
-  '/editor-demo': typeof EditorDemoRoute
   '/search': typeof SearchRoute
   '/repositories': typeof RepositoriesIndexRoute
   '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
@@ -66,34 +50,18 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/code-editor-demo': typeof CodeEditorDemoRoute
-  '/editor-demo': typeof EditorDemoRoute
   '/search': typeof SearchRoute
   '/repositories/': typeof RepositoriesIndexRoute
   '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/code-editor-demo'
-    | '/editor-demo'
-    | '/search'
-    | '/repositories'
-    | '/repositories/$owner/$repo'
+  fullPaths: '/' | '/search' | '/repositories' | '/repositories/$owner/$repo'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/code-editor-demo'
-    | '/editor-demo'
-    | '/search'
-    | '/repositories'
-    | '/repositories/$owner/$repo'
+  to: '/' | '/search' | '/repositories' | '/repositories/$owner/$repo'
   id:
     | '__root__'
     | '/'
-    | '/code-editor-demo'
-    | '/editor-demo'
     | '/search'
     | '/repositories/'
     | '/repositories/$owner/$repo'
@@ -101,8 +69,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  CodeEditorDemoRoute: typeof CodeEditorDemoRoute
-  EditorDemoRoute: typeof EditorDemoRoute
   SearchRoute: typeof SearchRoute
   RepositoriesIndexRoute: typeof RepositoriesIndexRoute
   RepositoriesOwnerRepoRoute: typeof RepositoriesOwnerRepoRoute
@@ -115,20 +81,6 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/editor-demo': {
-      id: '/editor-demo'
-      path: '/editor-demo'
-      fullPath: '/editor-demo'
-      preLoaderRoute: typeof EditorDemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/code-editor-demo': {
-      id: '/code-editor-demo'
-      path: '/code-editor-demo'
-      fullPath: '/code-editor-demo'
-      preLoaderRoute: typeof CodeEditorDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -157,8 +109,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  CodeEditorDemoRoute: CodeEditorDemoRoute,
-  EditorDemoRoute: EditorDemoRoute,
   SearchRoute: SearchRoute,
   RepositoriesIndexRoute: RepositoriesIndexRoute,
   RepositoriesOwnerRepoRoute: RepositoriesOwnerRepoRoute,

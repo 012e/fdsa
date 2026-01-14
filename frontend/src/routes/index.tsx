@@ -9,5 +9,5 @@ export const Route = createFileRoute('/')({
     })
   },
   // 2. Render nothing if the component is reached
-  component: () => null,
+  component: () => <div></div>,
 })
