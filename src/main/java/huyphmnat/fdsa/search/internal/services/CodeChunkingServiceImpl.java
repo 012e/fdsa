@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -18,9 +17,6 @@ import java.util.List;
 public class CodeChunkingServiceImpl implements CodeChunkingService {
 
     private final EmbeddingModel embeddingModel;
-
-    @Value("${search.embeddings.enabled:false}")
-    private boolean embeddingsEnabled;
 
     private static final int CHUNK_SIZE = 512; // tokens
     private static final int CHARS_PER_TOKEN = 4; // rough estimate
@@ -68,7 +64,7 @@ public class CodeChunkingServiceImpl implements CodeChunkingService {
 
         // Generate embeddings for all chunks in batch if enabled
         List<List<Float>> embeddings = new ArrayList<>();
-        if (embeddingsEnabled && !chunkStrings.isEmpty()) {
+        if (!chunkStrings.isEmpty()) {
             try {
                 embeddings = generateEmbeddingsBatch(chunkStrings);
             } catch (Exception e) {
@@ -77,11 +73,6 @@ public class CodeChunkingServiceImpl implements CodeChunkingService {
                 for (int i = 0; i < chunkStrings.size(); i++) {
                     embeddings.add(new ArrayList<>());
                 }
-            }
-        } else {
-            // Fill with empty embeddings if disabled
-            for (int i = 0; i < chunkStrings.size(); i++) {
-                embeddings.add(new ArrayList<>());
             }
         }
 

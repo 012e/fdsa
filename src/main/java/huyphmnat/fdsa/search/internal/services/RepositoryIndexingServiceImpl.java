@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
 import org.springframework.ai.embedding.EmbeddingResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -33,9 +32,6 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
     private final LanguageDetectionService languageDetectionService;
     private final CodeChunkingService chunkingService;
     private final EmbeddingModel embeddingModel;
-
-    @Value("${search.embeddings.enabled:false}")
-    private boolean embeddingsEnabled;
 
     private static final int BATCH_SIZE = 100; // Bulk index batch size
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
@@ -95,7 +91,7 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
             }
 
             log.info("Completed ingestion for repository: {}. Indexed: {}, Skipped: {}",
-                repositoryIdentifier, fileCount, skippedCount);
+                    repositoryIdentifier, fileCount, skippedCount);
 
         } catch (Exception e) {
             log.error("Failed to ingest repository: {}", repositoryIdentifier, e);
@@ -120,16 +116,15 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
     }
 
     private CodeFileDocument processFile(UUID repositoryId, String repositoryIdentifier, FileEntry fileEntry) {
-        try {
-            log.debug("Processing file: {}", fileEntry.getPath());
+        log.debug("Processing file: {}", fileEntry.getPath());
 
-            FileContent fileContent = repositoryFileService.readFile(repositoryId, fileEntry.getPath());
-            String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
+        FileContent fileContent = repositoryFileService.readFile(repositoryId, fileEntry.getPath());
+        String content = new String(fileContent.getContent(), StandardCharsets.UTF_8);
 
-            String fileExtension = extractFileExtension(fileEntry.getName());
-            String language = languageDetectionService.detectLanguage(fileEntry.getName());
+        String fileExtension = extractFileExtension(fileEntry.getName());
+        String language = languageDetectionService.detectLanguage(fileEntry.getName());
 
-            CodeFileDocument.CodeFileDocumentBuilder builder = CodeFileDocument.builder()
+        CodeFileDocument.CodeFileDocumentBuilder builder = CodeFileDocument.builder()
                 .id(UUID.randomUUID())
                 .repositoryId(repositoryId)
                 .repositoryIdentifier(repositoryIdentifier)
@@ -142,28 +137,13 @@ public class RepositoryIndexingServiceImpl implements RepositoryIngestionService
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now());
 
-            // Generate embedding for the whole content if embeddings are enabled
-            if (embeddingsEnabled) {
-                try {
-                    List<Float> contentEmbedding = generateEmbedding(content);
-                    builder.contentEmbedding(contentEmbedding);
-                } catch (Exception e) {
-                    log.warn("Failed to generate content embedding for {}, proceeding without it", fileEntry.getPath(), e);
-                }
-            }
+        log.debug("Chunking large file: {} ({} bytes)", fileEntry.getPath(), content.length());
+        List<CodeFileDocument.CodeChunk> chunks = chunkingService.chunkCodeWithMetadata(content);
+        builder.codeChunks(chunks);
 
-            // Chunk large files with embeddings
-            if (content.length() > CHUNK_THRESHOLD) {
-                List<CodeFileDocument.CodeChunk> chunks = chunkingService.chunkCodeWithMetadata(content);
-                builder.codeChunks(chunks);
-            }
-
-            return builder.build();
-
-        } catch (Exception e) {
-            log.error("Failed to process file: {}", fileEntry.getPath(), e);
-            return null; // Skip this file but continue with others
-        }
+        List<Float> contentEmbedding = generateEmbedding(content);
+        builder.contentEmbedding(contentEmbedding);
+        return builder.build();
     }
 
     private List<Float> generateEmbedding(String text) {
