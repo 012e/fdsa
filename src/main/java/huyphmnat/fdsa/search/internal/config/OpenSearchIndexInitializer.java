@@ -29,8 +29,6 @@ public class OpenSearchIndexInitializer implements ApplicationRunner {
 
     private static final String SEARCH_PIPELINE_ID = "code-files-search-pipeline";
 
-    public static String MODEL_ID = null;
-
     @Override
     public void run(ApplicationArguments args) throws Exception {
         log.info("Starting OpenSearch Semantic Search Configuration...");
