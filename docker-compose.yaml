@@ -126,3 +126,24 @@ services:
       timeout: 5s
       retries: 5
 
+  fluent-bit:
+    image: fluent/fluent-bit:3.2.4
+    container_name: fluent-bit
+    restart: always
+    ports:
+      - "24224:24224"  # Forward protocol
+      - "24224:24224/udp"
+    volumes:
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./fluent-bit-parsers.conf:/fluent-bit/etc/fluent-bit-parsers.conf
+      - ./tmp/app-logs:/var/log/app:ro  # Read-only mount for application logs
+    profiles:
+      - search
+    depends_on:
+      - opensearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sSf http://localhost:2020/api/v1/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+

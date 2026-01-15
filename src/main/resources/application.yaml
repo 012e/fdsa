@@ -1,6 +1,25 @@
 spring:
   ai:
-    openai:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    Time_Format %b %d %H:%M:%S    Time_Key    time    Regex       ^\<(?<pri>[0-9]+)\>(?<time>[^ ]* {1,2}[^ ]* [^ ]*) (?<host>[^ ]*) (?<ident>[a-zA-Z0-9_\/\.\-]*)(?:\[(?<pid>[0-9]+)\])?(?:[^\:]*\:)? *(?<message>.*)$    Format      regex    Name        syslog[PARSER]    Time_Keep   On    Time_Format %Y-%m-%dT%H:%M:%S.%L    Time_Key    time    Format      json    Name        docker[PARSER]    Time_Keep   On    Time_Format %Y-%m-%dT%H:%M:%S.%L    Time_Key    @timestamp    Format      json    openai:
       api-key: ${OPENAI_API_KEY}
   application:
     name: fdsa-backend
@@ -32,6 +51,15 @@ spring:
           jwk-set-uri: ${OAUTH2_ISSUER_URI:http://localhost:6969/realms/fdsa/protocol/openid-connect/certs}
   config:
     import: optional:./application-secret.yaml
+
+# Logging Configuration
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    root: INFO
+    huyphmnat.fdsa: DEBUG
+    org.springframework.web: INFO
+    org.springframework.kafka: INFO
 
 # Search Configuration
 search:

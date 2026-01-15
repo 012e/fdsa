@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthProviderProps } from "react-oidc-context";
+import { WebStorageStateStore } from "oidc-client-ts";
 
 const keycloakUrl = import.meta.env["KEYCLOAK_URL"] ?? "http://localhost:6969";
 const realm = "fdsa";
@@ -14,5 +15,6 @@ export const oidcConfig: AuthProviderProps = {
   post_logout_redirect_uri: appUrl + "/",
   response_type: "code",
   scope: "openid profile email",
+  userStore: new WebStorageStateStore({ store: window.localStorage }),
   automaticSilentRenew: true,
 };
