@@ -1,11 +1,13 @@
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { codeSearchTool } from "../tools/code-search-tool";
+import { OpenSearchVector } from "../opensearch";
 
 export const codeSearchAgent = new Agent({
   id: "code-search-agent",
   name: "Code Search Agent",
-  description: "This agent searches through indexed code repositories to find relevant code snippets, functions, classes, and files",
+  description:
+    "This agent searches through indexed code repositories to find relevant code snippets, functions, classes, and files",
   instructions: `
     You are a helpful code search assistant that helps users find relevant code across indexed repositories.
 
@@ -29,5 +31,18 @@ export const codeSearchAgent = new Agent({
 `,
   model: "openai/gpt-4o-mini",
   tools: { codeSearchTool },
-  memory: new Memory(),
+  memory: new Memory({
+    options: {
+      semanticRecall: {
+        topK: 3, // Retrieve 3 most similar messages
+        messageRange: 2, // Include 2 messages before and after each match
+        scope: "resource", // Search across all threads for this user (default setting if omitted)
+      },
+    },
+    embedder: "openai/text-embedding-3-small",
+    vector: new OpenSearchVector({
+      id: "code-search-agent-memory",
+      node: "http://localhost:9200",
+    }),
+  }),
 });

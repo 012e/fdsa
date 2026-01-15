@@ -36,20 +36,20 @@ export const Route = createFileRoute('/chat/$agentId/$threadId')({
 
 const suggestions = [
   {
-    title: "What's the latest movie?",
-    action: "What's the latest movie?",
+    title: 'Search for authentication code',
+    action: 'Find code snippets for user authentication',
   },
   {
-    title: "What's the first Ghibli movie?",
-    action: "What's the first Ghibli movie?",
+    title: 'Find API integration examples',
+    action: 'Show me REST API integration examples',
   },
   {
-    title: 'How many Ghibli movies are there?',
-    action: 'How many Ghibli movies are there?',
+    title: 'Search for database queries',
+    action: 'Find database query examples',
   },
   {
-    title: "What's the longest Ghibli movie?",
-    action: "What's the longest Ghibli movie?",
+    title: 'Look for error handling patterns',
+    action: 'Show error handling code patterns',
   },
 ]
 
@@ -163,7 +163,7 @@ const Chat = ({
       <Thread
         suggestions={suggestions}
         agentName={agentName}
-        welcome="Ask me about Ghibli movies, characters, and trivia."
+        welcome="Search and explore code snippets. Ask me to find specific code patterns, examples, or implementations."
       />
     </CustomRuntimeProvider>
   )

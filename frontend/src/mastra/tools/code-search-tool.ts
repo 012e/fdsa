@@ -12,7 +12,7 @@ const codeSearchResultSchema = z.object({
   size: z.number().optional(),
   score: z.number().optional(),
   createdAt: z.string().optional(),
-  highlights: z.record(z.string(), z.array(z.string())).optional(),
+  highlights: z.any(),
 });
 
 const codeSearchResponseSchema = z.object({
