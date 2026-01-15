@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 
@@ -61,6 +62,7 @@ public class KafkaConfiguration {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.getContainerProperties().setObservationEnabled(true);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }

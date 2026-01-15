@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { CodeViewer } from '@/components/ui/code-viewer'
-import { Search, FileCode, Hash, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, FileCode, Hash, Filter, ChevronLeft, ChevronRight, SearchX, AlertCircle } from 'lucide-react'
 import type { CodeSearchResponse, CodeSearchResult } from '@/lib/generated'
 import z from 'zod'
 import { zodValidator,} from '@tanstack/zod-adapter'
@@ -184,7 +184,63 @@ function SearchPage() {
       </Card>
 
       {/* Results Section */}
-      {searchResults && (
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-4">
+              <AlertCircle className="h-8 w-8 text-destructive flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="text-lg font-semibold text-destructive mb-2">
+                  Oops! Something went sideways 🤦
+                </h3>
+                <p className="text-muted-foreground mb-2">
+                  Well, this is embarrassing. The search gods have forsaken us.
+                </p>
+                <details className="text-sm">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground mb-2">
+                    Technical mumbo-jumbo (if you're into that sort of thing)
+                  </summary>
+                  <pre className="bg-muted p-3 rounded overflow-x-auto text-xs">
+                    {error instanceof Error ? error.message : 'Unknown error occurred'}
+                  </pre>
+                </details>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Try again? Maybe sacrifice a rubber duck to the debugging deities? 🦆
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!error && searchResults && searchResults.results && searchResults.results.length === 0 && (
+        <Card>
+          <CardContent className="pt-12 pb-12">
+            <div className="flex flex-col items-center text-center gap-4">
+              <SearchX className="h-16 w-16 text-muted-foreground/50" />
+              <div>
+                <h3 className="text-xl font-semibold mb-2">
+                  No results found for "{search.q}"
+                </h3>
+                <p className="text-muted-foreground max-w-md mx-auto mb-4">
+                  We searched high and low, turned over every virtual stone, checked behind the couch cushions... nothing. 
+                </p>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p>💡 Try:</p>
+                  <ul className="list-none space-y-1">
+                    <li>• Using different keywords or synonyms</li>
+                    <li>• Removing some filters</li>
+                    <li>• Checking if the code has been indexed</li>
+                    <li>• Asking nicely (works 0% of the time, every time)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!error && searchResults && searchResults.results && searchResults.results.length > 0 && (
         <>
           <div className="space-y-4 mb-6">
             {searchResults.results!.map((result: CodeSearchResult) => (
@@ -312,73 +368,33 @@ function SearchResultCard({ result }: SearchResultCardProps) {
           </div>
         )}
 
-        {/* Matched Chunks */}
-        {result.matchedChunks && result.matchedChunks.length > 0 && (
+        {/* File Content */}
+        {result.content && (
           <div className="mt-4 pt-4 border-t">
             <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase">
-              Matched Code Chunks ({result.matchedChunks.length}):
+              File Content:
             </p>
-            <div className="space-y-3">
-              {result.matchedChunks.slice(0, expanded ? undefined : 2).map((chunk, idx) => (
-                <div key={idx} className="border rounded overflow-hidden">
-                  {chunk.startLine !== undefined && (
-                    <div className="bg-muted px-3 py-1.5 border-b">
-                      <p className="text-xs text-muted-foreground">
-                        Lines {chunk.startLine}-{chunk.endLine}
-                      </p>
-                    </div>
-                  )}
-                  <div className="overflow-hidden">
-                    <CodeViewer
-                      code={chunk.content || ''}
-                      fileName={result.fileName}
-                      language={result.language}
-                      height="200px"
-                      showLineNumbers={true}
-                    />
-                  </div>
-                  {chunk.highlights && chunk.highlights.length > 0 && (
-                    <div className="bg-muted/50 px-3 py-2 border-t space-y-1">
-                      {chunk.highlights.map((highlight, hIdx) => (
-                        <p
-                          key={hIdx}
-                          className="text-xs text-muted-foreground italic"
-                          dangerouslySetInnerHTML={{ __html: highlight }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="border rounded overflow-hidden">
+              <CodeViewer
+                code={result.content}
+                fileName={result.fileName}
+                language={result.language}
+                height={expanded ? "600px" : "300px"}
+                showLineNumbers={true}
+              />
             </div>
-            {result.matchedChunks.length > 2 && !expanded && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setExpanded(true)
-                }}
-                className="mt-2"
-              >
-                Show {result.matchedChunks.length - 2} more chunks...
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                setExpanded(!expanded)
+              }}
+              className="mt-2"
+            >
+              {expanded ? 'Show less' : 'Show more'}
+            </Button>
           </div>
-        )}
-
-        {expanded && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              setExpanded(false)
-            }}
-            className="mt-2"
-          >
-            Show less
-          </Button>
         )}
 
         {/* File Metadata */}

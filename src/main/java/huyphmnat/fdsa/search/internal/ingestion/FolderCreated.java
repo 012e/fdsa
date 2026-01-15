@@ -6,6 +6,7 @@ import huyphmnat.fdsa.shared.GroupIdConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,12 +15,17 @@ import org.springframework.stereotype.Component;
 public class FolderCreated {
 
     @KafkaListener(topics = RepositoryTopics.FOLDER_CREATED, groupId = GroupIdConfiguration.GROUP_ID)
-    public void handleFolderCreated(FolderCreatedEvent event) {
+    public void handleFolderCreated(FolderCreatedEvent event, Acknowledgment acknowledgment) {
         log.info("Received FolderCreatedEvent for folder: {} in repository: {}",
             event.getFolderPath(), event.getRepositoryIdentifier());
 
         // Note: Folder creation doesn't require indexing action since folders are just containers.
         // Files added to the folder will trigger separate FileCreatedEvents.
         log.debug("No indexing action needed for folder creation: {}", event.getFolderPath());
+        
+        if (acknowledgment != null) {
+            acknowledgment.acknowledge();
+            log.debug("Acknowledged message for folder: {}", event.getFolderPath());
+        }
     }
 }

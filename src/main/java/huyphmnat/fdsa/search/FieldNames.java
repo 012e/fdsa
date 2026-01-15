@@ -15,7 +15,7 @@ public final class FieldNames {
     // Repository-related fields
     public static final String REPOSITORY_ID = "repository_id";
     public static final String REPOSITORY_IDENTIFIER = "repository_identifier";
-    public static final String REPOSITORY_IDENTIFIER_KEYWORD = "repository_identifier.keyword";
+    public static final String REPOSITORY_IDENTIFIER_KEYWORD = "repository_identifier";
 
     // File-related fields
     public static final String FILE_PATH = "file_path";

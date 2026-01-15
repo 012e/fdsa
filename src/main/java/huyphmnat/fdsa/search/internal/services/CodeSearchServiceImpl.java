@@ -11,6 +11,7 @@ import huyphmnat.fdsa.search.interfaces.QueryRewriter;
 import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.query_dsl.*;
@@ -90,6 +91,11 @@ public class CodeSearchServiceImpl implements CodeSearchService {
                     .from(request.getPage() * request.getSize())
                     .size(request.getSize());
 
+            // Apply filters as post_filter
+            if (hasFilters(request)) {
+                searchBuilder.postFilter(getFilters(request));
+            }
+
             // Add highlighting if requested
             addHighlighting(searchBuilder, request);
 
@@ -116,15 +122,17 @@ public class CodeSearchServiceImpl implements CodeSearchService {
             boolQuery.must(multiMatchQuery);
         }
 
-        // Add filters
-        addFilters(boolQuery, request);
-
         // Build search request
         SearchRequest.Builder searchBuilder = new SearchRequest.Builder()
                 .index(FILES_INDEX_NAME)
                 .query(boolQuery.build().toQuery())
                 .from(request.getPage() * request.getSize())
                 .size(request.getSize());
+
+        // Apply filters as post_filter
+        if (hasFilters(request)) {
+            searchBuilder.postFilter(getFilters(request));
+        }
 
         // Add highlighting if requested
         addHighlighting(searchBuilder, request);
@@ -135,7 +143,7 @@ public class CodeSearchServiceImpl implements CodeSearchService {
     /**
      * Adds filter queries to the bool query builder
      */
-    private void addFilters(BoolQuery.Builder boolQuery, CodeSearchRequest request) {
+    private Query getFilters(CodeSearchRequest request) {
         List<Query> filters = new ArrayList<>();
 
         if (request.getRepositoryIdentifier() != null && !request.getRepositoryIdentifier().isEmpty()) {
@@ -159,9 +167,7 @@ public class CodeSearchServiceImpl implements CodeSearchService {
             ).toQuery());
         }
 
-        if (!filters.isEmpty()) {
-            boolQuery.filter(filters);
-        }
+        return BoolQuery.of(b -> b.must(filters)).toQuery();
     }
 
     /**
@@ -209,31 +215,12 @@ public class CodeSearchServiceImpl implements CodeSearchService {
             log.debug("Added vector search to hybrid query");
         }
 
-        // If we only have one query (keyword), just use it directly with filters
-        if (queries.size() == 1) {
-            if (hasFilters(request)) {
-                BoolQuery.Builder boolQuery = new BoolQuery.Builder()
-                        .must(queries.get(0));
-                addFilters(boolQuery, request);
-                return boolQuery.build().toQuery();
-            }
-            return queries.get(0);
-        }
-
         // Build hybrid query with both queries
-        Query hybridQuery = HybridQuery.of(h -> h
+        var query = HybridQuery.of(h -> h
                 .queries(queries)
         ).toQuery();
 
-        // Wrap with filters if present
-        if (hasFilters(request)) {
-            BoolQuery.Builder boolQuery = new BoolQuery.Builder()
-                    .must(hybridQuery);
-            addFilters(boolQuery, request);
-            return boolQuery.build().toQuery();
-        }
-
-        return hybridQuery;
+        return query;
     }
 
     /**

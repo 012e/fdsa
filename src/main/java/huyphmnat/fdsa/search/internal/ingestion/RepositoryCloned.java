@@ -8,6 +8,7 @@ import io.micrometer.observation.annotation.Observed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,16 +20,20 @@ public class RepositoryCloned {
 
     @KafkaListener(topics = RepositoryTopics.REPOSITORY_CLONED, groupId = GroupIdConfiguration.GROUP_ID)
     @Observed(name = "repository.cloned.event.handling", contextualName = "Handle RepositoryClonedEvent")
-    public void handleRepositoryCloned(RepositoryClonedEvent event) {
+    public void handleRepositoryCloned(RepositoryClonedEvent event, Acknowledgment acknowledgment) {
         log.info("Received RepositoryClonedEvent for repository: {} ({})",
             event.getIdentifier(), event.getId());
 
         try {
             repositoryIngestionService.ingestRepository(event.getId(), event.getIdentifier());
             log.info("Successfully ingested repository: {}", event.getIdentifier());
+            if (acknowledgment != null) {
+                acknowledgment.acknowledge();
+                log.debug("Acknowledged message for repository: {}", event.getIdentifier());
+            }
         } catch (Exception e) {
             log.error("Failed to ingest repository: {}", event.getIdentifier(), e);
-            // In production, you might want to retry or send to a dead letter queue
+            // Message will not be acknowledged, will be reprocessed
         }
     }
 }

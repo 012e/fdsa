@@ -7,6 +7,7 @@ import huyphmnat.fdsa.shared.GroupIdConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,7 +18,7 @@ public class FolderDeleted {
     private final FileIngestionService fileIngestionService;
 
     @KafkaListener(topics = RepositoryTopics.FOLDER_DELETED, groupId = GroupIdConfiguration.GROUP_ID)
-    public void handleFolderDeleted(FolderDeletedEvent event) {
+    public void handleFolderDeleted(FolderDeletedEvent event, Acknowledgment acknowledgment) {
         log.info("Received FolderDeletedEvent for folder: {} in repository: {}",
             event.getFolderPath(), event.getRepositoryIdentifier());
 
@@ -28,9 +29,13 @@ public class FolderDeleted {
                 event.getFolderPath()
             );
             log.info("Successfully removed all files from deleted folder: {}", event.getFolderPath());
+            if (acknowledgment != null) {
+                acknowledgment.acknowledge();
+                log.debug("Acknowledged message for folder: {}", event.getFolderPath());
+            }
         } catch (Exception e) {
             log.error("Failed to remove files from deleted folder: {}", event.getFolderPath(), e);
-            // In production, you might want to retry or send to a dead letter queue
+            // Message will not be acknowledged, will be reprocessed
         }
     }
 }
