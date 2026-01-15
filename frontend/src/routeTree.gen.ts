@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RepositoriesIndexRouteImport } from './routes/repositories/index'
-import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as RepositoriesOwnerRepoRouteImport } from './routes/repositories/$owner/$repo'
 import { Route as ChatAgentIdThreadIdRouteImport } from './routes/chat/$agentId/$threadId'
 
@@ -31,11 +30,6 @@ const RepositoriesIndexRoute = RepositoriesIndexRouteImport.update({
   path: '/repositories/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatIndexRoute = ChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const RepositoriesOwnerRepoRoute = RepositoriesOwnerRepoRouteImport.update({
   id: '/repositories/$owner/$repo',
   path: '/repositories/$owner/$repo',
@@ -50,7 +44,6 @@ const ChatAgentIdThreadIdRoute = ChatAgentIdThreadIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
-  '/chat': typeof ChatIndexRoute
   '/repositories': typeof RepositoriesIndexRoute
   '/chat/$agentId/$threadId': typeof ChatAgentIdThreadIdRoute
   '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
@@ -58,7 +51,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
-  '/chat': typeof ChatIndexRoute
   '/repositories': typeof RepositoriesIndexRoute
   '/chat/$agentId/$threadId': typeof ChatAgentIdThreadIdRoute
   '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
@@ -67,7 +59,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/search': typeof SearchRoute
-  '/chat/': typeof ChatIndexRoute
   '/repositories/': typeof RepositoriesIndexRoute
   '/chat/$agentId/$threadId': typeof ChatAgentIdThreadIdRoute
   '/repositories/$owner/$repo': typeof RepositoriesOwnerRepoRoute
@@ -77,7 +68,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/search'
-    | '/chat'
     | '/repositories'
     | '/chat/$agentId/$threadId'
     | '/repositories/$owner/$repo'
@@ -85,7 +75,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/search'
-    | '/chat'
     | '/repositories'
     | '/chat/$agentId/$threadId'
     | '/repositories/$owner/$repo'
@@ -93,7 +82,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/search'
-    | '/chat/'
     | '/repositories/'
     | '/chat/$agentId/$threadId'
     | '/repositories/$owner/$repo'
@@ -102,7 +90,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SearchRoute: typeof SearchRoute
-  ChatIndexRoute: typeof ChatIndexRoute
   RepositoriesIndexRoute: typeof RepositoriesIndexRoute
   ChatAgentIdThreadIdRoute: typeof ChatAgentIdThreadIdRoute
   RepositoriesOwnerRepoRoute: typeof RepositoriesOwnerRepoRoute
@@ -131,13 +118,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RepositoriesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chat/': {
-      id: '/chat/'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/repositories/$owner/$repo': {
       id: '/repositories/$owner/$repo'
       path: '/repositories/$owner/$repo'
@@ -158,7 +138,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SearchRoute: SearchRoute,
-  ChatIndexRoute: ChatIndexRoute,
   RepositoriesIndexRoute: RepositoriesIndexRoute,
   ChatAgentIdThreadIdRoute: ChatAgentIdThreadIdRoute,
   RepositoriesOwnerRepoRoute: RepositoriesOwnerRepoRoute,
