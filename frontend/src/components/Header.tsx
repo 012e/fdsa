@@ -115,7 +115,7 @@ export default function Header() {
           <Link
             to="/chat/$agentId/$threadId"
             params={{
-              agentId: "ghibliAgent",
+              agentId: "code-search-agent",
               threadId: uuid(),
             }}
             onClick={() => setIsOpen(false)}
