@@ -4,6 +4,7 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { AuthProvider } from "react-oidc-context";
 import { Provider as JotaiProvider } from "jotai";
 import store from "@/lib/store";
+import { MastraReactProvider } from "@mastra/react";
 
 import Header from "@/components/Header";
 import { AuthSync } from "@/components/AuthSync";
@@ -15,6 +16,8 @@ import appCss from "../styles.css?url";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
+
+const MASTRA_BASE_URL = import.meta.env.VITE_MASTRA_BASE_URL || 'http://localhost:4750';
 
 export const Route = createRootRoute({
   head: () => ({
@@ -46,28 +49,30 @@ const client = new QueryClient();
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <>
-        <AuthProvider {...oidcConfig}>
-          <QueryClientProvider client={client}>
-            <JotaiProvider store={store}>
-              <AuthSync>
-                <Header />
-                {children}
-                <TanStackDevtools
-                  config={{
-                    position: "bottom-right",
-                  }}
-                  plugins={[
-                    {
-                      name: "Tanstack Router",
-                      render: <TanStackRouterDevtoolsPanel />,
-                    },
-                    TanStackQueryDevtools,
-                  ]}
-                />
-              </AuthSync>
-            </JotaiProvider>
-          </QueryClientProvider>
-        </AuthProvider>
+        <MastraReactProvider baseUrl={MASTRA_BASE_URL}>
+          <AuthProvider {...oidcConfig}>
+            <QueryClientProvider client={client}>
+              <JotaiProvider store={store}>
+                <AuthSync>
+                  <Header />
+                  {children}
+                  <TanStackDevtools
+                    config={{
+                      position: "bottom-right",
+                    }}
+                    plugins={[
+                      {
+                        name: "Tanstack Router",
+                        render: <TanStackRouterDevtoolsPanel />,
+                      },
+                      TanStackQueryDevtools,
+                    ]}
+                  />
+                </AuthSync>
+              </JotaiProvider>
+            </QueryClientProvider>
+          </AuthProvider>
+        </MastraReactProvider>
         <Scripts />
         <Toaster richColors />
     </>
