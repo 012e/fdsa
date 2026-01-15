@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Menu,
@@ -8,16 +8,14 @@ import {
   LogIn,
   LogOut,
   User,
-  Bubbles,
   MessageCircle,
 } from "lucide-react";
 import { useAuth } from "react-oidc-context";
-import { newThreadLink } from "@/lib/utils";
+import { uuid } from "@/lib/utils";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const auth = useAuth();
-  const navigate = useNavigate();
 
   return (
     <>
@@ -114,16 +112,22 @@ export default function Header() {
             <Search size={20} />
             <span className="font-medium">Code Search</span>
           </Link>
-          <button
-            onClick={() => {
-              setIsOpen(false);
-              navigate({ to: newThreadLink('chat', 'ghibliAgent') as any });
+          <Link
+            to="/chat/$agentId/$threadId"
+            params={{
+              agentId: "ghibliAgent",
+              threadId: uuid(),
             }}
-            className="flex gap-3 items-center p-3 mb-2 rounded-lg transition-colors hover:bg-gray-800 w-full text-left"
+            onClick={() => setIsOpen(false)}
+            className="flex gap-3 items-center p-3 mb-2 rounded-lg transition-colors hover:bg-gray-800"
+            activeProps={{
+              className:
+                "flex items-center gap-3 p-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors mb-2",
+            }}
           >
             <MessageCircle size={20} />
             <span className="font-medium">Chat</span>
-          </button>
+          </Link>
         </nav>
       </aside>
     </>

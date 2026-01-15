@@ -99,7 +99,7 @@ function AssistantUIDemo() {
   }
 
   return (
-    <div className="grid grid-cols-[130px_1fr] md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr] gap-x-2 size-full">
+    <div className="grid grid-cols-[130px_1fr] md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr] gap-x-2 size-full p-4">
       <Sidebar
         threads={threads || []}
         resourceId={agentId}

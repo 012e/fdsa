@@ -126,7 +126,7 @@ const ThreadWelcome: FC<ThreadWelcomeProps> = ({
             exit={{ opacity: 0, y: 10 }}
             className="aui-thread-welcome-message-motion-1 text-2xl font-semibold"
           >
-            Hello{agentName ? ` from ${agentName}` : ""} 👋🏻
+            Hello code search agent
           </m.div>
           <m.div
             initial={{ opacity: 0, y: 10 }}

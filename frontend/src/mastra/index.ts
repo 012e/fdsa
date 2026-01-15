@@ -49,7 +49,7 @@ export const mastra = new Mastra({
   },
   storage: new LibSQLStore({
     id: "mastra-storage",
-    url: ":memory:",
+    url: "file:/tmp/mastra-db",
   }),
   logger: new PinoLogger({
     name: "Mastra",
