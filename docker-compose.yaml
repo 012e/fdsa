@@ -89,6 +89,8 @@ services:
     environment:
       - OPENSEARCH_HOSTS=["http://opensearch:9200"]
       - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+      - OPENSEARCH_REQUESTTIMEOUT=60000  # Sets opensearch.requestTimeout
+      - OPENSEARCH_SHARDTIMEOUT=60000    # Sets opensearch.shardTimeout
     ports:
       - "5601:5601"
     profiles:
